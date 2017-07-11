@@ -1,4 +1,5 @@
 #include "LEDArt.h"
+#include "rand.h"
 
 //////
 
@@ -6,6 +7,9 @@ const uint8_t LEDArtAnimation::paletteSizes[] = {
     2,  // RB
     3,  // RGB
     12, // RYB
+    3,
+    5,
+
 };
 
 const RgbColor Palette_RB[] = {
@@ -34,10 +38,32 @@ const RgbColor Palette_RYB[] = {
     RgbColor(191, 0, 64),
 };
 
+const RgbColor Palette_WHITE_BLACK[] = {
+    RgbColor(0, 0, 0),
+    RgbColor(96, 96, 96),
+    RgbColor(255, 255, 255),
+};
+
+const RgbColor Palette_JORDAN[] = {
+    RgbColor(0, 0, 0),
+    RgbColor(96, 96, 96),
+    RgbColor(255, 255, 255),
+};
+
+const RgbColor Palette_MARDI_GRAS[] = {
+    RgbColor(176, 126, 9),
+    RgbColor(176, 126, 9),
+    RgbColor(4, 87, 22),
+    RgbColor(45, 6, 56),
+    RgbColor(45, 6, 56),
+};
+
 const RgbColor* LEDArtAnimation::paletteColors[] = {
     Palette_RB,
     Palette_RGB,
     Palette_RYB,
+    Palette_WHITE_BLACK,
+    Palette_MARDI_GRAS
 };
 
 // const uint8_t LEDArtAnimation::rybRainbowColorsCount = 3;
@@ -124,7 +150,7 @@ LEDArtPiece::begin() {
     strip.Show();
 
     // Start the first base animation
-    LEDArtAnimation* pAnim = findNextBaseAnimation();
+    LEDArtAnimation* pAnim = findNextBaseAnimation(true);
     startAnimation(pAnim);
 }
 
@@ -160,7 +186,8 @@ LEDArtPiece::startAnimation(LEDArtAnimation* pAnim) {
     }
 
     pRunningAnims[pAnim->type] = pAnim;
-    animator.StartAnimation(pAnim->type, pAnim->loopDuration, func);
+
+    animator.StartAnimation(pAnim->type, (float)pAnim->loopDuration * speedFactor, func);
 
     startedAt[pAnim->type] = millis();
 }
@@ -171,8 +198,41 @@ LEDArtPiece::stopAnimation(AnimationType type) {
 }
 
 void 
-LEDArtPiece::nextAnimation() {
-    LEDArtAnimation* pAnim = findNextBaseAnimation();
+LEDArtPiece::nextAnimation(bool randomize) {
+    LEDArtAnimation* pAnim = findNextBaseAnimation(randomize);
+
+    if (randomize) {
+        unitType = rand(5);
+
+        palette = (LEDArtAnimation::LEDPaletteType)rand((uint8_t)LEDArtAnimation::LEDPalette_LAST);
+
+        // Base unit is 8 bar loop. 120bpm, 4 beats = 2s = 1 bar. 8bars = 16s
+        switch(rand(6)) {
+            case 0: // 1 bar = 1/8 speed
+                speedFactor = 0.125;
+                break;
+
+            case 1: // 4 bar = 1/2 speed
+                speedFactor = 0.5;
+                break;
+
+            case 2: // 8 bar = 1.0
+                speedFactor = 1.0;
+                break;
+
+            case 3: // 16 bar = 2.0
+                speedFactor = 2.0;
+                break;
+
+            case 4: // 32 bar = 4.0
+                speedFactor = 4.0;
+                break;
+        }
+
+        // speedFactor = 1.0;
+        foreground = RgbColor(HslColor(((float)rand(1000))/1000.0, 0.6, 0.5));
+    }
+
     startAnimation(pAnim);   
 }
 
@@ -209,7 +269,7 @@ LEDArtPiece::animateChannel(AnimationParam param, AnimationType type) {
 
         // If it is base, we try to start a next one though
         if (type == AnimationType_BASE) {
-            nextAnimation();
+            nextAnimation(true);
         }
 
         return;
@@ -224,13 +284,13 @@ LEDArtPiece::animateChannel(AnimationParam param, AnimationType type) {
             // Only base will automatically move to a new animation
 
             // Need to find a next animation for this channel
-            nextAnimation();
+            nextAnimation(true);
         }
     }
 }
 
 LEDArtAnimation*
-LEDArtPiece::findNextBaseAnimation()
+LEDArtPiece::findNextBaseAnimation(bool randomize)
 {
     LEDArtAnimation* pCur = pRunningAnims[AnimationType_BASE];
 
@@ -242,7 +302,9 @@ LEDArtPiece::findNextBaseAnimation()
 
     // First half of the search, from this point to the end of the list
     while(pNext) {
-        if (pNext->isEnabled) {
+        if (pNext->isEnabled && 
+            (!randomize ||
+                (rand(100) < 60) )) {
             return pNext;
         }
 
@@ -253,7 +315,9 @@ LEDArtPiece::findNextBaseAnimation()
     // we get to the current one
     pNext = pRegistrations[AnimationType_BASE];
     while(pNext != pCur) {
-        if (pNext->isEnabled) {
+        if (pNext->isEnabled && 
+            (!randomize ||
+                (rand(100) < 60) )) {
             return pNext;
         }
 

@@ -30,8 +30,8 @@ public:
         Unit_Each,
         Unit_Rows,
         Unit_Cols,
-        Unit_SpecificRows,
         Unit_SpecificCols,
+        Unit_SpecificRows,
     };
 
     UnitType currentType = Unit_Single;
@@ -53,6 +53,15 @@ public:
     virtual void animate(LEDArtPiece& piece, AnimationParam p);
 };
 
+
+class LAA_Line : public LAA_UnitMapper {
+public:
+    RgbColor foreground;    
+
+    LAA_Line(char* szName);
+
+    virtual void animate(LEDArtPiece& piece, AnimationParam p);
+};
 
 class LAA_BoxOutline : public LAA_UnitMapper {
 public:

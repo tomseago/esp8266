@@ -27,6 +27,7 @@ LEDArtPiece art(PixelCount, 7, 18);
 LAA_Flood flood("Flood", RgbColor(64,0,0));
 LAA_Sparkle sparkle("Sparkle", PixelCount);
 LAA_RYBRainbow rainbow("Rainbow");
+LAA_Line line("Line");
 LAA_BoxOutline boxOutline("Box Outline");
 LAA_AllWhite allWhite("All White");
 LAA_HalfWhite halfWhite("Half White");
@@ -50,6 +51,7 @@ void setup() {
 
 //  art.registerAnimation(&flood);
   art.registerAnimation(&sparkle);
+  art.registerAnimation(&line);
   art.registerAnimation(&rainbow);
 //  art.registerAnimation(&boxOutline);
   art.begin();

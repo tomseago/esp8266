@@ -26,7 +26,7 @@ public:
 class LEDArtAnimation {
 public:
     char *szName;
-    uint16_t loopDuration = 10000;
+    uint16_t loopDuration = 16000; // 8bars at 120bpm
     uint16_t maxDuration = 0;
     bool loops = true;
     bool isEnabled = true;
@@ -45,6 +45,8 @@ public:
         LEDPalette_RB = 0,
         LEDPalette_RGB,
         LEDPalette_RYB, 
+        LEDPalette_WHITE_BLACK, 
+        LEDPalette_MARDI_GRAS, 
         LEDPalette_LAST      
     };
 
@@ -65,6 +67,8 @@ public:
     //// TEMP
     uint8_t unitType = 0;
     LEDArtAnimation::LEDPaletteType palette = (LEDArtAnimation::LEDPaletteType)0;
+    float speedFactor = 1.0;
+    RgbColor foreground;
     ////
 
 
@@ -79,7 +83,7 @@ public:
     virtual void startAnimation(LEDArtAnimation* pAnim);
     void stopAnimation(AnimationType type);
 
-    void nextAnimation();
+    void nextAnimation(bool randomize);
 
 
     // These are not for general use
@@ -102,11 +106,11 @@ protected:
 
     uint32_t startedAt[3];
 
-    uint32_t maxDuration = 30000;
+    uint32_t maxDuration = 128000;
     float maxBrightness = 180; // This has a range of 0 to 255, unlike brightness elsewhere which is 0.0 to 1.0
 
     NeoPixelAnimator animator;
 
-    LEDArtAnimation* findNextBaseAnimation();
+    LEDArtAnimation* findNextBaseAnimation(bool randomize);
 };
 

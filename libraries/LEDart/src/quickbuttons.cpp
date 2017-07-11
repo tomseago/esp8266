@@ -1,4 +1,5 @@
 #include "quickbuttons.h"
+#include "rand.h"
 
 QuickButtons::QuickButtons(LEDArtPiece& piece, LEDArtAnimation* flashLight) :
     piece(piece),
@@ -64,7 +65,7 @@ QuickButtons::loop() {
     }
 
     if (buttons[1].fell()) {
-        piece.nextAnimation();
+        piece.nextAnimation(false);
     }
 
     if (buttons[2].fell()) {
@@ -73,6 +74,8 @@ QuickButtons::loop() {
         if (piece.palette == LEDArtAnimation::LEDPalette_LAST) {
             piece.palette = (LEDArtAnimation::LEDPaletteType)0;
         }
+
+        piece.foreground = RgbColor(HslColor(((float)rand(1000))/1000.0, 0.6, 0.5));
     }
 
     if (buttons[3].fell()) {

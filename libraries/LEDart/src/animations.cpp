@@ -40,6 +40,7 @@ LAA_Sparkle::LAA_Sparkle(char* szName, uint16_t pixelCount) :
     LEDArtAnimation(szName), pixelCount(pixelCount)
 {
     loopDuration = 50;
+    maxDuration = 8000;
 
     for(int i=0; i<3; i++) {
         ppGenerations[i] = new bool[pixelCount];
@@ -260,7 +261,7 @@ LAA_UnitMapper::setAllUnitsPixelColor(LEDArtPiece& piece, uint16_t pixelIx, RgbC
 LAA_RYBRainbow::LAA_RYBRainbow(char* szName) : 
     LAA_UnitMapper(szName)
 {
-    loopDuration = 2000;
+    // loopDuration = 2000;
     // loops = false;
 
     // currentType = Unit_SpecificCols;
@@ -288,6 +289,22 @@ LAA_RYBRainbow::animate(LEDArtPiece& piece, AnimationParam p) {
     // Serial.printf("-------------\n");
 }
 
+///////////////////
+
+LAA_Line::LAA_Line(char* szName) : 
+    LAA_UnitMapper(szName)
+{
+}
+
+void
+LAA_Line::animate(LEDArtPiece& piece, AnimationParam p) {
+    currentType = (LAA_UnitMapper::UnitType)piece.unitType;
+
+    piece.strip.ClearTo(black);
+
+    setFullUnitColor(piece, p.progress * numUnits(piece), piece.foreground);
+
+}
 
 ///////////////////
 
