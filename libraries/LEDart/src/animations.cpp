@@ -1,5 +1,6 @@
 #include "animations.h"
 #include "rand.h"
+#include "nexus.h"
 
 const RgbColor red(255,0,0);
 const RgbColor yellow(255,255,0);
@@ -117,10 +118,24 @@ LAA_UnitMapper::numUnits(LEDArtPiece& piece) {
         return piece.topo.getWidth();
 
     case Unit_SpecificRows:
-        return piece.specificGeometry->height;
+        if (piece.specificGeometry) 
+        {
+            return piece.specificGeometry->height;
+        }
+        else
+        {
+            return piece.topo.getHeight();
+        }
 
     case Unit_SpecificCols:
-        return piece.specificGeometry->width;
+        if (piece.specificGeometry)
+        {
+            return piece.specificGeometry->width;
+        }
+        else
+        {
+            return piece.topo.getWidth();
+        }
     }
 
     return 0;
@@ -143,10 +158,24 @@ LAA_UnitMapper::unitSize(LEDArtPiece& piece) {
         return piece.topo.getHeight();
 
     case Unit_SpecificRows:
-        return piece.specificGeometry->width;
+        if (piece.specificGeometry)
+        {
+            return piece.specificGeometry->width;
+        }
+        else
+        {
+            return piece.topo.getWidth();
+        }
 
     case Unit_SpecificCols:
-        return piece.specificGeometry->height;
+        if (piece.specificGeometry)
+        {
+            return piece.specificGeometry->height;
+        }
+        else
+        {
+            return piece.topo.getHeight();
+        }
     }
 
     return 0;
@@ -177,14 +206,30 @@ LAA_UnitMapper::setFullUnitColor(LEDArtPiece& piece, uint16_t unitIx, RgbColor c
         break;
 
     case Unit_SpecificRows:
-        for(int16_t i=0; i<piece.topo.getWidth(); i++) {
-            piece.strip.SetPixelColor(piece.specificGeometry->Map(i, unitIx), color);
+        if (piece.specificGeometry) {
+            for(int16_t i=0; i<piece.topo.getWidth(); i++) {
+                piece.strip.SetPixelColor(piece.specificGeometry->Map(i, unitIx), color);
+            }
+        }
+        else
+        {
+            for(int16_t i=0; i<piece.topo.getWidth(); i++) {
+                piece.strip.SetPixelColor(piece.topo.Map(i, unitIx), color);
+            }            
         }
         break;
 
     case Unit_SpecificCols:
-        for(int16_t i=0; i<piece.topo.getHeight(); i++) {
-            piece.strip.SetPixelColor(piece.specificGeometry->Map(unitIx, i), color);
+        if (piece.specificGeometry) {
+            for(int16_t i=0; i<piece.topo.getHeight(); i++) {
+                piece.strip.SetPixelColor(piece.specificGeometry->Map(unitIx, i), color);
+            }
+        }
+        else
+        {
+            for(int16_t i=0; i<piece.topo.getHeight(); i++) {
+                piece.strip.SetPixelColor(piece.topo.Map(unitIx, i), color);
+            }            
         }
         break;
     }
@@ -210,11 +255,25 @@ LAA_UnitMapper::setUnitPixelColor(LEDArtPiece& piece, uint16_t unitIx, uint16_t 
         break;
 
     case Unit_SpecificRows:
-        piece.strip.SetPixelColor(piece.specificGeometry->Map(pixelIx, unitIx), color);
+        if (piece.specificGeometry)
+        {
+            piece.strip.SetPixelColor(piece.specificGeometry->Map(pixelIx, unitIx), color);
+        }
+        else
+        {
+            piece.strip.SetPixelColor(piece.topo.Map(pixelIx, unitIx), color);
+        }
         break;
 
     case Unit_SpecificCols:
-        piece.strip.SetPixelColor(piece.specificGeometry->Map(unitIx, pixelIx), color);
+        if (piece.specificGeometry)
+        {
+            piece.strip.SetPixelColor(piece.specificGeometry->Map(unitIx, pixelIx), color);
+        }
+        else
+        {
+            piece.strip.SetPixelColor(piece.topo.Map(unitIx, pixelIx), color);            
+        }
         break;
     }
 }
@@ -244,21 +303,40 @@ LAA_UnitMapper::setAllUnitsPixelColor(LEDArtPiece& piece, uint16_t pixelIx, RgbC
         break;
 
     case Unit_SpecificRows:
-        for(int16_t i=0; i<piece.topo.getHeight(); i++) {
-            piece.strip.SetPixelColor(piece.specificGeometry->Map(pixelIx, i), color);
+        if (piece.specificGeometry)
+        {
+            for(int16_t i=0; i<piece.topo.getHeight(); i++) {
+                piece.strip.SetPixelColor(piece.specificGeometry->Map(pixelIx, i), color);
+            }            
+        }
+        else
+        {
+            for(int16_t i=0; i<piece.topo.getHeight(); i++) {
+                piece.strip.SetPixelColor(piece.topo.Map(pixelIx, i), color);
+            }            
         }
         break;
 
     case Unit_SpecificCols:
-        for(int16_t i=0; i<piece.topo.getWidth(); i++) {
-            piece.strip.SetPixelColor(piece.specificGeometry->Map(i, pixelIx), color);
+        if (piece.specificGeometry)
+        {
+            for(int16_t i=0; i<piece.topo.getWidth(); i++) {
+                piece.strip.SetPixelColor(piece.specificGeometry->Map(i, pixelIx), color);
+            }            
         }
-        break;    }
+        else
+        {
+            for(int16_t i=0; i<piece.topo.getWidth(); i++) {
+                piece.strip.SetPixelColor(piece.topo.Map(i, pixelIx), color);
+            }
+        }
+        break;    
+    }
 }
 
 ///////////////////
 
-LAA_RYBRainbow::LAA_RYBRainbow(char* szName) : 
+LAA_Rainbow::LAA_Rainbow(char* szName) : 
     LAA_UnitMapper(szName)
 {
     // loopDuration = 2000;
@@ -268,15 +346,14 @@ LAA_RYBRainbow::LAA_RYBRainbow(char* szName) :
 }
 
 void
-LAA_RYBRainbow::animate(LEDArtPiece& piece, AnimationParam p) {
+LAA_Rainbow::animate(LEDArtPiece& piece, AnimationParam p) {
 
-    currentType = (LAA_UnitMapper::UnitType)piece.unitType;
+    currentType = (LAA_UnitMapper::UnitType)piece.nexus.unitType;
 
     uint16_t unitCount = numUnits(piece);
     for(uint16_t ix=0; ix<unitCount; ix++) {
         float prog = p.progress + ((float)ix / (float)unitCount);
-        setFullUnitColor(piece, ix, colorInPalette(piece.palette, prog));
-        // setFullUnitColor(piece, ix, colorInPalette(LEDPalette_RYB, prog));
+        setFullUnitColor(piece, ix, colorInPalette(piece.nexus.palette, prog));
     }
     // uint16_t pixelCount = piece.strip.PixelCount();
 
@@ -298,11 +375,11 @@ LAA_Line::LAA_Line(char* szName) :
 
 void
 LAA_Line::animate(LEDArtPiece& piece, AnimationParam p) {
-    currentType = (LAA_UnitMapper::UnitType)piece.unitType;
+    currentType = (LAA_UnitMapper::UnitType)piece.nexus.unitType;
 
     piece.strip.ClearTo(black);
 
-    setFullUnitColor(piece, p.progress * numUnits(piece), piece.foreground);
+    setFullUnitColor(piece, p.progress * numUnits(piece), piece.nexus.foreground);
 
 }
 

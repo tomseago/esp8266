@@ -46,9 +46,9 @@ public:
 };
 
 
-class LAA_RYBRainbow : public LAA_UnitMapper {
+class LAA_Rainbow : public LAA_UnitMapper {
 public:
-    LAA_RYBRainbow(char* szName);
+    LAA_Rainbow(char* szName);
 
     virtual void animate(LEDArtPiece& piece, AnimationParam p);
 };

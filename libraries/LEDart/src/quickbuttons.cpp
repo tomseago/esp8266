@@ -1,5 +1,6 @@
 #include "quickbuttons.h"
 #include "rand.h"
+#include "nexus.h"
 
 QuickButtons::QuickButtons(LEDArtPiece& piece, LEDArtAnimation* flashLight) :
     piece(piece),
@@ -69,20 +70,11 @@ QuickButtons::loop() {
     }
 
     if (buttons[2].fell()) {
-        uint8_t nextPalette = (uint8_t)piece.palette + 1;
-        piece.palette = (LEDArtAnimation::LEDPaletteType)nextPalette;
-        if (piece.palette == LEDArtAnimation::LEDPalette_LAST) {
-            piece.palette = (LEDArtAnimation::LEDPaletteType)0;
-        }
-
-        piece.foreground = RgbColor(HslColor(((float)rand(1000))/1000.0, 0.6, 0.5));
+        piece.nexus.nextPalette();
     }
 
     if (buttons[3].fell()) {
-        piece.unitType++;
-        if (piece.unitType >= 6 ) {
-            piece.unitType = 0;
-        }
+        piece.nexus.nextUnitType();
     }
 
 }

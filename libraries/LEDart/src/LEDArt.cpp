@@ -1,5 +1,6 @@
 #include "LEDArt.h"
 #include "rand.h"
+#include "nexus.h"
 
 //////
 
@@ -134,7 +135,8 @@ void AnimateStatusGlue(AnimationParam param) {
 }
 
 
-LEDArtPiece::LEDArtPiece(uint16_t pixelCount, uint16_t width, uint16_t height, uint8_t port) : 
+LEDArtPiece::LEDArtPiece(Nexus& nx, uint16_t pixelCount, uint16_t width, uint16_t height, uint8_t port) : 
+    nexus(nx),
     strip(pixelCount, port), 
     topo(width, height),
     animator(3) 
@@ -187,7 +189,9 @@ LEDArtPiece::startAnimation(LEDArtAnimation* pAnim) {
 
     pRunningAnims[pAnim->type] = pAnim;
 
-    animator.StartAnimation(pAnim->type, (float)pAnim->loopDuration * speedFactor, func);
+    animator.StartAnimation(pAnim->type, (float)pAnim->loopDuration * nexus.speedFactor, func);
+
+    nexus.currentAnim = pAnim->szName;
 
     startedAt[pAnim->type] = millis();
 }
@@ -202,35 +206,7 @@ LEDArtPiece::nextAnimation(bool randomize) {
     LEDArtAnimation* pAnim = findNextBaseAnimation(randomize);
 
     if (randomize) {
-        unitType = rand(5);
-
-        palette = (LEDArtAnimation::LEDPaletteType)rand((uint8_t)LEDArtAnimation::LEDPalette_LAST);
-
-        // Base unit is 8 bar loop. 120bpm, 4 beats = 2s = 1 bar. 8bars = 16s
-        switch(rand(6)) {
-            case 0: // 1 bar = 1/8 speed
-                speedFactor = 0.125;
-                break;
-
-            case 1: // 4 bar = 1/2 speed
-                speedFactor = 0.5;
-                break;
-
-            case 2: // 8 bar = 1.0
-                speedFactor = 1.0;
-                break;
-
-            case 3: // 16 bar = 2.0
-                speedFactor = 2.0;
-                break;
-
-            case 4: // 32 bar = 4.0
-                speedFactor = 4.0;
-                break;
-        }
-
-        // speedFactor = 1.0;
-        foreground = RgbColor(HslColor(((float)rand(1000))/1000.0, 0.6, 0.5));
+        nexus.randomizeAll();
     }
 
     startAnimation(pAnim);   
@@ -243,6 +219,8 @@ LEDArtPiece::registerAnimation(LEDArtAnimation* pAnim) {
 
     pAnim->pNext = pRegistrations[pAnim->type];
     pRegistrations[pAnim->type] = pAnim;
+
+    nexus.addAnimation(pAnim->szName);
 
     return pAnim;
 }

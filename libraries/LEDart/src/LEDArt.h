@@ -7,6 +7,7 @@
 
 class LEDArtPiece;
 class LEDArtAnimation;
+class Nexus;
 
 enum AnimationType {
     AnimationType_BASE = 0,
@@ -58,22 +59,15 @@ public:
 
 // typedef void (*LEDArtAnimation)(LEDArtPiece& piece, void* context, uint16_t *duration, bool *loops, AnimationParam p);
 
+
 class LEDArtPiece {
 public:
     NeoPixelBrightnessBus<LEDART_COLOR_FEATURE, LEDART_METHOD> strip;
     NeoTopology<LEDART_TOPO_LAYOUT> topo;
     LEDArtGeometry* specificGeometry = NULL;
+    Nexus& nexus;
 
-    //// TEMP
-    uint8_t unitType = 0;
-    LEDArtAnimation::LEDPaletteType palette = (LEDArtAnimation::LEDPaletteType)0;
-    float speedFactor = 1.0;
-    RgbColor foreground;
-    ////
-
-
-
-    LEDArtPiece(uint16_t pixelCount, uint16_t width=1, uint16_t height=1, uint8_t port=0);
+    LEDArtPiece(Nexus& nexus, uint16_t pixelCount, uint16_t width=1, uint16_t height=1, uint8_t port=0);
 
     void* registerAnimation(LEDArtAnimation* pAnim);
 
@@ -113,4 +107,3 @@ protected:
 
     LEDArtAnimation* findNextBaseAnimation(bool randomize);
 };
-
