@@ -29,18 +29,19 @@
 
 #include <FS.h>
 
-const uint16_t PixelCount = 50;
+const uint16_t PixelCount = 100;
 //const uint16_t PixelCount = 36;
 
 Nexus nx(2);
-LEDArtPiece art(nx, PixelCount, 50, 1);
-LAA_Flood flood("Flood", RgbColor(64,0,0));
+LEDArtPiece art(nx, PixelCount, 192, 20, 5);
+//LAA_Flood flood("Flood", RgbColor(64,0,0));
 LAA_Sparkle sparkle("Sparkle", PixelCount);
 LAA_Rainbow rainbow("Rainbow");
-LAA_Line line("Line");
-LAA_BoxOutline boxOutline("Box Outline");
-LAA_AllWhite allWhite("All White");
-LAA_HalfWhite halfWhite("Half White");
+//LAA_Line line("Line");
+//LAA_BoxOutline boxOutline("Box Outline");
+//LAA_AllWhite allWhite("All White");
+//LAA_HalfWhite halfWhite("Half White");
+LAA_RandoFill randoFill("Rando Fill");
 
 // PringlesGeometry pringlesGeom(7, 18);
 
@@ -62,11 +63,21 @@ void setup() {
 
 //  buttons.begin();
   // art.specificGeometry = &pringlesGeom;
-  
+  nx.unitType = 3;
+//  nx.palette = LEDArtAnimation::LEDPalette_BLUES;
+  nx.palette = LEDArtAnimation::LEDPalette_RYB;
+  nx.speedFactor = 0.25;
+  nx.maxDuration = 30000;
+
+  art.registerAnimation(&webui.statusAnim);
   art.registerAnimation(&sparkle);
   art.registerAnimation(&rainbow);
+  art.registerAnimation(&randoFill);
   art.begin();
 
+  // Start the webui animation just so we don't have to deal with it
+  // elsewhere right now
+  art.startAnimation(&webui.statusAnim);
 
   // What's on the disk daddy-o?
   // Presume that SPIFFS.begin() has been called already...

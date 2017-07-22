@@ -6,11 +6,13 @@
 
 const uint8_t LEDArtAnimation::paletteSizes[] = {
     2,  // RB
-    3,  // RGB
+    // 3,  // RGB
     12, // RYB
-    3,
-    5,
-
+    3,  // WHITE_BLACK
+    // 5,  // MARDI_GRAS
+    5,  // BLUES
+    5,  // PINKS
+    4,  // REDS
 };
 
 const RgbColor Palette_RB[] = {
@@ -59,12 +61,39 @@ const RgbColor Palette_MARDI_GRAS[] = {
     RgbColor(45, 6, 56),
 };
 
+const RgbColor Palette_BLUES[] = {
+    RgbColor(32, 74, 255),
+    RgbColor(0, 23, 123),
+    RgbColor(3, 19, 21),
+    RgbColor(21, 18, 33),
+    RgbColor(1, 1, 5),
+};
+
+
+const RgbColor Palette_PINKS[] = {
+    RgbColor(255, 59, 51),
+    RgbColor(191, 43, 87),
+    RgbColor(127, 48, 27),
+    RgbColor(64, 15, 13),
+    RgbColor(229, 92, 87),
+};
+
+const RgbColor Palette_REDS[] = {
+    RgbColor(255, 0, 0),
+    RgbColor(225, 32, 5),
+    RgbColor(35, 0, 0),
+    RgbColor(0, 0, 0),
+};
+
 const RgbColor* LEDArtAnimation::paletteColors[] = {
     Palette_RB,
-    Palette_RGB,
+    // Palette_RGB,
     Palette_RYB,
     Palette_WHITE_BLACK,
-    Palette_MARDI_GRAS
+    // Palette_MARDI_GRAS,
+    Palette_BLUES,
+    Palette_PINKS,
+    Palette_REDS,
 };
 
 // const uint8_t LEDArtAnimation::rybRainbowColorsCount = 3;
@@ -135,12 +164,13 @@ void AnimateStatusGlue(AnimationParam param) {
 }
 
 
-LEDArtPiece::LEDArtPiece(Nexus& nx, uint16_t pixelCount, uint16_t width, uint16_t height, uint8_t port) : 
+LEDArtPiece::LEDArtPiece(Nexus& nx, uint16_t pixelCount, uint8_t maxBrightness, uint16_t width, uint16_t height, uint8_t port) : 
     nexus(nx),
-    strip(pixelCount, port), 
+    strip(pixelCount, port),
     topo(width, height),
-    animator(3) 
+    animator(3)
 {
+    nx.maxBrightness = (float)maxBrightness;
     pSingleton = this;
 }
 
@@ -172,7 +202,7 @@ LEDArtPiece::startAnimation(LEDArtAnimation* pAnim) {
     }
 
     // strip.SetBrightness(maxBrightness * pAnim->brightness);
-    uint8_t b = maxBrightness * pAnim->brightness;
+    uint8_t b = nexus.maxBrightness * pAnim->brightness;
     Serial.print("Set Brightness to "); Serial.print(b); Serial.print("\n");
     strip.SetBrightness(b);
 
@@ -206,7 +236,7 @@ LEDArtPiece::nextAnimation(bool randomize) {
     LEDArtAnimation* pAnim = findNextBaseAnimation(randomize);
 
     if (randomize) {
-        nexus.randomizeAll();
+        nexus.randomizeAll((uint32_t)this);
     }
 
     startAnimation(pAnim);   
@@ -234,15 +264,25 @@ LEDArtPiece::animateChannel(AnimationParam param, AnimationType type) {
         return;
     }
 
+    // Structs get copied right? I sure hope so...
+    if (nexus.reverse) {
+        param.progress = 1.0 - param.progress;
+    }
+
     // We believe there is something running, so let it do it's thing
     pCur->animate(*this, param);
 
 
     // Has it hit max time?
+    // All animations are bound by their declared maxDuration.
+    // Base and Overlay are also bound by the system level 
+    // maxDuration (Status ones are not).
     uint32_t elapsed = millis() - startedAt[type];
     if ((pCur->maxDuration > 0 && elapsed >= pCur->maxDuration) ||
-        (elapsed > maxDuration) ) {
+        (nexus.maxDuration > 0 && type != AnimationType_STATUS && elapsed > nexus.maxDuration) ) {
         // It must stop!
+        Serial.printf("StopAnimation(%d)\n", type);
+
         animator.StopAnimation(type);
 
         // If it is base, we try to start a next one though

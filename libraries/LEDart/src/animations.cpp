@@ -455,3 +455,50 @@ LAA_HalfWhite::animate(LEDArtPiece& piece, AnimationParam p) {
     }
 
 }
+
+
+///////////////////
+
+LAA_RandoFill::LAA_RandoFill(char* szName) : 
+    LAA_UnitMapper(szName),
+    unitOrder(NULL)
+{
+    type = AnimationType_BASE;
+}
+
+void
+LAA_RandoFill::animate(LEDArtPiece& piece, AnimationParam p) 
+{
+    if (p.state == AnimationState_Started || !unitOrder || calculatedFor != piece.nexus.unitType) {
+
+        calculateOrder(piece);
+    }
+
+    uint16_t nUnits = numUnits(piece);
+    uint16_t floodedDistance = nUnits * p.progress;
+
+    for(uint16_t i=0; i< nUnits; i++) { 
+        setFullUnitColor(piece, unitOrder[i], (i < floodedDistance) ? piece.nexus.foreground : piece.nexus.background);
+    }
+}
+
+void
+LAA_RandoFill::calculateOrder(LEDArtPiece& piece) 
+{
+
+    currentType = (LAA_UnitMapper::UnitType)piece.nexus.unitType;
+
+    // For the moment the calculated order is identical to the native order
+    if (unitOrder) {
+        delete unitOrder;
+    }
+
+    uint16_t nUnits = numUnits(piece);
+    unitOrder = new uint16_t[nUnits];
+    for(uint16_t unitIx=0; unitIx < nUnits; unitIx++)
+    {
+        unitOrder[unitIx] = unitIx;
+    }
+
+    calculatedFor = (uint8_t)currentType;
+}

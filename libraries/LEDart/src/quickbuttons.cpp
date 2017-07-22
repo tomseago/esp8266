@@ -70,11 +70,11 @@ QuickButtons::loop() {
     }
 
     if (buttons[2].fell()) {
-        piece.nexus.nextPalette();
+        piece.nexus.nextPalette((uint32_t)this);
     }
 
     if (buttons[3].fell()) {
-        piece.nexus.nextUnitType();
+        piece.nexus.nextUnitType((uint32_t)this);
     }
 
 }

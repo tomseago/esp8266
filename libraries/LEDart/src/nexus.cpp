@@ -26,14 +26,16 @@ Nexus::animName(uint8_t index)
 }
 
 void
-Nexus::registerListener(NexusChangeListener* listener)
+Nexus::addListener(NexusListener* listener)
 {
+    if (!listener) return;
 
+    listeners.push_back(listener);
 }
 
 
 void
-Nexus::randomizeAll()
+Nexus::randomizeAll(uint32_t source)
 {
     unitType = rand(5);
 
@@ -64,11 +66,15 @@ Nexus::randomizeAll()
 
     // speedFactor = 1.0;
     foreground = RgbColor(HslColor(((float)rand(1000))/1000.0, 0.6, 0.5));
+    background = RgbColor(HslColor(((float)rand(1000))/1000.0, 0.3, 0.2));
+
+    // Even steven on reversie
+    reverse = rand(10) < 5;
 
 }
 
 void
-Nexus::nextUnitType()
+Nexus::nextUnitType(uint32_t source)
 {
     unitType++;
     if (unitType >= 6 ) {
@@ -77,7 +83,7 @@ Nexus::nextUnitType()
 }
 
 void
-Nexus::nextPalette()
+Nexus::nextPalette(uint32_t source)
 {
     uint8_t nextPalette = (uint8_t)palette + 1;
     palette = (LEDArtAnimation::LEDPaletteType)nextPalette;
@@ -85,3 +91,23 @@ Nexus::nextPalette()
         palette = (LEDArtAnimation::LEDPaletteType)0;
     }
 }
+
+void 
+Nexus::sendValueUpdate(NexusListener::NexusValueType which, uint32_t source)
+{
+    for(NexusListener* listener : listeners) 
+    {
+        listener->nexusValueUpdate(which, source);  
+    } 
+
+}
+
+void 
+Nexus::sendUserAnimationRequest(char* szName, uint32_t source)
+{
+    for(NexusListener* listener : listeners) 
+    {
+        listener->nexusUserAnimationRequest(szName, source);  
+    } 
+}
+

@@ -32,6 +32,8 @@ public:
         Unit_Cols,
         Unit_SpecificCols,
         Unit_SpecificRows,
+
+        Unit_Last,
     };
 
     UnitType currentType = Unit_Single;
@@ -80,6 +82,17 @@ public:
 class LAA_HalfWhite : public LAA_UnitMapper {
 public:
     LAA_HalfWhite(char* szName);
+
+    virtual void animate(LEDArtPiece& piece, AnimationParam p);
+};
+
+class LAA_RandoFill : public LAA_UnitMapper {
+    uint8_t calculatedFor = (uint8_t)Unit_Last;
+    uint16_t* unitOrder;
+
+    void calculateOrder(LEDArtPiece& piece);
+public:
+    LAA_RandoFill(char* szName);
 
     virtual void animate(LEDArtPiece& piece, AnimationParam p);
 };

@@ -9,9 +9,25 @@
 // #include <string>
 
 // using namespace std;
+WebUI::StatusAnim::StatusAnim(WebUI& parent) : 
+    LEDArtAnimation("WebUIStatus"),
+    parent(parent)
+{
+    type = AnimationType_STATUS;
+    maxDuration = 0;
+}
+
+void 
+WebUI::StatusAnim::animate(LEDArtPiece& piece, AnimationParam p)
+{
+    if (parent.showingColorChooser) {
+        piece.strip.ClearTo(parent.chooserColor);
+    }
+}
+
 
 WebUI::WebUI(Nexus& nexus) :
-    nexus(nexus)
+    statusAnim(*this), nexus(nexus), chooserColor(255,128,0)
 {
 
 }
@@ -191,7 +207,48 @@ WebUI::h_socket(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEvent
                     case 'P': // Palette
                         setPalette(data, len);
                         break;
+
+                    case 'B': // Brightness
+                        setBrightness(data, len);
+                        break;
+
+                    case 'D': // Max Duration (in seconds)
+                        setDuration(data, len);
+                        break;
+
+                    case 'S': // Speed factor as integer in cents
+                        setSpeedFactor(data, len);
+                        break;
+
+                    case 'R': // Reverse state
+                        setReverse(data, len);
+                        break;
                 }
+                break;
+
+            case 'C':
+                switch(data[1]) {
+                    case '+': // On
+                        showingColorChooser = true;
+                        break;
+
+                    case '-': // Off
+                        showingColorChooser = false;
+                        break;
+
+                    case '#':
+                        setChooserColor(data, len);
+                        break;
+
+                    case 'F': // Foreground
+                        setNexusColor(true, data, len);
+                        break;
+
+                    case 'B': // Background
+                        setNexusColor(false, data, len);
+                        break;
+                }
+                break;
           }
     }
       ////////////////////
@@ -353,4 +410,75 @@ WebUI::setPalette(uint8_t *data, size_t len)
     }
 
     nexus.palette = (LEDArtAnimation::LEDPaletteType)t;  
+}
+
+void
+WebUI::setChooserColor(uint8_t *data, size_t len)
+{
+    HtmlColor color;
+    uint8_t result = color.Parse<HtmlShortColorNames>((const char*)&data[1], len-1);
+
+    chooserColor = RgbColor(color);
+}
+
+void
+WebUI::setNexusColor(bool isForeground, uint8_t *data, size_t len)
+{
+    HtmlColor color;
+    uint8_t result = color.Parse<HtmlShortColorNames>((const char*)&data[1], len-1);
+
+    if (isForeground)
+    {
+        nexus.foreground = RgbColor(color);
+    }
+    else
+    {
+        nexus.background = RgbColor(color);
+    }
+}
+
+void
+WebUI::setBrightness(uint8_t *data, size_t len)
+{
+    if (len < 3) {
+        return;
+    }
+
+    uint8_t t = atoi((const char *)&data[2]);
+
+    nexus.maxBrightness = t;
+}
+
+void
+WebUI::setDuration(uint8_t *data, size_t len)
+{
+    if (len < 3) {
+        return;
+    }
+
+    uint32_t t = atoi((const char *)&data[2]);
+
+    nexus.maxDuration = t * 1000;
+}
+
+void
+WebUI::setSpeedFactor(uint8_t *data, size_t len)
+{
+    if (len < 3) {
+        return;
+    }
+
+    float t = (float)atoi((const char *)&data[2]);
+
+    nexus.speedFactor = t / 100.0f;
+}
+
+void
+WebUI::setReverse(uint8_t *data, size_t len)
+{
+    if (len < 3) {
+        return;
+    }
+
+    nexus.reverse = (data[3] == '+');
 }

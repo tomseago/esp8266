@@ -44,10 +44,13 @@ public:
 
     enum LEDPaletteType {
         LEDPalette_RB = 0,
-        LEDPalette_RGB,
+        // LEDPalette_RGB,
         LEDPalette_RYB, 
         LEDPalette_WHITE_BLACK, 
-        LEDPalette_MARDI_GRAS, 
+        // LEDPalette_MARDI_GRAS, 
+        LEDPalette_BLUES,
+        LEDPalette_PINKS,
+        LEDPalette_REDS,
         LEDPalette_LAST      
     };
 
@@ -67,7 +70,7 @@ public:
     LEDArtGeometry* specificGeometry = NULL;
     Nexus& nexus;
 
-    LEDArtPiece(Nexus& nexus, uint16_t pixelCount, uint16_t width=1, uint16_t height=1, uint8_t port=0);
+    LEDArtPiece(Nexus& nexus, uint16_t pixelCount, uint8_t maxBrightness, uint16_t width=1, uint16_t height=1, uint8_t port=0);
 
     void* registerAnimation(LEDArtAnimation* pAnim);
 
@@ -99,9 +102,6 @@ protected:
     LEDArtAnimation* pRunningAnims[3];
 
     uint32_t startedAt[3];
-
-    uint32_t maxDuration = 128000;
-    float maxBrightness = 180; // This has a range of 0 to 255, unlike brightness elsewhere which is 0.0 to 1.0
 
     NeoPixelAnimator animator;
 
