@@ -1,6 +1,7 @@
 #pragma once
 
 #include "LEDArt_config.h"
+#include "nexus_listener.h"
 
 #include <NeoPixelBrightnessBus.h>
 #include <NeoPixelAnimator.h>
@@ -31,6 +32,7 @@ public:
     uint16_t maxDuration = 0;
     bool loops = true;
     bool isEnabled = true;
+    bool ignoreSpeedFactor = false;
     AnimationType type = AnimationType_BASE;
 
     float brightness = 1.0;
@@ -63,7 +65,7 @@ public:
 // typedef void (*LEDArtAnimation)(LEDArtPiece& piece, void* context, uint16_t *duration, bool *loops, AnimationParam p);
 
 
-class LEDArtPiece {
+class LEDArtPiece : public NexusListener {
 public:
     NeoPixelBrightnessBus<LEDART_COLOR_FEATURE, LEDART_METHOD> strip;
     NeoTopology<LEDART_TOPO_LAYOUT> topo;
@@ -77,7 +79,7 @@ public:
     virtual void begin();
     virtual void loop();
 
-    virtual void startAnimation(LEDArtAnimation* pAnim);
+    virtual void startAnimation(LEDArtAnimation* pAnim, bool isLoop);
     void stopAnimation(AnimationType type);
 
     void nextAnimation(bool randomize);
@@ -85,6 +87,11 @@ public:
 
     // These are not for general use
     void animateChannel(AnimationParam param, AnimationType type);
+
+    void nexusValueUpdate(NexusValueType which, uint32_t source);
+
+    // Can pass NULL as szName to ask for a random selection
+    void nexusUserAnimationRequest(char* szName, bool randomize, uint32_t source);
 
 protected:
     // typedef struct RegistrationNode {

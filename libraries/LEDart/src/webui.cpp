@@ -376,7 +376,13 @@ WebUI::setAnimation(uint8_t *data, size_t len)
         return;
     }
 
+    bool randomize = false;
+    if (data[2]=='+') {
+        randomize = true;
+    }
 
+    char* szName = (len==3) ? NULL : (char*)&data[3];
+    nexus.sendUserAnimationRequest(szName, randomize, (uint32_t)this);
 }
 
 void
@@ -425,7 +431,7 @@ void
 WebUI::setNexusColor(bool isForeground, uint8_t *data, size_t len)
 {
     HtmlColor color;
-    uint8_t result = color.Parse<HtmlShortColorNames>((const char*)&data[1], len-1);
+    uint8_t result = color.Parse<HtmlShortColorNames>((const char*)&data[2], len-1);
 
     if (isForeground)
     {
@@ -480,5 +486,5 @@ WebUI::setReverse(uint8_t *data, size_t len)
         return;
     }
 
-    nexus.reverse = (data[3] == '+');
+    nexus.reverse = (data[2] == '+');
 }

@@ -183,7 +183,7 @@ LEDArtPiece::begin() {
 
     // Start the first base animation
     LEDArtAnimation* pAnim = findNextBaseAnimation(true);
-    startAnimation(pAnim);
+    startAnimation(pAnim, false);
 }
 
 
@@ -195,7 +195,7 @@ LEDArtPiece::loop() {
 
 
 void
-LEDArtPiece::startAnimation(LEDArtAnimation* pAnim) {
+LEDArtPiece::startAnimation(LEDArtAnimation* pAnim, bool isLoop) {
 
     if (!pAnim) {
         return;
@@ -219,11 +219,14 @@ LEDArtPiece::startAnimation(LEDArtAnimation* pAnim) {
 
     pRunningAnims[pAnim->type] = pAnim;
 
-    animator.StartAnimation(pAnim->type, (float)pAnim->loopDuration * nexus.speedFactor, func);
+    uint16_t duration = (pAnim->ignoreSpeedFactor) ? pAnim->loopDuration : (float)pAnim->loopDuration * nexus.speedFactor;
+    animator.StartAnimation(pAnim->type, duration, func);
 
     nexus.currentAnim = pAnim->szName;
 
-    startedAt[pAnim->type] = millis();
+    if (!isLoop) {
+        startedAt[pAnim->type] = millis();
+    }
 }
 
 void 
@@ -239,7 +242,7 @@ LEDArtPiece::nextAnimation(bool randomize) {
         nexus.randomizeAll((uint32_t)this);
     }
 
-    startAnimation(pAnim);   
+    startAnimation(pAnim, false);   
 }
 
 void* 
@@ -297,7 +300,8 @@ LEDArtPiece::animateChannel(AnimationParam param, AnimationType type) {
     if (param.state == AnimationState_Completed) {
         if (pCur->loops) {
             // Restart it - woo hoo!
-            animator.RestartAnimation(type);
+            startAnimation(pRunningAnims[type], true);
+            // animator.RestartAnimation(type);
         } else if (type == AnimationType_BASE) {
             // Only base will automatically move to a new animation
 
@@ -345,4 +349,37 @@ LEDArtPiece::findNextBaseAnimation(bool randomize)
     // Oops! We didn't find a "next", but because we want to always have 
     // something, just return the current again...
     return pCur;
+}
+
+void
+LEDArtPiece::nexusValueUpdate(NexusValueType which, uint32_t source) 
+{
+
+}
+
+// Can pass NULL as szName to ask for a random selection
+void
+LEDArtPiece::nexusUserAnimationRequest(char* szName, bool randomize, uint32_t source)
+{
+    // Just do something else
+    if (!szName)
+    {
+        nextAnimation(randomize);
+        return;
+    }
+
+    // Try to find something specific to do
+    LEDArtAnimation* pCursor = pRegistrations[AnimationType_BASE];
+
+    while(pCursor) {
+        if (strcmp(pCursor->szName, szName) == 0)
+        {
+            // Found it! Start it!
+            startAnimation(pCursor, false);
+            return;
+        }
+        pCursor = pCursor->pNext;
+    }
+
+    // Else, did not find. Tell someone??
 }

@@ -12,12 +12,20 @@ const socket = new WebSocket(config.socketPath);
 // Connection opened
 socket.addEventListener('open', function (event) {
     log("Socket Open");
-    socket.send('Hello Server!');
+    send('Hello Server!');
+    getAnims();
 });
 
 // Listen for messages
 socket.addEventListener('message', function (event) {
-    log("From Server: " + event.data);
+    var msg = event.data;
+
+    log("<---RECV: '" + msg + "'");
+
+    var parts = msg.split(":");
+    if (parts && parts.length > 0) {
+        handleMessageParts(parts);
+    }
 });
 
 socket.addEventListener('error', function(event) {
@@ -28,19 +36,58 @@ socket.addEventListener('close', function(event) {
     log("Socket closed");
 });
 
+function send(msg) {
+    if (socket.readyState != WebSocket.OPEN) {
+        alert("Socket not open");
+        return;
+    }
 
+    // Seems ok I guess??
+    log("--->SEND: '"+msg+"'");
+    socket.send(msg);
+}
+
+
+function handleMessageParts(parts) {
+    if (parts[0]=="ANIMS") {
+        handleAnimsList(parts[1].split(";"));
+        return;
+    }
+}
+
+function handleAnimsList(list) {
+    log("Anim list = "+list);
+    if (!list || list.length == 0) {
+        return;
+    }
+
+    var el = $("#animButtons");
+    el.empty();
+
+    list.forEach(function(name) {
+        log("Adding animation: '"+name+"'");
+        el.append("<button onClick='requestAnim(\""+name+"\");'>"+name+"</button>");
+    });
+}
+
+function requestNextAnim(randomize) {
+    send("SA"+ (randomize ? "+" : "-"));
+}
+
+function requestAnim(name) {
+    send("SA-"+name);
+}
 
 function getAnims() {
-    log("Can haz animations?");
-    socket.send("GA");
+    send("GA");
 }
 
 function getPalettes() {
-    socket.send("GP");
+    send("GP");
 }
 
 function getState() {
-    socket.send("GX");
+    send("GX");
 }
 
 function setUnit() {
@@ -50,7 +97,7 @@ function setUnit() {
         return;
     }
 
-    socket.send("SU"+t);
+    send("SU"+t);
 }
 
 function setPalette() {
@@ -60,7 +107,7 @@ function setPalette() {
         return;
     }
 
-    socket.send("SP"+t);
+    send("SP"+t);
 }
 
 function setAnim() {
@@ -70,27 +117,35 @@ function setAnim() {
         return;
     }
 
-    socket.send("SA"+t);
+    send("SA"+t);
 }
 
 /////////
 
 function setUnitType(num) {
-    socket.send("SU"+num);    
+    send("SU"+num);    
 }
 
 function setPaletteNum(num) {
-    socket.send("SP"+num);    
+    send("SP"+num);    
 }
 
-function setBrightness() {
-    var t = $("#brightnessToSet").val().trim();
-    if (!t) {
-        alert("Nothing to set");
-        return;
+function setBrightness(val) {
+    if (typeof val == "undefined")
+    {
+        var t = $("#brightnessToSet").val().trim();
+        if (!t) {
+            alert("Nothing to set");
+            return;
+        }
+    }
+    else
+    {
+        var t = ""+val;
+        $("#brightnessToSet").val(t);
     }
 
-    socket.send("SB"+t);
+    send("SB"+t);
 }
 
 
@@ -101,7 +156,7 @@ function setDuration() {
         return;
     }
 
-    socket.send("SD"+t);
+    send("SD"+t);
 }
 
 function setSpeedFactor() {
@@ -113,25 +168,25 @@ function setSpeedFactor() {
 
     var cents = parseInt(t * 100.0);
 
-    socket.send("SF"+cents);
+    send("SS"+cents);
 }
 
 
 function setReverse(shouldReverse) {
-    socket.send("SR"+(shouldReverse?"+":"-"));
+    send("SR"+(shouldReverse?"+":"-"));
 }
 
 function showColorChooser(shouldShow) {
     if (shouldShow) {
-        socket.send("C+");
+        send("C+");
     } else {
-        socket.send("C-");
+        send("C-");
     }
 }
 
 function setColorChooserColor(val) {
     // log("Setting color "+val);
-    socket.send("C"+val);
+    send("C"+val);
 }
 
 function setNexusColor(isForeground) {
@@ -139,7 +194,7 @@ function setNexusColor(isForeground) {
     var color = tinycolor(val);
     var hex = color.toHexString();
 
-    socket.send("C"+(isForeground?"F":"B") + val);
+    send("C"+(isForeground?"F":"B") + val);
 }
 
 function updateColor() {

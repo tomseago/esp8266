@@ -22,6 +22,19 @@ public:
     virtual void animate(LEDArtPiece& piece, AnimationParam p);
 };
 
+class LAA_Sparkle2 : public LEDArtAnimation {
+    uint16_t pixelCount;
+    float* absStartProgress;
+    float pixelsUsed;
+
+    float loopBase = 0.0f; // Base absolute progress of our current loop
+
+public:
+    LAA_Sparkle2(char* szName, uint16_t pixelCount);
+
+    virtual void animate(LEDArtPiece& piece, AnimationParam p);
+};
+
 
 class LAA_UnitMapper : public LEDArtAnimation {
 public:

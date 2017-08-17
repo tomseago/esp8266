@@ -1,25 +1,4 @@
 #include <ESP8266WiFi.h>
-//#include <ESP8266WiFiAP.h>
-//#include <ESP8266WiFiGeneric.h>
-//#include <ESP8266WiFiMulti.h>
-//#include <ESP8266WiFiScan.h>
-//#include <ESP8266WiFiSTA.h>
-//#include <ESP8266WiFiType.h>
-//#include <WiFiClient.h>
-//#include <WiFiClientSecure.h>
-//#include <WiFiServer.h>
-//#include <WiFiUdp.h>
-
-//#include <StandardCplusplus.h>
-//#include <serstream>
-//#include <string>
-//#include <vector>
-//#include <iterator>
-
-
-
-//#include <WiFi.h>
-
 #include <ESPAsyncWebServer.h>
 
 #include <LEDArt.h>
@@ -35,7 +14,7 @@ const uint16_t PixelCount = 100;
 Nexus nx(2);
 LEDArtPiece art(nx, PixelCount, 192, 20, 5);
 //LAA_Flood flood("Flood", RgbColor(64,0,0));
-LAA_Sparkle sparkle("Sparkle", PixelCount);
+LAA_Sparkle2 sparkle("Sparkle", PixelCount);
 LAA_Rainbow rainbow("Rainbow");
 //LAA_Line line("Line");
 //LAA_BoxOutline boxOutline("Box Outline");
@@ -66,29 +45,20 @@ void setup() {
   nx.unitType = 3;
 //  nx.palette = LEDArtAnimation::LEDPalette_BLUES;
   nx.palette = LEDArtAnimation::LEDPalette_RYB;
-  nx.speedFactor = 0.25;
-  nx.maxDuration = 30000;
+//  nx.speedFactor = 0.25;
+  nx.maxDuration = 300000;
 
   art.registerAnimation(&webui.statusAnim);
   art.registerAnimation(&sparkle);
-  art.registerAnimation(&rainbow);
   art.registerAnimation(&randoFill);
+  art.registerAnimation(&rainbow);
   art.begin();
+
+  nx.addListener(&art);
 
   // Start the webui animation just so we don't have to deal with it
   // elsewhere right now
-  art.startAnimation(&webui.statusAnim);
-
-  // What's on the disk daddy-o?
-  // Presume that SPIFFS.begin() has been called already...
-  Serial.println("Files???????");
-  Dir dir = SPIFFS.openDir("/");
-  while (dir.next()) {
-    Serial.print(dir.fileName());
-    File f = dir.openFile("r");
-    Serial.println(f.size());
-  }  
-  Serial.println("------ That's it!");
+  art.startAnimation(&webui.statusAnim, false);
 }
 
 void loop() {

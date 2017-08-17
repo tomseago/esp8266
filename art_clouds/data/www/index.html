@@ -11,7 +11,17 @@
 </head>
 <body>
     <div>
+        Start:
+        <button onClick="requestNextAnim(false);">Next</button>
+        <button onClick="requestNextAnim(true);">RANDOM</button>
+        <span id="animButtons"></span>
+    </div>
+
+    <div>
         <input type="text" id="brightnessToSet" value="192"/><button onClick="setBrightness();">Set Brightness</button>
+        <button onClick="setBrightness(255);">Max</button>    
+        <button onClick="setBrightness(192);">Mid</button>    
+        <button onClick="setBrightness(0);">Off</button>    
     </div>
 
     <div>

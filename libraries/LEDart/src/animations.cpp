@@ -93,6 +93,91 @@ LAA_Sparkle::animate(LEDArtPiece& piece, AnimationParam p) {
     }
 }
 
+/////////
+
+LAA_Sparkle2::LAA_Sparkle2(char* szName, uint16_t pixelCount) : 
+    LEDArtAnimation(szName), pixelCount(pixelCount)
+{
+    loopDuration = 1000;
+    ignoreSpeedFactor = true;
+    maxDuration = 8000;
+
+    absStartProgress = new float[pixelCount];
+    // for(int i=0; i<3; i++) {
+    //     ppGenerations[i] = new bool[pixelCount];
+
+    //     for(int j=0; j<pixelCount; j++) {
+    //         ppGenerations[i][j] = pixelCount + 1;
+    //     }
+    // }
+}
+
+const float SPARKLE2_L_MAX = 0.5;
+const float SPARKLE2_L_1 = 0.2;
+const float SPARKLE2_L_2 = 0.1;
+
+void
+LAA_Sparkle2::animate(LEDArtPiece& piece, AnimationParam p) {
+    if (p.state == AnimationState_Started) {
+        loopBase += 1.0f;
+    }
+
+    // Normalize progress by removing the speedFactor from it
+
+    float absProgress = loopBase + p.progress;
+
+    HslColor black(0, 0, 0);
+    HslColor color;
+    // X pixels per second (because our normalized loop rate
+    // is one per second)
+    float pixelsAvailable = absProgress * 100.0f;
+
+    int offset = rand(pixelCount);
+
+    for(int ix=0; ix<pixelCount; ix++) {
+
+        int pix = ix + offset;
+        if (pix >= pixelCount) {
+            pix -= pixelCount;
+        }
+
+        // These are the rules for pixels
+        // 0-50ms Really bright
+
+        float pixelAge = absProgress - absStartProgress[pix];
+
+        if (pixelAge > 0.200) {
+            // It has a chance to come back to life
+            if (rand(1000) < 50) {
+                // But have we exceeded the pixel rate?
+                if (pixelsAvailable - pixelsUsed > 0) {
+                    // Nope! do it!
+                    absStartProgress[pix] = absProgress;
+                    pixelAge = 0;
+
+                    pixelsUsed += 1.0f;
+                }
+            }
+        }
+
+        if (pixelAge < 0.020) {
+            // MAX to 1
+            // color = HslColor(0.0, 0.0, SPARKLE2_L_MAX - (p.progress * (SPARKLE2_L_MAX - SPARKLE2_L_1)));
+            color = HslColor(0.0, 0.0, SPARKLE2_L_MAX - (p.progress * (SPARKLE2_L_MAX - SPARKLE2_L_2)));
+        // } else if (pixelAge < 0.010) {
+        //     // 1 to 2
+        //     color = HslColor(0.0, 0.0, SPARKLE2_L_1 - (p.progress * (SPARKLE2_L_1 - SPARKLE2_L_2)));
+        // } else if (pixelAge < 0.020) {
+        //     // 2 to 0
+        //     color = HslColor(0.0, 0.0, SPARKLE2_L_2 - (p.progress * (SPARKLE2_L_2)));
+        } else {
+            // no color
+            color = black;
+        }
+        piece.strip.SetPixelColor(pix, color);
+    }
+}
+
 
 //////////
 

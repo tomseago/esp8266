@@ -103,11 +103,11 @@ Nexus::sendValueUpdate(NexusListener::NexusValueType which, uint32_t source)
 }
 
 void 
-Nexus::sendUserAnimationRequest(char* szName, uint32_t source)
+Nexus::sendUserAnimationRequest(char* szName, bool randomize, uint32_t source)
 {
     for(NexusListener* listener : listeners) 
     {
-        listener->nexusUserAnimationRequest(szName, source);  
+        listener->nexusUserAnimationRequest(szName, randomize, source);  
     } 
 }
 

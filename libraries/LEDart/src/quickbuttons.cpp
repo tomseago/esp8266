@@ -60,7 +60,7 @@ QuickButtons::loop() {
         if (flashLightOn) {
             piece.stopAnimation(AnimationType_OVERLAY);
         } else {
-            piece.startAnimation(flashLight);
+            piece.startAnimation(flashLight, false);
         }
         flashLightOn = !flashLightOn;
     }
