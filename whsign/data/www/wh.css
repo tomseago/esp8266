@@ -1,0 +1,46 @@
+body {
+    font-family: "Helvetica", "Helvetica-Neue", sans-serif;
+    background: #1c1c1c;
+    color: #808080;
+}
+
+button {
+    background: #ffffd7;
+    color: #626262;
+}
+
+#main_buttons {
+    text-align:center;
+}
+
+#main_buttons button {
+    /*padding: 1em 3em 1em 3em;*/
+    padding: 0.5em;
+    width: 90%;
+    font-size: 30px;
+}
+
+#log {
+    white-space: pre-wrap;
+    background-color: #050505;
+    color: #00f000;
+    padding: 5px;
+    font-size: 0.8em;
+    line-height: 1.4em;
+    font-family: courier, monospace;
+}
+
+#colorString {
+    padding: 1em;
+    font-family: courier, monospace;    
+}
+
+.sp-picker-container {
+    width: 300px;
+}
+
+#stateNumber {
+    font-size: 2em;
+    padding: 0.3em;
+    font-family: monospace;
+}
