@@ -4,6 +4,10 @@
 #include <bstrlib.h>
 #include "whsign.h"
 
+extern "C" {
+#include "user_interface.h"
+}
+
 
 WebUI::WebUI(WHSign& sign) :
     sign(sign)
@@ -27,6 +31,8 @@ WebUI::begin(){
     // attach class request handler
     ws.on("/hello", HTTP_ANY, std::bind(&WebUI::h_hello, this, std::placeholders::_1));
     ws.on("/config.js", HTTP_ANY, std::bind(&WebUI::h_config_js, this, std::placeholders::_1));
+
+    ws.on("/reset", HTTP_ANY, std::bind(&WebUI::h_hello, this, std::placeholders::_1));
 
     ws.serveStatic("/", SPIFFS, "/www/").setDefaultFile("index.html");
 
@@ -102,6 +108,26 @@ WebUI::h_config_js(AsyncWebServerRequest *req)
 }
 
 void 
+WebUI::h_reset(AsyncWebServerRequest *req)
+{
+    AsyncResponseStream *response = req->beginResponseStream("text/html");
+
+    response->printf("<!DOCTYPE html><html><head><title>Webpage at %s</title></head><body>", req->url().c_str());
+
+    response->print("<h2>Reset</h2> ");
+
+    response->print("<a href='/'>Back to root</a>");
+
+    response->print("</body></html>");
+
+    // Send it
+    req->send(response);
+
+    // Tell sign to reset
+    sign.scheduleReset();
+}
+
+void 
 WebUI::h_404(AsyncWebServerRequest *req)
 {
     AsyncResponseStream *response = req->beginResponseStream("text/html");
@@ -154,6 +180,12 @@ WebUI::h_socket(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEvent
 
       ////////////////////
       // Handle the specific message
+
+      if (len==5) {
+        if (strcmp((const char*)data, "RESET") == 0) {
+            system_restart();
+        }
+      }
 
       if (len>=2) {
             switch (data[0]) {
@@ -279,6 +311,13 @@ WebUI::broadcastState(uint16_t state)
 {
     // Super simple, send a 2 byte binary message to everyone
     socket.binaryAll((uint8_t*)&state, 2);
+}
+
+void
+WebUI::broadcastReset()
+{
+    // Super simple, send a 2 byte binary message to everyone
+    socket.textAll("RESET");
 }
 
 // void

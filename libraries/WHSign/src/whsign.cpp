@@ -1,11 +1,9 @@
 #import "whsign.h"
 #include <functional>
 
-#ifdef ESP8266
 extern "C" {
 #include "user_interface.h"
 }
-#endif
 
 
 // static const uint8_t D0   = 16;
@@ -116,6 +114,14 @@ int seconds = 0;
 void
 WHSign::loop()
 {
+    // Check for reset condition
+    if (resetAt != 0 && resetAt < millis()) {
+        resetAt = 0;
+        system_restart();
+        return;
+    }
+
+
     // Every 1 second at a minimum update the state
     int m = millis() / 1000;
     if (m>seconds) {
@@ -143,7 +149,7 @@ WHSign::loop()
     if (stateDirty) {
         Serial.printf("State=%04x\n", channelState);
 
-        if (configureTries < 10) {
+        if (configureTries < 50) {
             configurePins();
         }
 
@@ -185,6 +191,15 @@ WHSign::toggleChannel(uint8_t channel)
     channelState ^= mask;
 
     stateDirty = true;
+}
+
+void
+WHSign::scheduleReset()
+{
+    resetAt = millis() + 500;
+
+    // Tell any client to reset
+    ui.broadcastReset();
 }
 
 void

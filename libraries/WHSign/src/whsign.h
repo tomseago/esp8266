@@ -99,6 +99,7 @@ class WHSign {
     uint32_t nextFrameAt = 0;
 
     uint8_t configureTries = 0;
+    uint32_t resetAt = 0;
 
 public:
     WHSign(int);
@@ -110,6 +111,7 @@ public:
     void loop();
 
     void toggleChannel(uint8_t channel);
+    void scheduleReset();
 
 private:
     void configurePins();

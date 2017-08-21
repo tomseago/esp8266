@@ -16,6 +16,7 @@ public :
 
     void begin();
     void broadcastState(uint16_t state);
+    void broadcastReset();
 
 private:
     AsyncWebServer ws = AsyncWebServer(80);
@@ -23,6 +24,8 @@ private:
 
     void h_hello(AsyncWebServerRequest *req);
     void h_config_js(AsyncWebServerRequest *req);
+
+    void h_reset(AsyncWebServerRequest *req);
 
     void h_404(AsyncWebServerRequest *req);
 
