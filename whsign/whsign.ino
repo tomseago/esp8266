@@ -12,7 +12,7 @@
 #define AP_NAME "Welcome Homo"
 #define AP_PASS "Glamcocks!"
 
-#define IS_MASTER false 
+#define IS_MASTER true 
 
 WHSign sign(0);
 
@@ -50,3 +50,4 @@ void loop() {
   sign.loop();
   
 }
+

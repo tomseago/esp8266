@@ -196,6 +196,7 @@ WHSign::toggleChannel(uint8_t channel)
 void
 WHSign::scheduleReset()
 {
+    Serail.printf("******* Schedule reset\n");
     resetAt = millis() + 500;
 
     // Tell any client to reset

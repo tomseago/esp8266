@@ -32,7 +32,7 @@ WebUI::begin(){
     ws.on("/hello", HTTP_ANY, std::bind(&WebUI::h_hello, this, std::placeholders::_1));
     ws.on("/config.js", HTTP_ANY, std::bind(&WebUI::h_config_js, this, std::placeholders::_1));
 
-    ws.on("/reset", HTTP_ANY, std::bind(&WebUI::h_hello, this, std::placeholders::_1));
+    ws.on("/reset", HTTP_ANY, std::bind(&WebUI::h_reset, this, std::placeholders::_1));
 
     ws.serveStatic("/", SPIFFS, "/www/").setDefaultFile("index.html");
 
