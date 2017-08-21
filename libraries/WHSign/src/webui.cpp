@@ -170,7 +170,7 @@ WebUI::h_socket(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEvent
       os_printf("ws[%s][%u] %s-message[%llu]: ", server->url(), client->id(), (info->opcode == WS_TEXT)?"text":"binary", info->len);
       if(info->opcode == WS_TEXT){
         data[len] = 0;
-        os_printf("%s\n", (char*)data);
+        os_printf("'%s' len=%d\n", (char*)data, len);
       } else {
         for(size_t i=0; i < info->len; i++){
           os_printf("%02x ", data[i]);
@@ -180,13 +180,6 @@ WebUI::h_socket(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEvent
 
       ////////////////////
       // Handle the specific message
-
-      if (len==5) {
-        if (strcmp((const char*)data, "RESET") == 0) {
-            system_restart();
-        }
-      }
-
       if (len>=2) {
             switch (data[0]) {
             case 'T': // Toggle

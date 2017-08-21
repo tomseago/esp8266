@@ -271,6 +271,14 @@ WHSign::h_wsEvent(WStype_t type, uint8_t * payload, size_t length)
             break;
         case WStype_TEXT:
             Serial.printf("[WSc] got text: %s\n", payload);
+            if (length==5) {
+                if (strcmp((const char*)payload, "RESET") == 0) {
+                    os_printf("******* System Restart *********\n");
+                    system_restart();
+                    return;
+                }
+            }
+
 
             break;
         case WStype_BIN:
