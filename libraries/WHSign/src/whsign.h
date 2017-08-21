@@ -23,6 +23,34 @@ const uint8_t channel_map[] = {
     15
 };
 
+/*
+
+File format for animations:
+
+Commands:
+    Set State,     State      uint16
+    Delay          How long   uint16
+    Jump To        location   uint16
+    Random Branch   % of time to take branch, location   uint8, uint8
+
+Units for location are cells.
+
+An animation is an ordered sequence of cells. Each cell is 3 bytes long.
+The first byte is the command. The next two bytes are data related
+to that command that is intpreted within the context of the command.
+
+Cells have an identity. They are counted and numbered. Locations of cells
+are given as absolute addresses for the jump to and random branch commands.
+* This could be done as relative cell addresses???
+
+
+Maybe???
+    Set Register
+    Add To Register
+    Branch if equal
+
+*/
+
 class WebSocketsClient;
 
 class WHSign {
@@ -59,13 +87,18 @@ class WHSign {
     uint8_t consecutiveDisconnects = 0;
     uint32_t lastStateAt = 0;
 
-    uint32_t channelState = 0;
+    uint32_t channelState = 0xffff;
     bool stateDirty = false;
 
     bool isMaster = false;
 
     WebUI ui;
     WebSocketsClient* wsClient = 0;
+
+    File* currentFile = 0;
+    uint32_t nextFrameAt = 0;
+
+    uint8_t configureTries = 0;
 
 public:
     WHSign(int);
@@ -79,6 +112,7 @@ public:
     void toggleChannel(uint8_t channel);
 
 private:
+    void configurePins();
     void attemptClientConnection();
     void h_wsEvent(WStype_t type, uint8_t * payload, size_t length);
 

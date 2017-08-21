@@ -99,14 +99,7 @@ WHSign::begin()
         
     ui.begin();
 
-    pinMode(D0, OUTPUT);
-    pinMode(D1, OUTPUT);
-    pinMode(D2, OUTPUT);
-    pinMode(D3, OUTPUT);
-    pinMode(D5, OUTPUT);
-    pinMode(D6, OUTPUT);
-    pinMode(D7, OUTPUT);
-    pinMode(D8, OUTPUT);
+    configurePins();
 
     if (wsClient) 
     {
@@ -149,6 +142,11 @@ WHSign::loop()
 
     if (stateDirty) {
         Serial.printf("State=%04x\n", channelState);
+
+        if (configureTries < 10) {
+            configurePins();
+        }
+
         // Output the state on our pins
         if (isMaster) {
             // The master output map
@@ -187,6 +185,23 @@ WHSign::toggleChannel(uint8_t channel)
     channelState ^= mask;
 
     stateDirty = true;
+}
+
+void
+WHSign::configurePins()
+{
+    Serial.printf("*** Configure Pins ***\n");
+
+    pinMode(D0, OUTPUT);
+    pinMode(D1, OUTPUT);
+    pinMode(D2, OUTPUT);
+    pinMode(D3, OUTPUT);
+    pinMode(D5, OUTPUT);
+    pinMode(D6, OUTPUT);
+    pinMode(D7, OUTPUT);
+    pinMode(D8, OUTPUT);
+
+    configureTries++;    
 }
 
 void
