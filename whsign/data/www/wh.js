@@ -7,68 +7,84 @@ function log(msg) {
 //////////////
 // UI
 
-function c_welcome() {
-    sendToggle("a");
+function c_welcome() { 
+    // a 0 ***
+    sendToggle("a"); // 0
 }
 
-function c_hom() {
-    sendToggle("b");
+function c_hom() { 
+    // k 10
+    sendToggle("b"); // 1
 }
 
-function c_o() {
-    sendToggle("c");
+function c_o() { 
+    // l 11
+    sendToggle("c"); // 2
 }
 
-function c_e() {
-    sendToggle("d");    
+function c_e() { 
+    // i 8
+    sendToggle("d"); // 3
 }
 
-function c_pink_dancer() {
-    sendToggle("e");    
+function c_pink_dancer() { 
+    // c 2
+    sendToggle("e"); // 4
 }
 
-function c_pink_fucker() {
-    sendToggle("f");
+function c_pink_fucker() { 
+    // f 5 ***
+    sendToggle("f"); // 5
 }
 
-function c_blue_dancer() {
-    sendToggle("g");    
+function c_blue_dancer() { 
+    // m 12
+    sendToggle("g"); // 6
 }
 
-function c_blue_fucker() {
-    sendToggle("h");
+function c_blue_fucker() { 
+    // e 4
+    sendToggle("h"); // 7
 }
 
-function c_pink_action_1() {
-    sendToggle("i");
+function c_pink_action_1() { 
+    // d 3
+    sendToggle("i"); // 8
 }
 
-function c_pink_action_2() {
-    sendToggle("j");
+function c_pink_action_2() { 
+    // b 1
+    sendToggle("j"); // 9
 }
 
 function c_blue_action_1() {
-    sendToggle("k");
+    // p 15
+    sendToggle("k"); // 10
 }
 
 function c_blue_action_2() {
-    sendToggle("l");
+    // n 13
+    sendToggle("l"); // 11
 }
 
 function c_sex_action_1() {
-    sendToggle("m");
+    // j 9
+    sendToggle("m"); // 12
 }
 
 function c_sex_action_2() {
-    sendToggle("n");
+    // g 6
+    sendToggle("n"); // 13
 }
 
 function c_sex_action_3() {
-    sendToggle("o");
+    // h 7
+    sendToggle("o"); // 14
 }
 
 function c_sex_action_4() {
-    sendToggle("p");
+    // o 14
+    sendToggle("p"); // 15
 }
 
 
@@ -126,6 +142,14 @@ function sendToggle(channel) {
     socket.send("T"+channel);
 }
 
+function sendState(state) {
+    var b = new Uint16Array(1);
+
+    b[0] = state;
+
+    socket.send(b);
+}
+
 var GREY = "#444"
 function setState(val) {    
 
@@ -178,6 +202,29 @@ function setState(val) {
     $("#sex_action_4").css("stroke", bit ? "#fff" : GREY);
 }
 
+
+pauseAnim = false;
+timer = false;
+
+function homoLoop1() {
+    if (pauseAnim) return;
+
+    sendState(6);
+    timer = setTimeout(homoLoop2, 1400);
+}
+
+function homoLoop2() {
+    if (pauseAnim) return;
+
+    sendState(1);
+    timer = setTimeout(homoLoop1, 800);
+}
+
+function runHomoLoop() {
+    pauseAnim = false;
+    homoLoop1();
+}
+
 // Create WebSocket connection.
 // const socket = new WebSocket('ws://localhost:3000/socket');
 const socket = new WebSocket(config.socketPath);
@@ -210,148 +257,57 @@ socket.addEventListener('close', function(event) {
     log("Socket closed");
 });
 
+///////////////////////////
 
+var homeHomoFrames = [
+    [0x0f5b, 1000],
+    [0x055b,  300],
+    [0x065b,  300],
+    [0x0a5b,  300],
+    [0x0f5b, 1000],
 
-// function getAnims() {
-//     log("Can haz animations?");
-//     socket.send("GA");
-// }
+    [0x50a7,  200],
+    [0xa0a7,  200],
+    [0x50a7,  200],
+    [0xa0a7,  200],
+    [0x50a7,  200],
+    [0xa0a7,  200],
+    [0x50a7,  200],
+    [0xa0a7,  200],
+];
 
-// function getPalettes() {
-//     socket.send("GP");
-// }
+var nextFrameIx = 0;
+function nextHomeHomo() {
+    if (nextFrameIx >= homeHomoFrames.length) {
+        nextFrameIx = 0;
+    }
 
-// function getState() {
-//     socket.send("GX");
-// }
+    var frame = homeHomoFrames[nextFrameIx];
+    nextFrameIx++;
+    sendState(frame[0]);
 
-// function setUnit() {
-//     var t = $("#unitToSet").val().trim();
-//     if (!t) {
-//         alert("Nothing to set");
-//         return;
-//     }
+    timer = null;
+    if (!pauseAnim) {
+        timer = setTimeout(nextHomeHomo, frame[1]);
+    }
+}
 
-//     socket.send("SU"+t);
-// }
+function runHomeHomo() {
+    if (timer) {
+        clearTimeout(timer);
+        timer = null;
+    }
 
-// function setPalette() {
-//     var t = $("#paletteToSet").val().trim();
-//     if (!t) {
-//         alert("Nothing to set");
-//         return;
-//     }
+    pauseAnim = false;
+    nextFrameIx = 0;
+    nextHomeHomo();
+}
 
-//     socket.send("SP"+t);
-// }
+function stopAnim() {
+    if (timer) {
+        clearTimeout(timer);
+        timer = null;
+    }
 
-// function setAnim() {
-//     var t = $("#animToSet").val().trim();
-//     if (!t) {
-//         alert("Nothing to set");
-//         return;
-//     }
-
-//     socket.send("SA"+t);
-// }
-
-// /////////
-
-// function setUnitType(num) {
-//     socket.send("SU"+num);    
-// }
-
-// function setPaletteNum(num) {
-//     socket.send("SP"+num);    
-// }
-
-// function setBrightness() {
-//     var t = $("#brightnessToSet").val().trim();
-//     if (!t) {
-//         alert("Nothing to set");
-//         return;
-//     }
-
-//     socket.send("SB"+t);
-// }
-
-
-// function setDuration() {
-//     var t = $("#durationToSet").val().trim();
-//     if (!t) {
-//         alert("Nothing to set");
-//         return;
-//     }
-
-//     socket.send("SD"+t);
-// }
-
-// function setSpeedFactor() {
-//     var t = $("#speedFactorToSet").val().trim();
-//     if (!t) {
-//         alert("Nothing to set");
-//         return;
-//     }
-
-//     var cents = parseInt(t * 100.0);
-
-//     socket.send("SF"+cents);
-// }
-
-
-// function setReverse(shouldReverse) {
-//     socket.send("SR"+(shouldReverse?"+":"-"));
-// }
-
-// function showColorChooser(shouldShow) {
-//     if (shouldShow) {
-//         socket.send("C+");
-//     } else {
-//         socket.send("C-");
-//     }
-// }
-
-// function setColorChooserColor(val) {
-//     // log("Setting color "+val);
-//     socket.send("C"+val);
-// }
-
-// function setNexusColor(isForeground) {
-//     var val = $("#colorChooser").spectrum("get");
-//     var color = tinycolor(val);
-//     var hex = color.toHexString();
-
-//     socket.send("C"+(isForeground?"F":"B") + val);
-// }
-
-// function updateColor() {
-//     var val = $("#colorChooser").spectrum("get");
-
-//     var color = tinycolor(val);
-//     var rgb = color.toRgb();
-//     $("#colorString").text("RgbColor("+rgb.r+", "+rgb.g+", "+rgb.b+")");
-
-//     var hex = color.toHexString();
-//     setColorChooserColor(hex);
-// }
-
-// function colorMove(event) {
-//     // log("move");
-
-//     updateColor()
-// }
-
-// function colorChange(event) {
-//     var val = $("#colorChooser").spectrum("get");
-//     log("change: "+val);
-// }
-// /////
-
-// $("#colorChooser").spectrum({
-//     flat: true
-//     , showInput: true
-//     , showButtons: false
-//     , preferredFormat: "hex" 
-//     , move: colorMove
-//     , change: colorChange
-// });
+    pauseAnim = true;
+}

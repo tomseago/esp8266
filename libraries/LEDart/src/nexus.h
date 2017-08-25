@@ -40,7 +40,7 @@ public:
     float maxBrightness = 180.0; // This has a range of 0 to 255, unlike brightness elsewhere which is 0.0     
 
 
-    Nexus(int i);
+    Nexus();
 
     void randomizeAll(uint32_t source);
     void nextUnitType(uint32_t source);

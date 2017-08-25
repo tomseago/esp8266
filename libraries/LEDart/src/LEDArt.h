@@ -46,13 +46,14 @@ public:
 
     enum LEDPaletteType {
         LEDPalette_RB = 0,
-        // LEDPalette_RGB,
+        LEDPalette_RGB,
         LEDPalette_RYB, 
         LEDPalette_WHITE_BLACK, 
-        // LEDPalette_MARDI_GRAS, 
+        LEDPalette_MARDI_GRAS, 
         LEDPalette_BLUES,
         LEDPalette_PINKS,
         LEDPalette_REDS,
+        
         LEDPalette_LAST      
     };
 

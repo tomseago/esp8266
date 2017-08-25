@@ -24,42 +24,42 @@ void(* crashNow)(void) = 0;//declare reset function at address 0
 
 void h_WiFiEvent(WiFiEvent event) 
 {
-    Serial.printf("[ME ME ME] event: %d\n", event);
+    // Serial.printf("[h_WiFiEvent] event: %d\n", event);
 
     switch(event) {
         case WIFI_EVENT_STAMODE_CONNECTED:
-            Serial.printf("STA: Wifi connected\n");
+            Serial.printf("~STA: Wifi connected\n");
             break;
 
         case WIFI_EVENT_STAMODE_DISCONNECTED:
-            Serial.printf("STA: Wifi disconnected\n");
+            Serial.printf("~STA: Wifi disconnected\n");
             haveIP = false;
             break;
 
         case WIFI_EVENT_STAMODE_AUTHMODE_CHANGE:
-            Serial.printf("STA: Auth mode change\n");
+            Serial.printf("~STA: Auth mode change\n");
             break;
 
         case WIFI_EVENT_STAMODE_GOT_IP:
-            Serial.printf("STA: Got IP\n");
+            Serial.printf("~STA: Got IP\n");
             Serial.println(WiFi.localIP());
             haveIP = true;
             break;
 
         case WIFI_EVENT_STAMODE_DHCP_TIMEOUT:
-            Serial.printf("STA: DHCP Timeout\n");
+            Serial.printf("~STA: DHCP Timeout\n");
             break;
 
         case WIFI_EVENT_SOFTAPMODE_STACONNECTED:
-            Serial.printf("AP: Station connected\n");
+            Serial.printf("~AP: Station connected\n");
             break;
 
         case WIFI_EVENT_SOFTAPMODE_STADISCONNECTED:
-            Serial.printf("AP: Station disconnected\n");
+            Serial.printf("~AP: Station disconnected\n");
             break;
 
         case WIFI_EVENT_SOFTAPMODE_PROBEREQRECVED:
-            Serial.printf("AP: Probe request\n");
+            Serial.printf("~AP: Probe request\n");
             break;
     }
 }
@@ -68,6 +68,7 @@ void h_WiFiEvent(WiFiEvent event)
 WHSign::WHSign(int a) : 
     ui(*this)
 {
+    disconnectedAt = millis();
 }
 
 void
@@ -103,9 +104,9 @@ WHSign::begin()
     {
         wsClient->onEvent(std::bind(&WHSign::h_wsEvent, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
-        attemptClientConnection();
+        //attemptClientConnection();
 
-        Serial.printf("Started wsClient (hopefully)\n");
+        //Serial.printf("~Started wsClient (hopefully)\n");
     }
 }
 
@@ -141,43 +142,48 @@ WHSign::loop()
             attemptClientConnection();
         } else if (clientState == CS_CONNECTED && (millis() - lastStateAt > 5000) ) {
             // Disconnect because it's been to long. We assume things are bad.
-            Serial.printf("Too long without a state. Disconnecting\n");
+            Serial.printf("~Too long without a state. Disconnecting\n");
             wsClient->disconnect();
         }
+
+        // A little unnecessary with async but actually necessary
+        //Serial.printf("~Calling client loop()\n");
+        wsClient->loop();
+        //Serial.printf("~Done with client loop()\n");
     }
 
     if (stateDirty) {
-        Serial.printf("State=%04x\n", channelState);
+        Serial.printf("~%c State=%04x\n", (isMaster ? 'M' : 's'), channelState);
 
-        if (configureTries < 50) {
-            configurePins();
-        }
+        // if (configureTries < 50) {
+        //     configurePins();
+        // }
 
         // Output the state on our pins
         if (isMaster) {
             // The master output map
-            digitalWrite(D0, channelState & (1 << 0) ? 1 : 0);
-            digitalWrite(D1, channelState & (1 << 1) ? 1 : 0);
-            digitalWrite(D2, channelState & (1 << 2) ? 1 : 0);
-            digitalWrite(D3, channelState & (1 << 3) ? 1 : 0);
-            digitalWrite(D5, channelState & (1 << 4) ? 1 : 0);
-            digitalWrite(D6, channelState & (1 << 5) ? 1 : 0);
-            digitalWrite(D7, channelState & (1 << 6) ? 1 : 0);
-            digitalWrite(D8, channelState & (1 << 7) ? 1 : 0);
+            digitalWrite(D0, channelState & (1 << 0) ? 1 : 0); //  0
+            digitalWrite(D1, channelState & (1 << 9) ? 1 : 0); //  1
+            digitalWrite(D2, channelState & (1 << 4) ? 1 : 0); //  2
+            digitalWrite(D3, channelState & (1 << 8) ? 1 : 0); //  3
+            digitalWrite(D5, channelState & (1 << 7) ? 1 : 0); //  4
+            digitalWrite(D6, channelState & (1 << 5) ? 1 : 0); //  5
+            digitalWrite(D7, channelState & (1 <<13) ? 1 : 0); //  6
+            digitalWrite(D8, channelState & (1 <<14) ? 1 : 0); //  7
         } else {
             // The slave output map
-            digitalWrite(D0, channelState & (1 << 8) ? 1 : 0);
-            digitalWrite(D1, channelState & (1 << 9) ? 1 : 0);
-            digitalWrite(D2, channelState & (1 <<10) ? 1 : 0);
-            digitalWrite(D3, channelState & (1 <<11) ? 1 : 0);
-            digitalWrite(D5, channelState & (1 <<12) ? 1 : 0);
-            digitalWrite(D6, channelState & (1 <<13) ? 1 : 0);
-            digitalWrite(D7, channelState & (1 <<14) ? 1 : 0);
-            digitalWrite(D8, channelState & (1 <<15) ? 1 : 0);
+            digitalWrite(D0, channelState & (1 << 3) ? 1 : 0); //  8
+            digitalWrite(D1, channelState & (1 <<12) ? 1 : 0); //  9
+            digitalWrite(D2, channelState & (1 << 1) ? 1 : 0); // 10
+            digitalWrite(D3, channelState & (1 << 2) ? 1 : 0); // 11
+            digitalWrite(D5, channelState & (1 << 6) ? 1 : 0); // 12
+            digitalWrite(D6, channelState & (1 <<11) ? 1 : 0); // 13
+            digitalWrite(D7, channelState & (1 <<15) ? 1 : 0); // 14
+            digitalWrite(D8, channelState & (1 <<10) ? 1 : 0); // 15
         }
 
         // Broadcast the state to everyone who cares
-        ui.broadcastState(channelState);
+        if (isMaster) ui.broadcastState(channelState);
 
         stateDirty = false;
     }
@@ -194,9 +200,19 @@ WHSign::toggleChannel(uint8_t channel)
 }
 
 void
+WHSign::setState(uint16_t newState)
+{
+    channelState = newState;
+    Serial.printf("~setState(%04x)\n", channelState);
+
+    stateDirty = true;
+    lastStateAt = millis();
+}
+
+void
 WHSign::scheduleReset()
 {
-    Serial.printf("******* Schedule reset\n");
+    Serial.printf("~******* Schedule reset\n");
     resetAt = millis() + 500;
 
     // Tell any client to reset
@@ -206,7 +222,7 @@ WHSign::scheduleReset()
 void
 WHSign::configurePins()
 {
-    Serial.printf("*** Configure Pins ***\n");
+    Serial.printf("~*** Configure Pins ***\n");
 
     pinMode(D0, OUTPUT);
     pinMode(D1, OUTPUT);
@@ -223,11 +239,22 @@ WHSign::configurePins()
 void
 WHSign::attemptClientConnection()
 {
-    if (!wsClient || !haveIP) return;
+    // Always reset this so we don't freak out.
+    disconnectedAt = millis();
+
+    if (!wsClient) {
+        Serial.println("~No wsClient. Not connect attempt");
+        return;
+    }
+
+    if (!haveIP) {
+        Serial.println("~Don't have an ip. Won't try to connect");
+        return;
+    }
 
     if (clientState == CS_CONNECTED)
     {
-        Serial.printf("Not trying to connect when already connected\n");
+        Serial.printf("~Not trying to connect when already connected\n");
         return;
     }
 
@@ -242,18 +269,24 @@ WHSign::h_wsEvent(WStype_t type, uint8_t * payload, size_t length)
 
     switch(type) {
         case WStype_DISCONNECTED:
-            Serial.printf("[WSc] Disconnected!\n");
-            clientState = CS_DISCONNECTED;
-            disconnectedAt = millis();
-            consecutiveDisconnects++;
-
-            if (consecutiveDisconnects > 4) {
-                consecutiveDisconnects = 0;
-                Serial.printf("\n\nOh gawd. Restart....\n");
-                delay(200);
-                Serial.printf("%5f", consecutiveDisconnects/0);
-                //crashNow();
+            if (clientState == CS_DISCONNECTED) {
+                // We know, we don't care
+                return;
             }
+            Serial.printf("~[WSc] Disconnected!\n");
+            disconnectedAt = millis();
+            clientState = CS_DISCONNECTED;
+            //clientState = CS_DISCONNECTED;
+            //disconnectedAt = millis();
+            //consecutiveDisconnects++;
+
+            // if (consecutiveDisconnects > 4) {
+            //     consecutiveDisconnects = 0;
+            //     Serial.printf("\n\n~Oh gawd. Restart....\n");
+            //     delay(200);
+            //     Serial.printf("%5f", consecutiveDisconnects/0);
+            //     //crashNow();
+            // }
             break;
 
         case WStype_CONNECTED:
@@ -261,7 +294,7 @@ WHSign::h_wsEvent(WStype_t type, uint8_t * payload, size_t length)
                 consecutiveDisconnects = 0;
                 disconnectedAt = -1;
                 clientState = CS_CONNECTED;
-                Serial.printf("[WSc] Connected to url: %s\n",  payload);
+                Serial.printf("~[WSc] Connected to url: %s\n",  payload);
                 
                 // send message to server when Connected
                 wsClient->sendTXT("Hiiiiiii!");                
@@ -271,10 +304,10 @@ WHSign::h_wsEvent(WStype_t type, uint8_t * payload, size_t length)
             }
             break;
         case WStype_TEXT:
-            Serial.printf("[WSc] got text: %s\n", payload);
+            Serial.printf("~[WSc] got text: %s\n", payload);
             if (length==5) {
                 if (strcmp((const char*)payload, "RESET") == 0) {
-                    os_printf("******* System Restart *********\n");
+                    os_printf("~******* System Restart *********\n");
                     system_restart();
                     return;
                 }
@@ -283,15 +316,11 @@ WHSign::h_wsEvent(WStype_t type, uint8_t * payload, size_t length)
 
             break;
         case WStype_BIN:
-            Serial.printf("[WSc] got binary length: %u\n", length);
+            Serial.printf("~[WSc] got binary length: %u\n", length);
             //hexdump(payload, length);
 
             if (length==2) {
-                channelState = *((uint16_t*)payload);
-                Serial.printf("channelState is now %d\n", channelState);
-
-                stateDirty = true;
-                lastStateAt = millis();
+                setState(*((uint16_t*)payload));
             }
             break;
     }
@@ -304,17 +333,18 @@ WHSign::h_wsEvent(WStype_t type, uint8_t * payload, size_t length)
 void
 WHSign::h_GotIP(const WiFiEventStationModeGotIP& evt)
 {
-    Serial.printf("******* Got IP\n");
+    Serial.printf("~~~~******* Got IP\n");
 }
 
 void
 WHSign::h_Connected(const WiFiEventStationModeConnected& evt)
 {
-    Serial.printf("******* Connected\n");
+    Serial.printf("~~~******* Connected\n");
 }
 
 void
 WHSign::h_Disconnected(const WiFiEventStationModeDisconnected& evt)
 {
-    Serial.printf("******* Disconnected\n");
+    Serial.printf("~~~******* Disconnected\n");
 }
+

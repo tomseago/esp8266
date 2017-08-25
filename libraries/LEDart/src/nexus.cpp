@@ -1,7 +1,7 @@
 #include "nexus.h"
 #include "rand.h"
 
-Nexus::Nexus(int i) 
+Nexus::Nexus() 
 {
 
 }
@@ -80,6 +80,8 @@ Nexus::nextUnitType(uint32_t source)
     if (unitType >= 6 ) {
         unitType = 0;
     }
+
+    Serial.printf("Nexus.nextUnitType now=%d\n",unitType);
 }
 
 void
@@ -90,6 +92,8 @@ Nexus::nextPalette(uint32_t source)
     if (palette == LEDArtAnimation::LEDPalette_LAST) {
         palette = (LEDArtAnimation::LEDPaletteType)0;
     }
+
+    Serial.printf("Nexus.nextPalette now=%d\n",(uint8_t)palette);
 }
 
 void 

@@ -6,10 +6,10 @@
 
 const uint8_t LEDArtAnimation::paletteSizes[] = {
     2,  // RB
-    // 3,  // RGB
+    3,  // RGB
     12, // RYB
     3,  // WHITE_BLACK
-    // 5,  // MARDI_GRAS
+    5,  // MARDI_GRAS
     5,  // BLUES
     5,  // PINKS
     4,  // REDS
@@ -87,10 +87,10 @@ const RgbColor Palette_REDS[] = {
 
 const RgbColor* LEDArtAnimation::paletteColors[] = {
     Palette_RB,
-    // Palette_RGB,
+    Palette_RGB,
     Palette_RYB,
     Palette_WHITE_BLACK,
-    // Palette_MARDI_GRAS,
+    Palette_MARDI_GRAS,
     Palette_BLUES,
     Palette_PINKS,
     Palette_REDS,

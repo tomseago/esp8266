@@ -19,7 +19,7 @@ app.get("/config.js", function(req, resp) {
     var r = [];
 
     var config = {
-        socketPath: "ws://zerg.local:3000/socket"
+        socketPath: "ws://localhost:3000/socket"
     };
 
     r.push("config = ");
@@ -38,7 +38,13 @@ wss.on('connection', function connection(ws, req) {
   // or req.headers.cookie (see http://stackoverflow.com/a/16395220/151312)
 
   ws.on('message', function incoming(message) {
-    console.log('received: %s', message);
+    if (typeof message == "string") {
+      // It's a toggle probably?
+      ws.send("Echo: '"+message+"'");
+    } else {
+      // It should be a buffer
+      ws.send(message);
+    }
   });
 
   ws.send('a text');

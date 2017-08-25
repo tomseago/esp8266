@@ -112,6 +112,7 @@ public:
 
     void toggleChannel(uint8_t channel);
     void scheduleReset();
+    void setState(uint16_t newState);
 
 private:
     void configurePins();
