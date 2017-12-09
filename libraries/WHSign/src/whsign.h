@@ -1,8 +1,9 @@
 #pragma once
 
-#import "webui.h"
+#import "signui.h"
 #import <WebSocketsClient.h>
 #import <ESP8266WiFiType.h>
+#import <FS.h>
 
 const uint8_t channel_map[] = {
     0,
@@ -92,7 +93,7 @@ class WHSign {
 
     bool isMaster = false;
 
-    WebUI ui;
+    SignUI ui;
     WebSocketsClient* wsClient = 0;
 
     File* currentFile = 0;
@@ -114,7 +115,17 @@ public:
     void scheduleReset();
     void setState(uint16_t newState);
 
+    void startAnimation(char* name);
+
 private:
+    bool animRunning = false;
+    uint32_t animDelayUntil;
+
+    uint8_t animCommand;
+    uint16_t animValue;
+
+    File animFile;
+
     void configurePins();
     void attemptClientConnection();
     void h_wsEvent(WStype_t type, uint8_t * payload, size_t length);
@@ -122,6 +133,8 @@ private:
     void h_GotIP(const WiFiEventStationModeGotIP& evt);
     void h_Connected(const WiFiEventStationModeConnected& evt);
     void h_Disconnected(const WiFiEventStationModeDisconnected& evt);
+
+    void animTick();
 
 };
 

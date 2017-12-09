@@ -1,0 +1,26 @@
+s w h e 
+d 3000
+s w h e p
+d 1000
+s w h e p b
+d 1000
+s w h e p b p1 b1
+d 1000
+s w h e p b p2 b2
+d 1000
+s w h e p b p1 b1
+d 1000
+s w h e p b p2 b2
+d 1000
+s w h e p b p1 p2 b1 b2
+d 3000
+
+s p b p1 p2 b1 b2
+d 1000
+s w p b p1 p2 b1 b2
+d 1000
+s h e p b p1 p2 b1 b2
+d 1000
+s w h e p b p1 p2 b1 b2
+d 1000
+

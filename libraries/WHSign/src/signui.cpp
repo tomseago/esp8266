@@ -1,4 +1,4 @@
-#include "webui.h"
+#include "signui.h"
 #include <FS.h>
 
 #include <bstrlib.h>
@@ -24,22 +24,22 @@ SignUI::begin(){
     // attach global request handler
     // classWebServer.on("/example", HTTP_ANY, handleRequest);
 
-    socket.onEvent(std::bind(&WebUI::h_socket, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5, std::placeholders::_6));
+    socket.onEvent(std::bind(&SignUI::h_socket, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5, std::placeholders::_6));
     // socket.onEvent(&WebUI::h_socket);
     ws.addHandler(&socket);
 
     // attach class request handler
-    ws.on("/hello", HTTP_ANY, std::bind(&WebUI::h_hello, this, std::placeholders::_1));
-    ws.on("/config.js", HTTP_ANY, std::bind(&WebUI::h_config_js, this, std::placeholders::_1));
+    ws.on("/hello", HTTP_ANY, std::bind(&SignUI::h_hello, this, std::placeholders::_1));
+    ws.on("/config.js", HTTP_ANY, std::bind(&SignUI::h_config_js, this, std::placeholders::_1));
 
-    ws.on("/reset", HTTP_ANY, std::bind(&WebUI::h_reset, this, std::placeholders::_1));
+    ws.on("/reset", HTTP_ANY, std::bind(&SignUI::h_reset, this, std::placeholders::_1));
 
     ws.serveStatic("/", SPIFFS, "/www/").setDefaultFile("index.html");
 
     // Catch-All Handlers
     // Any request that can not find a Handler that canHandle it
     // ends in the callbacks below.
-    ws.onNotFound(std::bind(&WebUI::h_404, this, std::placeholders::_1));
+    ws.onNotFound(std::bind(&SignUI::h_404, this, std::placeholders::_1));
 
     ws.begin();
 }

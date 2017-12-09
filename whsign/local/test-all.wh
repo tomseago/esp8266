@@ -1,0 +1,12 @@
+# A comment to begin the file
+
+! start
+S w h e p p1 p2 b b1 b2
+D 1000
+R 0.2 homo
+J start
+
+! homo 
+S w h o l l1 l2 r r1 r2
+D 1000
+J start

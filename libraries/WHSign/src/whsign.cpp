@@ -1,6 +1,8 @@
 #import "whsign.h"
 #include <functional>
 
+#import <rand.h>
+
 extern "C" {
 #include "user_interface.h"
 }
@@ -108,6 +110,9 @@ WHSign::begin()
 
         //Serial.printf("~Started wsClient (hopefully)\n");
     }
+
+    // Start default animation
+    startAnimation(NULL);
 }
 
 int seconds = 0;
@@ -122,6 +127,8 @@ WHSign::loop()
         return;
     }
 
+    // Do any animation that should be happening
+    animTick();
 
     // Every 1 second at a minimum update the state
     int m = millis() / 1000;
@@ -348,3 +355,122 @@ WHSign::h_Disconnected(const WiFiEventStationModeDisconnected& evt)
     Serial.printf("~~~******* Disconnected\n");
 }
 
+
+
+///////////////////////
+
+void
+WHSign::animTick()
+{
+    if (!animRunning) {
+        return;
+    }
+
+    if (!animFile) {
+        return;
+    }
+
+    if (animDelayUntil > millis()) {
+        // Serial.printf("waiting until %d (now %d)\n", animDelayUntil, millis());
+        return;
+    }
+
+    // Time for next command
+    if (animFile.position() == animFile.size()) {
+        // Loop to beginning of file
+        animFile.seek(0, SeekSet);
+    }
+
+    // Serial.printf("Attempting read\n");
+    uint8_t cmdBuf[3];
+    size_t amount = animFile.read(cmdBuf, 3);
+    if (amount != 3) {
+        Serial.println("Failed to read 3 bytes from file. Stopping");
+        animRunning = false;
+        return;
+    }
+
+    uint16_t val = (((uint16_t)cmdBuf[1]) << 8) + (uint16_t)cmdBuf[2];
+
+    Serial.printf("Read command 0x%02x%02x%02x. val=%d\n", cmdBuf[0], cmdBuf[1], cmdBuf[2], val);
+    // animRunning = false;
+    // return;
+
+
+    switch(cmdBuf[0]) {
+        case 0: // Set
+            setState(val);
+            break;
+
+        case 1: // Delay
+            animDelayUntil = millis() + val;
+            Serial.printf("Anim delay until %d (now %d)\n",animDelayUntil, millis());
+            break;
+
+        case 2: // Jump
+            {
+                uint32_t pos = val * 3;
+                if (pos > animFile.size()-3) {
+                    Serial.printf("Attempt to jump to %d but size is %d. Stopping.\n", pos, animFile.size());
+                    animRunning = false;                
+                } else {
+                    Serial.printf("Jump to %d\n", val);
+                    animFile.seek(pos, SeekSet);
+                }
+            }
+            break;
+
+        case 3: // Random jump
+            {
+                uint8_t rVal = rand(255);
+
+                if (rVal < cmdBuf[1]) {
+                    // Jump!!!
+                    uint32_t pos = cmdBuf[2] * 3;
+                    if (pos > animFile.size() - 3) {
+                        Serial.printf("Random jump to %d but size is %d. Stopping.\n", pos, animFile.size());
+                        animRunning = false;
+                    } else {
+                        Serial.printf("Random jump to %d\n", cmdBuf[2]);
+                        animFile.seek(pos, SeekSet);
+                    }
+                } else {
+                    // No jump, do nothing so we fall through to next statement
+                    Serial.printf("Random jump not taken\n");
+                }
+            }
+            break;
+
+        default:
+            Serial.printf("Ignoring unknown command 0x%02x%02x%02x\n", cmdBuf[0], cmdBuf[1], cmdBuf[2]);
+            break;
+    }
+}
+
+void
+WHSign::startAnimation(char *filename) {
+    if (animRunning) {
+        animRunning = false;
+    }
+
+    if (animFile) {
+        animFile.close();
+    }
+
+    if (!filename) {
+        filename = "/anims/default.whb";
+    }
+    animFile = SPIFFS.open(filename, "r");
+
+    if (!animFile) {
+        Serial.printf("Could not open '%s'\n", filename);
+
+        Dir d = SPIFFS.openDir("/");
+        while(d.next()) {
+            Serial.printf("%s %d\n", d.fileName().c_str(), d.fileSize());
+        }
+
+        return;
+    }
+    animRunning = true;
+}

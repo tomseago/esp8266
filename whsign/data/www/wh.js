@@ -303,6 +303,7 @@ function runHomeHomo() {
     nextHomeHomo();
 }
 
+
 function stopAnim() {
     if (timer) {
         clearTimeout(timer);
@@ -311,3 +312,75 @@ function stopAnim() {
 
     pauseAnim = true;
 }
+
+/////////////////////////////
+
+binAnim = [ 0, 15, 91, 1, 3, 232, 3, 51, 4, 2, 0, 0, 0, 240, 167, 1, 3, 232, 2, 0, 0 ];
+
+binAnimCursor = 0;
+
+function randInt(max) {
+    var val = Math.random() * max;
+    return parseInt(val);
+}
+
+function binAnimTick() {
+    var delay = 1; // in ms
+
+    var command = binAnim[binAnimCursor];
+    var v16 = (binAnim[binAnimCursor+1] << 8) + binAnim[binAnimCursor+2];
+
+    switch(command) {
+        case 0:
+            sendState(v16);
+            break
+
+        case 1:
+            delay = v16;
+            break
+
+        case 2:
+            binAnimCursor = (v16-1) * 3;
+            break;
+
+        case 3:
+            var shouldJump = randInt(255) < binAnim[binAnimCursor+1];
+            if (shouldJump) {
+                binAnimCursor = (binAnim[binAnimCursor+2]-1) * 3;
+            }
+            break;
+    }
+
+
+    binAnimCursor += 3;
+    if (binAnimCursor > binAnim.length) {
+        binAnimCursor = 0;
+    }
+
+    if (!pauseAnim) {
+        timer = setTimeout(binAnimTick, delay);
+    }
+}
+
+function runBinAnim() {
+    if (timer) {
+        clearTimeout(timer);
+        timer = null;
+    }
+
+    var s = $("#binAnimText").val();
+    if (s) {
+        var se = eval(s);
+        if (se) {
+            binAnim = se;
+        }
+    }
+
+    pauseAnim = false;
+    if (binAnimCursor > binAnim.length) {
+        binAnimCursor = 0;
+
+    }
+    binAnimTick();
+}
+

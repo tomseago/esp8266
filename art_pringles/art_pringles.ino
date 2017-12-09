@@ -26,7 +26,7 @@
 
 Nexus nx;
 
-#define TALL_CAN true
+#define TALL_CAN false
 
 #ifdef TALL_CAN
 const uint16_t PixelCount = 140;

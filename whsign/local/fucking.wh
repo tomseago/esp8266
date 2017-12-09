@@ -1,0 +1,41 @@
+! start
+s w h o 
+d 300
+s w
+d 300
+r 0.1 fucking
+j start
+
+! fucking
+s l
+d 500
+s l r
+d 500
+
+s l l1 r
+d 500
+s l r r2
+d 500
+s l l1 r
+d 500
+s l r r2
+d 500
+s l l1 r
+d 500
+s l r r2
+d 500
+s l l1 l2 r
+d 500
+s l r r1 r2
+d 500
+s l l1 l2 r
+d 500
+s l r r1 r2
+d 500
+s l l1 l2 r
+d 500
+s l r r1 r2
+d 500
+
+
+j start
