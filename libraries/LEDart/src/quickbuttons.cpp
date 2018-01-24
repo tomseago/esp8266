@@ -22,6 +22,13 @@
 #define BUTTON_3 D1
 #define BUTTON_4 D2
 
+
+// For vest
+#define BUTTON_1 D4
+#define BUTTON_2 D3
+#define BUTTON_3 D2
+#define BUTTON_4 D1
+
 QuickButtons::QuickButtons(LEDArtPiece& piece, LEDArtAnimation* flashLight) :
     piece(piece),
     buttons({

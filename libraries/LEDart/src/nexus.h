@@ -32,7 +32,8 @@ public:
     RgbColor background = RgbColor(0, 0, 255);
     char* currentAnim = "";
 
-    uint32_t maxDuration = 128000;
+    // uint32_t maxDuration = 128000;
+    uint32_t maxDuration = 1280000;
     bool reverse = false;
 
     // For pringles, 180
@@ -54,6 +55,8 @@ public:
 
     void sendValueUpdate(NexusListener::NexusValueType which, uint32_t source);
     void sendUserAnimationRequest(char* szName, bool randomize, uint32_t source);
+
+    void checkUnitType();
 
 private:
     std::vector<char *> animNames;

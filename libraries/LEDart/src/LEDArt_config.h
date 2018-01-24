@@ -1,8 +1,11 @@
 #pragma once
 
 #ifndef LEDART_COLOR_FEATURE
+// strips
 // #define LEDART_COLOR_FEATURE  NeoGrbFeature
-#define LEDART_COLOR_FEATURE  NeoRgbFeature
+// bullets
+// #define LEDART_COLOR_FEATURE  NeoRgbFeature  
+#define LEDART_COLOR_FEATURE NeoGrbRgbFeature
 #endif
 
 #ifndef LEDART_METHOD

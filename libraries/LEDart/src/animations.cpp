@@ -479,7 +479,7 @@ LAA_BoxOutline::LAA_BoxOutline(char* szName) :
 void
 LAA_BoxOutline::animate(LEDArtPiece& piece, AnimationParam p) {
 
-    piece.strip.ClearTo(red);
+    piece.strip.ClearTo(black);
 
     // uint16_t w = piece.topo.getWidth();
     // uint16_t h = piece.topo.getHeight();
@@ -586,4 +586,29 @@ LAA_RandoFill::calculateOrder(LEDArtPiece& piece)
     }
 
     calculatedFor = (uint8_t)currentType;
+}
+
+///////////////////
+
+LAA_DimDebug::LAA_DimDebug(char* szName) : 
+    LAA_UnitMapper(szName)
+{
+    loopDuration = 8000;
+    brightness = 0.2;
+}
+
+void
+LAA_DimDebug::animate(LEDArtPiece& piece, AnimationParam p) {
+
+    if (p.progress > 0.5) {
+        clearTo(piece, blue, 0, piece.strip.PixelCount());
+        // for(int i=0; i< piece.strip.PixelCount(); i++) {
+        //     piece.strip.SetPixelColor(i, blue);
+        // }
+    } else {
+        clearTo(piece, red, 0, piece.strip.PixelCount());
+        // for(int i=0; i< piece.strip.PixelCount(); i++) {
+        //     piece.strip.SetPixelColor(i, red);
+        // }
+    }
 }

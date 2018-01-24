@@ -387,3 +387,77 @@ public:
     }
     
 };
+
+//////////
+const uint16_t SplitPoint = 72;
+
+class NeoGrbRgbFeature : public Neo3Elements
+{
+public:
+    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
+    {
+        uint8_t* p = getPixelAddress(pPixels, indexPixel);
+
+        if (indexPixel < SplitPoint) {
+            *p++ = color.G;
+            *p++ = color.R;
+            *p = color.B;
+        } else {
+            *p++ = color.R;
+            *p++ = color.G;
+            *p = color.B;
+        }
+    }
+
+    static ColorObject retrievePixelColor(uint8_t* pPixels, uint16_t indexPixel)
+    {
+        ColorObject color;
+        uint8_t* p = getPixelAddress(pPixels, indexPixel);
+
+        if (indexPixel < SplitPoint) {
+            color.G = *p++;
+            color.R = *p++;
+            color.B = *p;
+        } else {
+            color.R = *p++;
+            color.G = *p++;
+            color.B = *p;            
+        }
+
+        return color;
+    }
+    
+    static ColorObject retrievePixelColor_P(PGM_VOID_P pPixels, uint16_t indexPixel)
+    {
+        ColorObject color;
+        const uint8_t* p = getPixelAddress((const uint8_t*)pPixels, indexPixel);
+
+        if (indexPixel < SplitPoint) {
+            color.G = pgm_read_byte(p++);
+            color.R = pgm_read_byte(p++);
+            color.B = pgm_read_byte(p);
+        } else {
+            color.R = pgm_read_byte(p++);
+            color.G = pgm_read_byte(p++);
+            color.B = pgm_read_byte(p);            
+        }
+        return color;
+    }
+    
+    // static void replicatePixel(uint8_t* pPixelDest, const uint8_t* pPixelSrc, uint16_t count)
+    // {
+    //     uint8_t* pEnd = pPixelDest + (count * PixelSize);
+    //     while (pPixelDest < pEnd)
+    //     {
+    //         if ((pPixelDest - pPixelSrc) * 3 < SplitPoint) {
+    //             *pPixelDest++ = pPixelSrc[0];
+    //             *pPixelDest++ = pPixelSrc[1];
+    //             *pPixelDest++ = pPixelSrc[2];
+    //         } else {
+    //             *pPixelDest++ = pPixelSrc[1];
+    //             *pPixelDest++ = pPixelSrc[0];
+    //             *pPixelDest++ = pPixelSrc[2];                
+    //         }
+    //     }
+    // }
+};

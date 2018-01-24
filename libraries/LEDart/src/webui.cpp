@@ -399,6 +399,7 @@ WebUI::setUnit(uint8_t *data, size_t len)
     }
 
     nexus.unitType = t;
+    nexus.checkUnitType();
 }
 
 void

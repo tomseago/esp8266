@@ -43,8 +43,8 @@ public:
         Unit_Each,
         Unit_Rows,
         Unit_Cols,
-        Unit_SpecificCols,
         Unit_SpecificRows,
+        Unit_SpecificCols,
 
         Unit_Last,
     };
@@ -106,6 +106,13 @@ class LAA_RandoFill : public LAA_UnitMapper {
     void calculateOrder(LEDArtPiece& piece);
 public:
     LAA_RandoFill(char* szName);
+
+    virtual void animate(LEDArtPiece& piece, AnimationParam p);
+};
+
+class LAA_DimDebug : public LAA_UnitMapper {
+public:
+    LAA_DimDebug(char* szName);
 
     virtual void animate(LEDArtPiece& piece, AnimationParam p);
 };

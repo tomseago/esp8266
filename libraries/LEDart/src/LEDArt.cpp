@@ -15,6 +15,8 @@ const uint8_t LEDArtAnimation::paletteSizes[] = {
     4,  // REDS
 };
 
+const RgbColor black(0,0,0);
+
 const RgbColor Palette_RB[] = {
     RgbColor(255, 0, 0),
     RgbColor(0, 0, 255),
@@ -140,6 +142,13 @@ LEDArtAnimation::colorInPalette(LEDPaletteType palette, float progress) {
 
     // Serial.printf(" ==> (%3d, %3d, %3d)\n", color.R, color.G, color.B);
     return color;
+}
+
+void
+LEDArtAnimation::clearTo(LEDArtPiece& piece, RgbColor color, uint16_t start, uint16_t end) {
+    for(uint16_t ix=start; ix<end; ix++) {
+        piece.strip.SetPixelColor(ix, color);
+    }
 }
 
 /////
@@ -274,6 +283,11 @@ LEDArtPiece::animateChannel(AnimationParam param, AnimationType type) {
 
     // We believe there is something running, so let it do it's thing
     pCur->animate(*this, param);
+
+    // Set last 4 pieces of strip to off
+    for (uint16_t ix = strip.PixelCount()-4; ix<strip.PixelCount(); ix++) {
+        strip.SetPixelColor(ix, black);
+    }
 
 
     // Has it hit max time?

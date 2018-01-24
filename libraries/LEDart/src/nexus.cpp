@@ -33,11 +33,19 @@ Nexus::addListener(NexusListener* listener)
     listeners.push_back(listener);
 }
 
+void 
+Nexus::checkUnitType()
+{
+    if (unitType == 2 || unitType == 3) {
+        unitType += 2;
+    }
+}
 
 void
 Nexus::randomizeAll(uint32_t source)
 {
     unitType = rand(5);
+    checkUnitType();
 
     palette = (LEDArtAnimation::LEDPaletteType)rand((uint8_t)LEDArtAnimation::LEDPalette_LAST);
 
@@ -80,6 +88,7 @@ Nexus::nextUnitType(uint32_t source)
     if (unitType >= 6 ) {
         unitType = 0;
     }
+    checkUnitType();
 
     Serial.printf("Nexus.nextUnitType now=%d\n",unitType);
 }

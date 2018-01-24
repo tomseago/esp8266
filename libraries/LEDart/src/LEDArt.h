@@ -61,6 +61,7 @@ public:
     const static RgbColor* paletteColors[];
 
     RgbColor colorInPalette(LEDPaletteType palette, float progress);
+    void clearTo(LEDArtPiece& piece, RgbColor color, uint16_t start, uint16_t end); 
 };
 
 // typedef void (*LEDArtAnimation)(LEDArtPiece& piece, void* context, uint16_t *duration, bool *loops, AnimationParam p);
