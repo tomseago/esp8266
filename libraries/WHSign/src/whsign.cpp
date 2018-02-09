@@ -474,3 +474,55 @@ WHSign::startAnimation(char *filename) {
     }
     animRunning = true;
 }
+
+struct bstrList * 
+WHSign::createAnimationList() {
+
+    struct bstrList* out = bstrListCreate();
+    if (!out) {
+        Serial.printf("ERROR: Failed to allocate animation list bstrlist\n");
+        return NULL;
+    }
+
+    if (!bstrListAlloc(out, 20)) {
+        Serial.printf("ERROR: Failed to allocate list\n");
+        bstrListDestroy(out);
+        return NULL;
+    }
+
+    Dir d = SPIFFS.openDir("/");    
+    while(d.next() && out->qty < out->mlen) {
+        Serial.printf("%s %d\n", d.fileName().c_str(), d.fileSize());
+
+        out->entry[out->qty] = bfromcstralloc(0,d.fileName().c_str());
+        out->qty++;
+    }
+
+    return out;
+}
+
+int
+WHSign::saveAnimation() {
+
+    struct bstrList* out = bstrListCreate();
+    if (!out) {
+        Serial.printf("ERROR: Failed to allocate animation list bstrlist\n");
+        return NULL;
+    }
+
+    if (!bstrListAlloc(out, 20)) {
+        Serial.printf("ERROR: Failed to allocate list\n");
+        bstrListDestroy(out);
+        return NULL;
+    }
+
+    Dir d = SPIFFS.openDir("/");    
+    while(d.next() && out->qty < out->mlen) {
+        Serial.printf("%s %d\n", d.fileName().c_str(), d.fileSize());
+
+        out->entry[out->qty] = bfromcstralloc(0,d.fileName().c_str());
+        out->qty++;
+    }
+
+    return out;
+}

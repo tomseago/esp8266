@@ -5,6 +5,8 @@
 #import <ESP8266WiFiType.h>
 #import <FS.h>
 
+#import <bstrlib.h>
+
 const uint8_t channel_map[] = {
     0,
     1,
@@ -116,6 +118,8 @@ public:
     void setState(uint16_t newState);
 
     void startAnimation(char* name);
+
+    struct bstrList * createAnimationList();
 
 private:
     bool animRunning = false;
