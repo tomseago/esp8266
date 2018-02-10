@@ -284,12 +284,6 @@ LEDArtPiece::animateChannel(AnimationParam param, AnimationType type) {
     // We believe there is something running, so let it do it's thing
     pCur->animate(*this, param);
 
-    // Set last 4 pieces of strip to off
-    for (uint16_t ix = strip.PixelCount()-4; ix<strip.PixelCount(); ix++) {
-        strip.SetPixelColor(ix, black);
-    }
-
-
     // Has it hit max time?
     // All animations are bound by their declared maxDuration.
     // Base and Overlay are also bound by the system level 

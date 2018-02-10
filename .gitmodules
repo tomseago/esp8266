@@ -4,3 +4,6 @@
 [submodule "libraries/ESPAsyncWebServer"]
 	path = libraries/ESPAsyncWebServer
 	url = git@github.com:tomseago/ESPAsyncWebServer.git
+[submodule "libraries/NeoPixelBus"]
+	path = libraries/NeoPixelBus
+	url = git@github.com:tomseago/NeoPixelBus.git
