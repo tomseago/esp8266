@@ -9,7 +9,7 @@ class LAA_Flood : public LEDArtAnimation {
 public:
     LAA_Flood(char* szName, RgbColor background);
 
-    virtual void animate(LEDArtPiece& piece, AnimationParam p);
+    virtual void animate(LEDArtPiece& piece, LEDAnimationParam p);
 };
 
 class LAA_Sparkle : public LEDArtAnimation {
@@ -19,7 +19,7 @@ class LAA_Sparkle : public LEDArtAnimation {
 public:
     LAA_Sparkle(char* szName, uint16_t pixelCount);
 
-    virtual void animate(LEDArtPiece& piece, AnimationParam p);
+    virtual void animate(LEDArtPiece& piece, LEDAnimationParam p);
 };
 
 class LAA_Sparkle2 : public LEDArtAnimation {
@@ -32,7 +32,7 @@ class LAA_Sparkle2 : public LEDArtAnimation {
 public:
     LAA_Sparkle2(char* szName, uint16_t pixelCount);
 
-    virtual void animate(LEDArtPiece& piece, AnimationParam p);
+    virtual void animate(LEDArtPiece& piece, LEDAnimationParam p);
 };
 
 
@@ -65,7 +65,7 @@ class LAA_Rainbow : public LAA_UnitMapper {
 public:
     LAA_Rainbow(char* szName);
 
-    virtual void animate(LEDArtPiece& piece, AnimationParam p);
+    virtual void animate(LEDArtPiece& piece, LEDAnimationParam p);
 };
 
 
@@ -75,28 +75,28 @@ public:
 
     LAA_Line(char* szName);
 
-    virtual void animate(LEDArtPiece& piece, AnimationParam p);
+    virtual void animate(LEDArtPiece& piece, LEDAnimationParam p);
 };
 
 class LAA_BoxOutline : public LAA_UnitMapper {
 public:
     LAA_BoxOutline(char* szName);
 
-    virtual void animate(LEDArtPiece& piece, AnimationParam p);
+    virtual void animate(LEDArtPiece& piece, LEDAnimationParam p);
 };
 
 class LAA_AllWhite : public LAA_UnitMapper {
 public:
     LAA_AllWhite(char* szName);
 
-    virtual void animate(LEDArtPiece& piece, AnimationParam p);
+    virtual void animate(LEDArtPiece& piece, LEDAnimationParam p);
 };
 
 class LAA_HalfWhite : public LAA_UnitMapper {
 public:
     LAA_HalfWhite(char* szName);
 
-    virtual void animate(LEDArtPiece& piece, AnimationParam p);
+    virtual void animate(LEDArtPiece& piece, LEDAnimationParam p);
 };
 
 class LAA_RandoFill : public LAA_UnitMapper {
@@ -107,12 +107,12 @@ class LAA_RandoFill : public LAA_UnitMapper {
 public:
     LAA_RandoFill(char* szName);
 
-    virtual void animate(LEDArtPiece& piece, AnimationParam p);
+    virtual void animate(LEDArtPiece& piece, LEDAnimationParam p);
 };
 
 class LAA_DimDebug : public LAA_UnitMapper {
 public:
     LAA_DimDebug(char* szName);
 
-    virtual void animate(LEDArtPiece& piece, AnimationParam p);
+    virtual void animate(LEDArtPiece& piece, LEDAnimationParam p);
 };

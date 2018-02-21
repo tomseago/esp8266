@@ -13,12 +13,12 @@ WebUI::StatusAnim::StatusAnim(WebUI& parent) :
     LEDArtAnimation("WebUIStatus"),
     parent(parent)
 {
-    type = AnimationType_STATUS;
+    type = LEDAnimationType_STATUS;
     maxDuration = 0;
 }
 
 void 
-WebUI::StatusAnim::animate(LEDArtPiece& piece, AnimationParam p)
+WebUI::StatusAnim::animate(LEDArtPiece& piece, LEDAnimationParam p)
 {
     if (parent.showingColorChooser) {
         piece.strip.ClearTo(parent.chooserColor);

@@ -7,10 +7,18 @@
 const uint16_t MTServerPort = 2000;
 const uint8_t MTBroadcastAddr = 255;
 
+const uint8_t MTMasterAddr = 1;
+
 const uint8_t MT_Type_Generic = 0;
 const uint8_t MT_Type_Log = 1;
 const uint8_t MT_Type_Ping = 2;
 const uint8_t MT_Type_Pong = 3;
+
+// WiFiSync
+const uint8_t MT_Type_TimeQuery = 4;
+const uint8_t MT_Type_TimeResponse = 5;
+const uint8_t MT_Type_StateQuery = 6;
+const uint8_t MT_Type_PreparedState = 7;
 
 
 class MTMessage;
@@ -141,6 +149,7 @@ public:
     void loop();
 
     uint8_t getNodeId() { return nodeId; }
+    bool isMaster() { return nodeId == MTMasterAddr; }
 
     void addListener(MTListener* listener);
 

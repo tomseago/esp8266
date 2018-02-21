@@ -1,4 +1,4 @@
-#define NODE_ID 4
+#define NODE_ID 1
 
 #include <ESP8266WiFi.h>
 
@@ -22,7 +22,6 @@
 #include <animations.h>
 #include <log.h>
 #include <msg_tube.h>
-#include <wifisync.h>
 
 #include <Bounce2.h>
 #include <quickbuttons.h>
@@ -31,24 +30,15 @@
 
 Nexus nx;
 
-//#define TEST_FOUR
-
-#ifdef TEST_FOUR
+//const uint16_t PixelCount = 60;
+const uint16_t PixelCount = 144;  // 48 * 3
 const uint8_t MaxBrightness = 128;
-const uint16_t PixelCount = 4;
 const uint16_t Width = 1;
 const uint16_t Height = 4;
-#else
-const uint8_t MaxBrightness = 255;
-const uint16_t PixelCount = 144;
-const uint16_t Width = 3;
-const uint16_t Height = 48;
-#endif
-
 LEDArtPiece art(nx, PixelCount, MaxBrightness, Width, Height);
 
     
-//LAA_Flood flood("Flood", RgbColor(128,0,0));
+LAA_Flood flood("Flood", RgbColor(255,0,0));
 LAA_Sparkle sparkle("Sparkle", PixelCount);
 LAA_Rainbow rainbow("Rainbow");
 LAA_Line line("Line");
@@ -62,7 +52,6 @@ LAA_RandoFill randoFill("Rando Fill");
 QuickButtons buttons(art, &halfWhite);
 
 WebUI webui(nx);
-WiFiSync wifiSync(nx);
 
 Pinger pinger;
 
@@ -76,32 +65,26 @@ void setup() {
   Log.printf("DB Log start\n");
 
   msgTube.configure(NODE_ID, "Pyramid", "ILoveTwinks");
-  msgTube.begin();
+  //msgTube.begin();
   
-  buttons.begin();
+//  buttons.begin();
 //  art.specificGeometry = &pringlesGeom;
   nx.unitType = 1;
 //  nx.palette = LEDArtAnimation::LEDPalette_BLUES;
   nx.palette = LEDArtAnimation::LEDPalette_RYB;
 //  nx.speedFactor = 0.25;
-
-#ifdef TEST_FOUR
-  nx.maxDuration = 10000;
-#else
-  nx.maxDuration = 20000;
-//  nx.maxDuration = 300000;
-#endif
+  nx.maxDuration = 300000;
   
   art.registerAnimation(&webui.statusAnim);
 
 //  art.registerAnimation(&allWhite);
 //  art.registerAnimation(&halfWhite);
 //
-//  art.registerAnimation(&flood);
-  art.registerAnimation(&randoFill);
+  art.registerAnimation(&flood);
   art.registerAnimation(&sparkle);
 //  art.registerAnimation(&line);
   art.registerAnimation(&rainbow);
+//  art.registerAnimation(&randoFill);
 //  art.registerAnimation(&boxOutline);
   art.begin();
 //
@@ -109,31 +92,38 @@ void setup() {
 
 //  // Start the webui animation just so we don't have to deal with it
 //  // elsewhere right now
-    //art.startAnimation(&webui.statusAnim, false);
-
-//    art.startAnimation(&flood, false);
-    art.startAnimation(&wifiSync.statusAnim, false);
+    art.startAnimation(&webui.statusAnim, false);
+    art.startAnimation(&flood, false);
 
 //    art.strip.Begin();
   webui.begin();
-  wifiSync.begin();
-  
+
 //  pinger.begin();
 //  if (NODE_ID == 2)
 //  {
 //    pinger.startPings(0, 5000);
 //  }
+
+  pinMode(LED_BUILTIN, OUTPUT);
 }
 
 uint8_t count = 0;
+uint32_t last = 0;
+bool state = false;
 
 void loop() {
-  msgTube.loop();
-  wifiSync.loop();
+  //msgTube.loop();
 //  pinger.loop();
 
-  buttons.loop();
+//  buttons.loop();
   art.loop();
+
+  uint32_t now = millis();
+  if (now - last > 1000) {
+    state = !state;
+    digitalWrite(LED_BUILTIN, state ? HIGH : LOW);
+    last = now;
+  }
   
 
 // art.strip.ClearTo(RgbColor(255,0,0), 0, 2);

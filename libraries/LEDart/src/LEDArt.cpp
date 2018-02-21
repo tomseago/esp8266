@@ -1,6 +1,7 @@
 #include "LEDArt.h"
 #include "rand.h"
 #include "nexus.h"
+#include "log.h"
 
 //////
 
@@ -153,58 +154,94 @@ LEDArtAnimation::clearTo(LEDArtPiece& piece, RgbColor color, uint16_t start, uin
 
 /////
 
-LEDArtPiece *pSingleton = NULL;
+// LEDArtPiece *pSingleton = NULL;
 
-void AnimateBaseGlue(AnimationParam param) {
-    // Presume the singleton is set
-    pSingleton->animateChannel(param, AnimationType_BASE);
-}
-
-
-void AnimateOverlayGlue(AnimationParam param) {
-    // Presume the singleton is set
-    pSingleton->animateChannel(param, AnimationType_OVERLAY);
-}
+// void AnimateBaseGlue(AnimationParam param) {
+//     // Presume the singleton is set
+//     pSingleton->animateChannel(param, AnimationType_BASE);
+// }
 
 
-void AnimateStatusGlue(AnimationParam param) {
-    // Presume the singleton is set
-    pSingleton->animateChannel(param, AnimationType_STATUS);
-}
+// void AnimateOverlayGlue(AnimationParam param) {
+//     // Presume the singleton is set
+//     pSingleton->animateChannel(param, AnimationType_OVERLAY);
+// }
+
+
+// void AnimateStatusGlue(AnimationParam param) {
+//     // Presume the singleton is set
+//     pSingleton->animateChannel(param, AnimationType_STATUS);
+// }
+
+// // Can be set to our modified NeoPixelAnimator so that it uses the localTimeOffset
+// unsigned long AnimateTimeFunction() {
+//     return millis() + pSingleton->nexus.localTimeOffset;
+// }
 
 
 LEDArtPiece::LEDArtPiece(Nexus& nx, uint16_t pixelCount, uint8_t maxBrightness, uint16_t width, uint16_t height, uint8_t port) : 
     nexus(nx),
     strip(pixelCount, port),
-    topo(width, height),
-    animator(3)
+    topo(width, height)
+    // animator(3)
 {
+    // For offsets
+    // animator.setTimeFunction(&AnimateTimeFunction);
+
     nx.maxBrightness = (float)maxBrightness;
-    pSingleton = this;
+    // pSingleton = this;
 }
 
+void* 
+LEDArtPiece::registerAnimation(LEDArtAnimation* pAnim) 
+{
+    if (!pAnim) return NULL;
+
+    LEDAnimationChannel* pChannel = channels + pAnim->type;
+
+    pAnim->pNext = pChannel->pRegistrations;
+    pChannel->pRegistrations = pAnim;
+
+    if (pAnim->type == LEDAnimationType_BASE)
+    {
+        nexus.addAnimation(pAnim->szName);
+    }
+
+    return pAnim;
+}
 
 void 
-LEDArtPiece::begin() {
+LEDArtPiece::begin() 
+{
     // Be nice and zero it all out
     strip.Begin();
     strip.Show();
 
     // Start the first base animation
-    LEDArtAnimation* pAnim = findNextBaseAnimation(true);
-    startAnimation(pAnim, false);
+    nextBaseAnimation(true);
+    // LEDArtAnimation* pAnim = findNextBaseAnimation(true);
+    // startAnimation(pAnim, false);
 }
 
 
 void 
-LEDArtPiece::loop() {
-    animator.UpdateAnimations();
+LEDArtPiece::loop() 
+{
+    // animator.UpdateAnimations();
+    uint32_t now = millis() + nexus.localTimeOffset;
+
+    for(uint8_t i=0; i<3; i++) 
+    {
+        animateChannel((LEDAnimationType)i, now);
+    }
+
     strip.Show();
 }
 
 
 void
-LEDArtPiece::startAnimation(LEDArtAnimation* pAnim, bool isLoop) {
+LEDArtPiece::startAnimation(LEDArtAnimation* pAnim, bool isLoop, uint32_t now) 
+{
 
     if (!pAnim) {
         return;
@@ -212,68 +249,120 @@ LEDArtPiece::startAnimation(LEDArtAnimation* pAnim, bool isLoop) {
 
     // strip.SetBrightness(maxBrightness * pAnim->brightness);
     uint8_t b = nexus.maxBrightness * pAnim->brightness;
-    Serial.print("Set Brightness to "); Serial.print(b); Serial.print("\n");
+    // Serial.print("Set Brightness to "); Serial.print(b); Serial.print("\n");
     strip.SetBrightness(b);
 
-    AnimUpdateCallback func = &AnimateBaseGlue;
-    switch(pAnim->type) {
-    case AnimationType_OVERLAY:
-        func = &AnimateOverlayGlue;
-        break;
-
-    case AnimationType_STATUS:
-        func = &AnimateStatusGlue;
-        break;
+    if (!now) 
+    {
+        now = millis() + nexus.localTimeOffset;
     }
 
-    pRunningAnims[pAnim->type] = pAnim;
-
-    uint16_t duration = (pAnim->ignoreSpeedFactor) ? pAnim->loopDuration : (float)pAnim->loopDuration * nexus.speedFactor;
-    animator.StartAnimation(pAnim->type, duration, func);
-
+    LEDAnimationChannel* pChannel = channels + pAnim->type;
+    pChannel->pRunning = pAnim;
+    pChannel->loopStartedAt = now;    
+    if (!isLoop)
+    {        
+        pChannel->channelStartedAt = now;
+        Log.printf("PIECE: Start animation %s\n", pAnim->szName);
+    } else {
+        Log.printf("PIECE: Loop animation %s\n", pAnim->szName);
+    }
     nexus.currentAnim = pAnim->szName;
 
-    if (!isLoop) {
-        startedAt[pAnim->type] = millis();
+    // Dispatch time 0
+    LEDAnimationParam param;
+    param.state = LEDAnimationState_Started;
+    param.progress = nexus.reverse ? 1.0f : 0.0f;
+    pAnim->animate(*this, param);
+
+    // If we are a channel start, we might need to prepare for the end of times
+    if (!isLoop && pAnim->type == LEDAnimationType_BASE && nexus.shouldPrepareRandomStatesFor)
+    {
+        uint32_t minDuration = pAnim->maxDuration;
+
+        if (!minDuration)
+        {
+            // Nothing specified by the anim, so use what's in the nexus
+            minDuration = nexus.maxDuration;
+        }
+        else
+        {
+            // Is the nexus one existant and lower?
+            if (nexus.maxDuration && nexus.maxDuration < minDuration)
+            {
+                minDuration = nexus.maxDuration;
+            }
+        }
+
+        // Oh hey, nothing specified a duration, so ignore this
+        if (!minDuration)
+        {
+            Log.printf("PIECE: shouldPrepareRandomStatesFor set but not maxDuration anywhere. Ignoring it.\n");
+        }
+        else
+        {
+            uint32_t nextStateTime = now + minDuration - nexus.shouldPrepareRandomStatesFor;
+            LEDArtAnimation* pNext = findNextBaseAnimation(true);
+            nexus.prepareRandomStateFor(nextStateTime, pNext->szName, (uint32_t)this);
+        }
     }
 }
 
 void 
-LEDArtPiece::stopAnimation(AnimationType type) {
-    animator.StopAnimation(type);
+LEDArtPiece::stopAnimation(LEDAnimationType type) 
+{
+    LEDAnimationChannel* pChannel = channels + type;
+
+    pChannel->pRunning = NULL;
 }
 
 void 
-LEDArtPiece::nextAnimation(bool randomize) {
+LEDArtPiece::nextBaseAnimation(bool randomize, uint32_t now) 
+{
     LEDArtAnimation* pAnim = findNextBaseAnimation(randomize);
 
     if (randomize) {
         nexus.randomizeAll((uint32_t)this);
-    }
+    }    
 
-    startAnimation(pAnim, false);   
+    startAnimation(pAnim, false, now);
 }
 
-void* 
-LEDArtPiece::registerAnimation(LEDArtAnimation* pAnim) {
-
-    if (!pAnim) return NULL;
-
-    pAnim->pNext = pRegistrations[pAnim->type];
-    pRegistrations[pAnim->type] = pAnim;
-
-    nexus.addAnimation(pAnim->szName);
-
-    return pAnim;
-}
 
 void
-LEDArtPiece::animateChannel(AnimationParam param, AnimationType type) {
-    LEDArtAnimation *pCur = pRunningAnims[type];
-    if (!pCur) {
-        // How did we get here?
-        animator.StopAnimation(type);
+LEDArtPiece::animateChannel(LEDAnimationType type, uint32_t now) 
+{
+    LEDAnimationChannel* pChannel = channels + type;
+    LEDArtAnimation* pAnim = pChannel->pRunning;
+    if (!pAnim)
+    {
+        // Nothing on the channel is running
         return;
+    }
+
+    LEDAnimationParam param;
+    param.state = LEDAnimationState_Progress;
+
+    // Have we exceeded the single loop duration?
+    uint32_t channelElapsed = now - pChannel->channelStartedAt;
+    uint32_t loopElapsed = now - pChannel->loopStartedAt;
+
+    uint32_t loopAdjustedDuration = pAnim->loopDuration;
+    if (!pAnim->ignoreSpeedFactor) 
+    {
+        loopAdjustedDuration = (float)loopAdjustedDuration * nexus.speedFactor;
+    }
+
+    if (loopElapsed > loopAdjustedDuration)
+    {
+        // This loop has ended, so definitely need to dispatch this concept to the animation
+        param.progress = 1.0f;
+        param.state = LEDAnimationState_Completed;
+    }
+    else
+    {
+        // Normal loop interval
+        param.progress = (float)loopElapsed / (float)loopAdjustedDuration;        
     }
 
     // Structs get copied right? I sure hope so...
@@ -281,51 +370,82 @@ LEDArtPiece::animateChannel(AnimationParam param, AnimationType type) {
         param.progress = 1.0 - param.progress;
     }
 
-    // We believe there is something running, so let it do it's thing
-    pCur->animate(*this, param);
+    // Dispatch for the update
+    pAnim->animate(*this, param);
 
-    // Has it hit max time?
-    // All animations are bound by their declared maxDuration.
-    // Base and Overlay are also bound by the system level 
-    // maxDuration (Status ones are not).
-    uint32_t elapsed = millis() - startedAt[type];
-    if ((pCur->maxDuration > 0 && elapsed >= pCur->maxDuration) ||
-        (nexus.maxDuration > 0 && type != AnimationType_STATUS && elapsed > nexus.maxDuration) ) {
-        // It must stop!
-        Serial.printf("StopAnimation(%d)\n", type);
 
-        animator.StopAnimation(type);
-
-        // If it is base, we try to start a next one though
-        if (type == AnimationType_BASE) {
-            nextAnimation(true);
+    // Now let's see if we've exceeded a max duration
+    if (type != LEDAnimationType_STATUS && !nexus.forcedForeverLoop &&
+        ( (pAnim->maxDuration && channelElapsed >= pAnim->maxDuration) ||
+          (nexus.maxDuration && channelElapsed >= nexus.maxDuration ) ) )
+    {
+        // This base or overlay is OVER
+        if (type == LEDAnimationType_BASE)
+        {
+            nextBaseAnimation(true, now);
         }
-
+        else
+        {
+            stopAnimation(type);
+        }
         return;
     }
 
+    // Do we have a prepared thing to do next?
+    char* szPreparedName = NULL;
+    uint32_t preparedReadyAt = nexus.nextPreparedState(&szPreparedName);
+    if (preparedReadyAt && preparedReadyAt < now)
+    {
+        // Oh hey! try to do the next animation
+        if (szPreparedName)
+        {
+            LEDArtAnimation* pNext = baseAnimForName(szPreparedName);
+            if (!pNext)
+            {
+                Log.printf("PIECE: Did not find requested animation '%s' from prepared state\n", szPreparedName);
+                nexus.clearPreparedState();
+            }
+            else
+            {
+                Log.printf("PIECE: Starting prepared animation '%s'\n", szPreparedName);
+                nexus.usePreparedState();
+                nexus.clearPreparedState();
+                startAnimation(pNext, false, now);
+                return;
+            }
+        }
+        else
+        {
+            Log.printf("PIECE: Prepared state had no anim name, ignoring\n");
+            nexus.clearPreparedState();
+        }
+    }
+
+    // Was that completed though?
     // If it has finished, it might be time to start something new though
-    if (param.state == AnimationState_Completed) {
-        if (pCur->loops) {
+    if (param.state == LEDAnimationState_Completed) {
+        if (pAnim->loops || nexus.forcedForeverLoop) {
             // Restart it - woo hoo!
-            startAnimation(pRunningAnims[type], true);
-            // animator.RestartAnimation(type);
-        } else if (type == AnimationType_BASE) {
+            startAnimation(pAnim, true, now);
+        } else if (type == LEDAnimationType_BASE) {
             // Only base will automatically move to a new animation
 
             // Need to find a next animation for this channel
-            nextAnimation(true);
+            nextBaseAnimation(true, now);
         }
+        return;
     }
 }
 
 LEDArtAnimation*
 LEDArtPiece::findNextBaseAnimation(bool randomize)
 {
-    LEDArtAnimation* pCur = pRunningAnims[AnimationType_BASE];
+    LEDAnimationChannel* pChannel = channels + LEDAnimationType_BASE;
+    LEDArtAnimation* pCur = pChannel->pRunning;
 
     if (!pCur) {
-        return pRegistrations[AnimationType_BASE];
+        // Nothing running, use the first registration
+        return pChannel->pRegistrations;
     }
 
     LEDArtAnimation* pNext = pCur->pNext;
@@ -343,7 +463,7 @@ LEDArtPiece::findNextBaseAnimation(bool randomize)
 
     // Second half we restart at the very head of the list and go until
     // we get to the current one
-    pNext = pRegistrations[AnimationType_BASE];
+    pNext = pChannel->pRegistrations;
     while(pNext != pCur) {
         if (pNext->isEnabled && 
             (!randomize ||
@@ -369,25 +489,39 @@ LEDArtPiece::nexusValueUpdate(NexusValueType which, uint32_t source)
 void
 LEDArtPiece::nexusUserAnimationRequest(char* szName, bool randomize, uint32_t source)
 {
+    LEDArtAnimation* pRequested = baseAnimForName(szName);
+
     // Just do something else
-    if (!szName)
+    if (!pRequested)
     {
-        nextAnimation(randomize);
+        nextBaseAnimation(randomize);
         return;
     }
 
+    startAnimation(pRequested);
+}
+
+LEDArtAnimation*
+LEDArtPiece::baseAnimForName(char* szName)
+{
+    if (!szName)
+    {
+        return NULL;
+    }
+
     // Try to find something specific to do
-    LEDArtAnimation* pCursor = pRegistrations[AnimationType_BASE];
+    LEDAnimationChannel* pChannel = channels + LEDAnimationType_BASE;
+    LEDArtAnimation* pCursor = pChannel->pRegistrations;
 
     while(pCursor) {
         if (strcmp(pCursor->szName, szName) == 0)
         {
             // Found it! Start it!
-            startAnimation(pCursor, false);
-            return;
+            return pCursor;
         }
         pCursor = pCursor->pNext;
     }
 
     // Else, did not find. Tell someone??
+    return NULL;
 }

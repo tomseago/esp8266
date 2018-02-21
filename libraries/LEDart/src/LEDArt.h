@@ -4,17 +4,31 @@
 #include "nexus_listener.h"
 
 #include <NeoPixelBrightnessBus.h>
-#include <NeoPixelAnimator.h>
+// #include <NeoPixelAnimator.h>
 
 class LEDArtPiece;
 class LEDArtAnimation;
 class Nexus;
 
-enum AnimationType {
-    AnimationType_BASE = 0,
-    AnimationType_OVERLAY = 1,
-    AnimationType_STATUS = 2,
+enum LEDAnimationType {
+    LEDAnimationType_BASE = 0,
+    LEDAnimationType_OVERLAY = 1,
+    LEDAnimationType_STATUS = 2,
 };
+
+enum LEDAnimationState
+{
+    LEDAnimationState_Started,
+    LEDAnimationState_Progress,
+    LEDAnimationState_Completed
+};
+
+struct LEDAnimationParam
+{
+    float progress;
+    LEDAnimationState state;
+};
+
 
 class LEDArtGeometry {
 public:
@@ -33,7 +47,7 @@ public:
     bool loops = true;
     bool isEnabled = true;
     bool ignoreSpeedFactor = false;
-    AnimationType type = AnimationType_BASE;
+    LEDAnimationType type = LEDAnimationType_BASE;
 
     float brightness = 1.0;
 
@@ -42,7 +56,7 @@ public:
     LEDArtAnimation(char* szName);
     ~LEDArtAnimation();
 
-    virtual void animate(LEDArtPiece& piece, AnimationParam p) = 0;
+    virtual void animate(LEDArtPiece& piece, LEDAnimationParam p) = 0;
 
     enum LEDPaletteType {
         LEDPalette_RB = 0,
@@ -81,15 +95,13 @@ public:
     virtual void begin();
     virtual void loop();
 
-    virtual void startAnimation(LEDArtAnimation* pAnim, bool isLoop);
-    void stopAnimation(AnimationType type);
+    virtual void startAnimation(LEDArtAnimation* pAnim, bool isLoop=false, uint32_t now=0);
+    void stopAnimation(LEDAnimationType type);
 
-    void nextAnimation(bool randomize);
+    void nextBaseAnimation(bool randomize, uint32_t now=0);
 
 
     // These are not for general use
-    void animateChannel(AnimationParam param, AnimationType type);
-
     void nexusValueUpdate(NexusValueType which, uint32_t source);
 
     // Can pass NULL as szName to ask for a random selection
@@ -107,12 +119,25 @@ protected:
     //     struct RegistrationNode *next;
     // } RegistrationNode;
 
-    LEDArtAnimation* pRegistrations[3];
-    LEDArtAnimation* pRunningAnims[3];
+    //LEDArtAnimation* pRegistrations[3];
 
-    uint32_t startedAt[3];
+    typedef struct LEDAnimationChannel {
+        LEDArtAnimation* pRegistrations;
 
-    NeoPixelAnimator animator;
+        LEDArtAnimation* pRunning;
+        uint32_t channelStartedAt;
+        uint32_t loopStartedAt;
+    } LEDAnimationChannel;
+
+    LEDAnimationChannel channels[3];
+
+    // LEDArtAnimation* pRunningAnims[3];
+
+    // uint32_t startedAt[3];
+    // uint32_t endsAt[3];
+
+    void animateChannel(LEDAnimationType type, uint32_t now);
 
     LEDArtAnimation* findNextBaseAnimation(bool randomize);
+    LEDArtAnimation* baseAnimForName(char* szName);
 };

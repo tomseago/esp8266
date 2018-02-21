@@ -13,7 +13,7 @@ public :
     public:
         StatusAnim(WebUI& parent);
 
-        virtual void animate(LEDArtPiece& piece, AnimationParam p);
+        virtual void animate(LEDArtPiece& piece, LEDAnimationParam p);
 
     private:
         WebUI& parent;

@@ -16,6 +16,8 @@ public:
         Reverse,
         MaxBrightness,
 
+        PreparedState,
+        
         Last
     };
 

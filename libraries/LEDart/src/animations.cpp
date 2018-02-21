@@ -17,13 +17,15 @@ LAA_Flood::LAA_Flood(char* szName, RgbColor background) :
     LEDArtAnimation(szName),
     background(background),
     foreground(background)
+    // background(0,255,255),
+    // foreground(255,0,0)
 {
 
 }
 
 void
-LAA_Flood::animate(LEDArtPiece& piece, AnimationParam p) {
-    if (p.state == AnimationState_Started) {
+LAA_Flood::animate(LEDArtPiece& piece, LEDAnimationParam p) {
+    if (p.state == LEDAnimationState_Started) {
         background = foreground;
 
         foreground = RgbColor(HslColor(rand(255)/255.0, 0.6, 0.5));
@@ -31,8 +33,10 @@ LAA_Flood::animate(LEDArtPiece& piece, AnimationParam p) {
 
     uint16_t floodedDistance = piece.strip.PixelCount() * p.progress;
 
-    piece.strip.ClearTo(foreground, 0, floodedDistance);
-    piece.strip.ClearTo(background, floodedDistance+1, piece.strip.PixelCount());
+    clearTo(piece, foreground, 0, floodedDistance);
+    clearTo(piece, background, floodedDistance+1, piece.strip.PixelCount());
+    // piece.strip.ClearTo(foreground, 0, floodedDistance);
+    // piece.strip.ClearTo(background, floodedDistance+1, piece.strip.PixelCount());
 }
 
 /////////
@@ -57,8 +61,8 @@ const float SPARKLE_L_1 = 0.2;
 const float SPARKLE_L_2 = 0.1;
 
 void
-LAA_Sparkle::animate(LEDArtPiece& piece, AnimationParam p) {
-    if (p.state == AnimationState_Started) {
+LAA_Sparkle::animate(LEDArtPiece& piece, LEDAnimationParam p) {
+    if (p.state == LEDAnimationState_Started) {
         for(int i=0; i<2; i++) {
             memcpy(ppGenerations[i], ppGenerations[i+1], sizeof(bool) * pixelCount);
         }
@@ -117,8 +121,8 @@ const float SPARKLE2_L_1 = 0.2;
 const float SPARKLE2_L_2 = 0.1;
 
 void
-LAA_Sparkle2::animate(LEDArtPiece& piece, AnimationParam p) {
-    if (p.state == AnimationState_Started) {
+LAA_Sparkle2::animate(LEDArtPiece& piece, LEDAnimationParam p) {
+    if (p.state == LEDAnimationState_Started) {
         loopBase += 1.0f;
     }
 
@@ -431,7 +435,7 @@ LAA_Rainbow::LAA_Rainbow(char* szName) :
 }
 
 void
-LAA_Rainbow::animate(LEDArtPiece& piece, AnimationParam p) {
+LAA_Rainbow::animate(LEDArtPiece& piece, LEDAnimationParam p) {
 
     currentType = (LAA_UnitMapper::UnitType)piece.nexus.unitType;
 
@@ -459,7 +463,7 @@ LAA_Line::LAA_Line(char* szName) :
 }
 
 void
-LAA_Line::animate(LEDArtPiece& piece, AnimationParam p) {
+LAA_Line::animate(LEDArtPiece& piece, LEDAnimationParam p) {
     currentType = (LAA_UnitMapper::UnitType)piece.nexus.unitType;
 
     piece.strip.ClearTo(black);
@@ -477,7 +481,7 @@ LAA_BoxOutline::LAA_BoxOutline(char* szName) :
 }
 
 void
-LAA_BoxOutline::animate(LEDArtPiece& piece, AnimationParam p) {
+LAA_BoxOutline::animate(LEDArtPiece& piece, LEDAnimationParam p) {
 
     piece.strip.ClearTo(black);
 
@@ -515,7 +519,7 @@ LAA_AllWhite::LAA_AllWhite(char* szName) :
 }
 
 void
-LAA_AllWhite::animate(LEDArtPiece& piece, AnimationParam p) {
+LAA_AllWhite::animate(LEDArtPiece& piece, LEDAnimationParam p) {
 
     piece.strip.ClearTo(white);
 }
@@ -526,12 +530,12 @@ LAA_AllWhite::animate(LEDArtPiece& piece, AnimationParam p) {
 LAA_HalfWhite::LAA_HalfWhite(char* szName) : 
     LAA_UnitMapper(szName)
 {
-    type = AnimationType_OVERLAY;
+    type = LEDAnimationType_OVERLAY;
     currentType = Unit_SpecificCols;
 }
 
 void
-LAA_HalfWhite::animate(LEDArtPiece& piece, AnimationParam p) {
+LAA_HalfWhite::animate(LEDArtPiece& piece, LEDAnimationParam p) {
 
     uint16_t nUnits = numUnits(piece);
 
@@ -548,13 +552,13 @@ LAA_RandoFill::LAA_RandoFill(char* szName) :
     LAA_UnitMapper(szName),
     unitOrder(NULL)
 {
-    type = AnimationType_BASE;
+    type = LEDAnimationType_BASE;
 }
 
 void
-LAA_RandoFill::animate(LEDArtPiece& piece, AnimationParam p) 
+LAA_RandoFill::animate(LEDArtPiece& piece, LEDAnimationParam p) 
 {
-    if (p.state == AnimationState_Started || !unitOrder || calculatedFor != piece.nexus.unitType) {
+    if (p.state == LEDAnimationState_Started || !unitOrder || calculatedFor != piece.nexus.unitType) {
 
         calculateOrder(piece);
     }
@@ -598,7 +602,7 @@ LAA_DimDebug::LAA_DimDebug(char* szName) :
 }
 
 void
-LAA_DimDebug::animate(LEDArtPiece& piece, AnimationParam p) {
+LAA_DimDebug::animate(LEDArtPiece& piece, LEDAnimationParam p) {
 
     if (p.progress > 0.5) {
         clearTo(piece, blue, 0, piece.strip.PixelCount());

@@ -209,7 +209,7 @@ MTMessage::readIdDone(bool ok, void * ret)
         return;
     }
 
-    Log.printf("MT: Read: id = %d\n", id);
+    // Log.printf("MT: Read: id = %d\n", id);
 
     conn->tcpBuffer->readBytes((uint8_t*)&src, sizeof(src), std::bind(&MTMessage::readSrcDone, this, std::placeholders::_1, std::placeholders::_2));    
 }
@@ -223,7 +223,7 @@ MTMessage::readSrcDone(bool ok, void * ret)
         return;
     }
 
-    Log.printf("MT: Read: source = %d\n", src);
+    // Log.printf("MT: Read: source = %d\n", src);
 
     conn->tcpBuffer->readBytes((uint8_t*)&dest, sizeof(dest), std::bind(&MTMessage::readDestDone, this, std::placeholders::_1, std::placeholders::_2));    
 }
@@ -237,7 +237,7 @@ MTMessage::readDestDone(bool ok, void * ret)
         return;
     }
 
-    Log.printf("MT: Read: dest = %d\n", dest);
+    // Log.printf("MT: Read: dest = %d\n", dest);
 
     conn->tcpBuffer->readBytes((uint8_t*)&type, sizeof(type), std::bind(&MTMessage::readTypeDone, this, std::placeholders::_1, std::placeholders::_2));    
 }
@@ -251,7 +251,7 @@ MTMessage::readTypeDone(bool ok, void * ret)
         return;
     }
 
-    Log.printf("MT: Read: type = %d\n", type);
+    // Log.printf("MT: Read: type = %d\n", type);
 
     conn->tcpBuffer->readBytes((uint8_t*)&length, sizeof(length), std::bind(&MTMessage::readDataLenDone, this, std::placeholders::_1, std::placeholders::_2));    
 }
@@ -265,7 +265,7 @@ MTMessage::readDataLenDone(bool ok, void * ret)
         return;
     }
 
-    Log.printf("MT: Read: length = %d\n", length);
+    // Log.printf("MT: Read: length = %d\n", length);
 
     // Make sure this is sane
     if (length > capacity)
@@ -630,7 +630,7 @@ void
 MsgTube::startSTAConnect(bool isSecondary)
 {    
     Log.printf("MT: startSTAConnect(isSecondary=%s)\n", isSecondary ? "true": "false");
-    if (nodeId == 1 && isSecondary)
+    if ((nodeId == MTMasterAddr+1) && isSecondary)
     {
         // There is no secondary, but we might want to try again for the primary
         startSTANothingPeriod();
@@ -640,7 +640,7 @@ MsgTube::startSTAConnect(bool isSecondary)
     // Start by making sure we are consistently disconnected
     WiFi.disconnect(true);
 
-    if (nodeId == 0)
+    if (nodeId == MTMasterAddr)
     {
         // Special case for master node, disabled
         staStatus = Disabled;

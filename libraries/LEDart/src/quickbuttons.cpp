@@ -85,7 +85,7 @@ QuickButtons::loop() {
 
     if (buttons[0].fell()) {
         if (flashLightOn) {
-            piece.stopAnimation(AnimationType_OVERLAY);
+            piece.stopAnimation(LEDAnimationType_OVERLAY);
         } else {
             piece.startAnimation(flashLight, false);
         }
@@ -93,7 +93,7 @@ QuickButtons::loop() {
     }
 
     if (buttons[1].fell()) {
-        piece.nextAnimation(false);
+        piece.nextBaseAnimation(false);
     }
 
     if (buttons[2].fell()) {
