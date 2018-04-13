@@ -3,7 +3,7 @@
 
 #include <bstrlib.h>
 #include "nexus.h"
-
+#include "log.h"
 
 // #include <StandardCplusplus.h>
 // #include <string>
@@ -26,11 +26,110 @@ WebUI::StatusAnim::animate(LEDArtPiece& piece, LEDAnimationParam p)
 }
 
 
-WebUI::WebUI(Nexus& nexus) :
-    statusAnim(*this), nexus(nexus), chooserColor(255,128,0)
+WebUI::WebUI(Nexus& nexus, LEDArtPiece& piece) :
+    statusAnim(*this), nexus(nexus), piece(piece), chooserColor(255,128,0)
 {
 
 }
+
+void
+WebUI::addClient(AsyncWebSocketClient* client)
+{
+    if (!client) return;
+
+    ClientCtx* ctx = new ClientCtx(client->id());
+    if (!pClientCtxs)
+    {
+        pClientCtxs = ctx;
+        return;
+    }
+
+    ClientCtx* pCur = pClientCtxs;
+    while(pCur->pNext) pCur = pCur->pNext;
+
+    pCur->pNext = ctx;
+}
+
+void
+WebUI::removeClient(AsyncWebSocketClient* client)
+{
+    if (!client) return;
+
+    removeClientForId(client->id());
+}
+
+
+void
+WebUI::removeClientForId(uint32_t id)
+{
+    ClientCtx* pLast = NULL;
+    ClientCtx* pCur = pClientCtxs;
+
+    while(pCur)
+    {
+        if (id == pCur->id)
+        {
+            // time to kill it off
+            if (!pLast)
+            {
+                // Only one item, so it must be at the head of the list
+                pClientCtxs = pCur->pNext;
+            }
+            else
+            {
+                // There was someone before so rebase them to our future
+                pLast->pNext = pCur->pNext;
+            }
+
+            // Don't modify last
+            ClientCtx* pToKill = pCur;
+            pCur = pCur->pNext;
+            delete pToKill;
+
+        }
+        else
+        {
+            pLast = pCur;
+            pCur = pCur->pNext;    
+        }
+    }
+}
+
+WebUI::ClientCtx* 
+WebUI::ctxForClient(AsyncWebSocketClient* client)
+{
+    if (!client) return NULL;
+
+    uint32_t id = client->id();
+    ClientCtx* pCur = pClientCtxs;
+
+    while(pCur)
+    {
+        if(pCur->id == id)
+        {
+            return pCur;
+        }
+
+        pCur = pCur->pNext;
+    }
+
+    // Nope!
+    return NULL;
+}
+
+uint32_t lastPoke = 0;
+void
+WebUI::loop()
+{
+    // uint32_t now = millis();
+    // if (now - lastPoke > 3000)
+    // {
+    //     // Log.print("poke\n");
+    //     printf("poke!\n");
+    //     lastPoke = now;
+    // }    
+}
+
 
 void 
 WebUI::begin(){
@@ -57,7 +156,11 @@ WebUI::begin(){
     ws.onNotFound(std::bind(&WebUI::h_404, this, std::placeholders::_1));
 
     ws.begin();
+
+    // So that we can send these to our clients if they wants them
+    Log.addPrint(this);
 }
+
 
 void 
 WebUI::h_hello(AsyncWebServerRequest *req)
@@ -148,9 +251,14 @@ WebUI::h_socket(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEvent
     os_printf("ws[%s][%u] connect\n", server->url(), client->id());
     // client->printf("Hello Client %u :)", client->id());
     client->ping();
+
+    addClient(client);
+
   } else if(type == WS_EVT_DISCONNECT){
     //client disconnected
     os_printf("ws[%s][%u] disconnect: %u\n", server->url(), client->id());
+    removeClient(client);
+
   } else if(type == WS_EVT_ERROR){
     //error was received from the other end
     os_printf("ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t*)arg), (char*)data);
@@ -180,6 +288,10 @@ WebUI::h_socket(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEvent
           switch (data[0]) {
             case 'G': // Get
                 switch(data[1]) {
+                    case 'G':
+                        getGeometries(client);
+                        break;
+
                     case 'A':
                         getAnimations(client);
                         break;
@@ -196,17 +308,13 @@ WebUI::h_socket(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEvent
 
             case 'S':
                 switch(data[1]) {
-                    case 'A': // Animation
-                        setAnimation(data, len);
-                        break;
-
                     case 'G': // Geometry
                         setGeometry(data, len);
                         break;
 
-                    // case 'U': // Unit
-                    //     setUnit(data, len);
-                    //     break;
+                    case 'A': // Animation
+                        setAnimation(data, len);
+                        break;
 
                     case 'P': // Palette
                         setPalette(data, len);
@@ -226,6 +334,10 @@ WebUI::h_socket(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEvent
 
                     case 'R': // Reverse state
                         setReverse(data, len);
+                        break;
+
+                    case 'L':
+                        setWantLogs(client, data, len);
                         break;
                 }
                 break;
@@ -295,20 +407,59 @@ WebUI::h_socket(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEvent
 }
 
 void
+WebUI::getGeometries(AsyncWebSocketClient * client)
+{
+    bstring s = bfromcstr("GEOMS:");
+
+    char* szName = NULL;
+    bool canRotate = false;
+    void* cursor = piece.enumerateGeometries(NULL, &szName, &canRotate);
+    while(cursor)
+    {
+        if (szName)
+        {
+            bconchar(s, canRotate ? '+' : '-');
+            bcatcstr(s, szName);
+            bconchar(s, ';');
+        }
+
+        cursor = piece.enumerateGeometries(cursor, &szName, &canRotate);
+    }
+
+    if (szName)
+    {
+        bconchar(s, canRotate ? '+' : '-');
+        bcatcstr(s, szName);
+        bconchar(s, ';');
+    }
+
+    client->text(bdata(s));
+}
+
+
+void
 WebUI::getAnimations(AsyncWebSocketClient * client)
 {
     bstring s = bfromcstr("ANIMS:");
 
+    char* szName = NULL;
+    void* cursor = piece.enumerateAnimations(NULL, &szName);
+    while(cursor)
+    {
+        if (szName)
+        {
+            bcatcstr(s, szName);
+            bconchar(s, ';');
+        }
 
-    // for(uint8_t ix = 0; ix<nexus.numAnimations(); ix++)
-    // {
-    //     char* sz = nexus.animName(ix);
-    //     if (ix > 0)
-    //     {
-    //         bconchar(s, ';');
-    //     }
-    //     bcatcstr(s, sz);
-    // }
+        cursor = piece.enumerateAnimations(cursor, &szName);
+    }
+
+    if (szName)
+    {
+        bcatcstr(s, szName);
+        bconchar(s, ';');
+    }
 
     client->text(bdata(s));
 }
@@ -439,6 +590,23 @@ WebUI::setPalette(uint8_t *data, size_t len)
 }
 
 void
+WebUI::setWantLogs(AsyncWebSocketClient* client, uint8_t *data, size_t len)
+{
+    if (!client) return;
+
+    if (len < 3) return;
+
+    bool wantsLog = (data[2] == '+');
+
+    ClientCtx* ctx = ctxForClient(client);
+    if (ctx)
+    {
+        ctx->wantsDeviceLogs = wantsLog;
+    }
+}
+
+
+void
 WebUI::setChooserColor(uint8_t *data, size_t len)
 {
     HtmlColor color;
@@ -470,7 +638,8 @@ WebUI::setBrightness(uint8_t *data, size_t len)
         return;
     }
 
-    uint8_t t = atoi((const char *)&data[2]);
+    bstring s = blk2bstr(data+2, len-2);
+    uint8_t t = atoi(bdata(s));
 
     nexus.maxBrightness = t;
 }
@@ -507,4 +676,76 @@ WebUI::setReverse(uint8_t *data, size_t len)
     }
 
     nexus.reverse = (data[2] == '+');
+}
+
+///////////////////////
+// Stream interface for logging
+
+void
+WebUI::flush(void)
+{
+    // if (serialEnabled)
+    // {
+    //     Serial.flush();
+    // }
+
+    // for(uint8_t i=0; i<MAX_STREAMS; i++) 
+    // {
+    //     if (streams[i]) streams[i]->flush();
+    // }
+}
+
+size_t
+WebUI::write(uint8_t c)
+{
+    // Should buffer these, but we will not for right now...
+    return write(&c, 1);
+    // size_t amtWritten;
+
+    // if (serialEnabled)
+    // {
+    //     amtWritten = Serial.write(c);
+    // }
+
+    // for(uint8_t i=0; i<MAX_STREAMS; i++) 
+    // {
+    //     if (streams[i]) amtWritten = streams[i]->write(c);
+    // }
+
+    // return amtWritten;
+}
+
+size_t
+WebUI::write(const uint8_t *buffer, size_t size)
+{
+    if (!buffer || !size) return 0;
+
+    ClientCtx* pCur = pClientCtxs;
+    if (!pCur) return 0;
+
+    bstring s = bfromcstr("L:");
+    bcatblk(s, buffer, size);
+
+    // Log.printf("DL>%s<\n", bdata(s));
+
+    while(pCur)
+    {
+        if (pCur->wantsDeviceLogs)
+        {
+            AsyncWebSocketClient* client = socket.client(pCur->id);
+            // Log.printf("DL For %d got %d\n", pCur->id, client);
+            if (!client)
+            {
+                // Error of some type???
+            }
+            else
+            {
+                client->text(bdata(s));
+            }
+        }
+
+        pCur = pCur->pNext;
+    }
+
+    return size;
 }

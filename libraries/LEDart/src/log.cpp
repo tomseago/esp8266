@@ -6,7 +6,7 @@
 #define MAX_STREAMS 2
 
 bool serialEnabled;
-Stream* streams[MAX_STREAMS];
+Print* streams[MAX_STREAMS];
 
 DBLog::DBLog()
 {
@@ -23,15 +23,28 @@ void DBLog::setSerialEnabled(bool en)
 }
 
 bool
-DBLog::addStream(Stream *stream)
+DBLog::addPrint(Print *stream)
 {
     for(uint8_t i=0; i<MAX_STREAMS; i++) {
-        if (streams[i] != NULL) {
+        if (!streams[i]) {
             streams[i] = stream;
-            break;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void
+DBLog::removePrint(Print *stream)
+{
+    for(uint8_t i=0; i<MAX_STREAMS; i++) {
+        if (streams[i] == stream) {            
+            streams[i] = NULL;
         }
     }
 }
+
 
 void
 DBLog::flush(void)

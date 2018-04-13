@@ -7,3 +7,6 @@
 [submodule "libraries/NeoPixelBus"]
 	path = libraries/NeoPixelBus
 	url = git@github.com:tomseago/NeoPixelBus.git
+[submodule "libraries/Artnet"]
+	path = libraries/Artnet
+	url = git@github.com:natcl/Artnet.git

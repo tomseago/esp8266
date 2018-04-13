@@ -76,7 +76,7 @@ LAA_PaletteFill paletteFill("Palette Fill");
 
 QuickButtons buttons(art, &halfWhite);
 
-WebUI webui(nx);
+WebUI webui(nx, art);
 WiFiSync wifiSync(nx);
 
 //Pinger pinger;
@@ -128,7 +128,7 @@ void setup() {
   art.registerAnimation(&randoFill);
   art.registerAnimation(&paletteFill);
   art.registerAnimation(&sparkle);
-  art.registerAnimation(&line);
+//  art.registerAnimation(&line);
   art.registerAnimation(&rainbow);
 //  art.registerAnimation(&boxOutline);
   art.begin();
@@ -160,6 +160,7 @@ uint8_t count = 0;
 void loop() {
   msgTube.loop();
   wifiSync.loop();
+  webui.loop();
 //  pinger.loop();
 
   buttons.loop();

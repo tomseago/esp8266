@@ -150,6 +150,14 @@ public:
     void* registerGeometry(LEDArtGeometry* pGeom);
     void* registerAnimation(LEDArtAnimation* pAnim);
 
+    // To begin a new enumeration pass NULL for the cursor. On subsequent calls pass
+    // the returned value as the cursor. On the last item in the list the cursor
+    // result will be NULL. 
+    void* enumerateGeometries(void* cursor, char** pszName, bool* pCanRotate);
+
+    // Only returns the base animations because that's all a UI cares about
+    void* enumerateAnimations(void* cursor, char** pszName);
+
     virtual void begin();
     virtual void loop();
 

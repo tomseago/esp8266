@@ -229,6 +229,67 @@ LEDArtPiece::registerAnimation(LEDArtAnimation* pAnim)
     return pAnim;
 }
 
+void* 
+LEDArtPiece::enumerateGeometries(void* cursor, char** pszName, bool* pCanRotate)
+{
+    // Presume the cursor value a pointer to the current thing we should return
+    // some data for
+    LEDArtGeometry* pGeom = (LEDArtGeometry*)cursor;
+
+    if (!pGeom)
+    {
+        pGeom = pGeomRegistrations;
+
+        // start a new enumeration
+        if (!pGeom)
+        {
+            // Nothng to do at all
+            if (pszName)
+            {
+                *pszName = NULL;
+            }
+            return NULL;
+        }
+    }
+
+    if (pszName)
+    {
+        *pszName = pGeom->szName;
+    }
+    if (pCanRotate)
+    {
+        *pCanRotate = pGeom->canRotate;
+    }
+
+    return pGeom->pNext;
+}
+
+void*
+LEDArtPiece::enumerateAnimations(void* cursor, char** pszName)
+{
+    LEDArtAnimation* pAnim = (LEDArtAnimation*)cursor;
+
+    if (!pAnim)
+    {
+        pAnim = channels[LEDAnimationType_BASE].pRegistrations;
+        if (!pAnim)
+        {
+            if (pszName)
+            {
+                *pszName = NULL;
+            }
+            return NULL;
+        }
+    }
+
+    if (pszName)
+    {
+        *pszName = pAnim->szName;
+    }
+
+    return pAnim->pNext;
+}
+
 void 
 LEDArtPiece::begin() 
 {

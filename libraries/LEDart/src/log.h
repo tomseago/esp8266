@@ -9,7 +9,8 @@ public:
     DBLog();
 
     void setSerialEnabled(bool en);
-    bool addStream(Stream *stream);
+    bool addPrint(Print *stream);
+    void removePrint(Print *stream);
 
     void flush(void) override;
     size_t write(uint8_t) override;

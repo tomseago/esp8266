@@ -3,38 +3,70 @@ function log(msg) {
     $("#log").append(msg+"\n");
 }
 
+function clearLog() {
+    $("#log").empty();    
+}
+
 
 // Create WebSocket connection.
 // const socket = new WebSocket('ws://localhost:3000/socket');
-const socket = new WebSocket(config.socketPath);
 
+var showNetwork = true;
+var socket;
 
-// Connection opened
-socket.addEventListener('open', function (event) {
-    log("Socket Open");
-    send('Hello Server!');
-    getAnims();
-});
-
-// Listen for messages
-socket.addEventListener('message', function (event) {
-    var msg = event.data;
-
-    log("<---RECV: '" + msg + "'");
-
-    var parts = msg.split(":");
-    if (parts && parts.length > 0) {
-        handleMessageParts(parts);
+function openSocket() {
+    if (socket) {
+        // close the lod one first
+        log("closing old socket");
+        socket.close();
+        socket = false;
     }
-});
 
-socket.addEventListener('error', function(event) {
-    log("Socket error: ", event.data);
-});
+    socket = new WebSocket(config.socketPath);
 
-socket.addEventListener('close', function(event) {
-    log("Socket closed");
-});
+    // Connection opened
+    socket.addEventListener('open', function (event) {
+        log("Socket Open");
+        send('Hello Server!');
+        getAnims();
+        getGeoms();
+
+        setSocketOpen();
+    });
+
+    // Listen for messages
+    socket.addEventListener('message', function (event) {
+        var msg = event.data;
+
+        if (showNetwork) log("<---RECV: '" + msg + "'");
+
+        var parts = msg.split(":");
+        if (parts && parts.length > 0) {
+            handleMessageParts(parts);
+        }
+    });
+
+    socket.addEventListener('error', function(event) {
+        log("Socket error: ", event.data);
+    });
+
+    socket.addEventListener('close', function(event) {
+        log("Socket closed");
+        socket = false;
+        setSocketClosed();
+    });
+}
+
+function setSocketOpen() {
+    $("#socketClosed").hide();
+    $("#socketOpen").show();    
+}
+
+function setSocketClosed() {
+    $("#socketClosed").show();
+    $("#socketOpen").hide();    
+}
+
 
 function send(msg) {
     if (socket.readyState != WebSocket.OPEN) {
@@ -43,16 +75,55 @@ function send(msg) {
     }
 
     // Seems ok I guess??
-    log("--->SEND: '"+msg+"'");
+    if (showNetwork) log("--->SEND: '"+msg+"'");
     socket.send(msg);
 }
 
 
 function handleMessageParts(parts) {
+    if (parts[0]=="GEOMS") {
+        handleGeomsList(parts[1].split(";"));
+        return;
+    }
+
     if (parts[0]=="ANIMS") {
         handleAnimsList(parts[1].split(";"));
         return;
     }
+
+    if (parts[0]=="L") {
+        var out = parts.slice(1,parts.length);
+        out.unshift("DEV) ");
+        log(out.join(":").trim());
+    }
+}
+
+function handleGeomsList(list) {
+    log("Geoms list = "+list);
+
+    if (!list || list.length == 0) {
+        return;
+    }
+
+    // Update the buttons
+    var el = $("#geomButtons");
+    el.empty();
+
+    list.forEach(function(name) {
+        if (!name) return;
+        var canRotate = name[0] == '+';
+
+        name = name.slice(1, name.length);
+        if (!name) return;
+
+        log("Adding geom: '"+name+"'");
+        el.append("<button onClick='requestGeom(\""+name+"\", false);'>"+name+"</button>");
+
+        if (canRotate) {
+            // A second rotated version
+            el.append("<button onClick='requestGeom(\""+name+"\", true);'>"+name+" Rotated</button>");
+        }            
+    });
 }
 
 function handleAnimsList(list) {
@@ -65,6 +136,7 @@ function handleAnimsList(list) {
     el.empty();
 
     list.forEach(function(name) {
+        if (!name) return;
         log("Adding animation: '"+name+"'");
         el.append("<button onClick='requestAnim(\""+name+"\");'>"+name+"</button>");
     });
@@ -78,8 +150,16 @@ function requestAnim(name) {
     send("SA-"+name);
 }
 
+function requestGeom(name, rotated) {
+    send("SG"+(rotated?"+":"-")+name);
+}
+
 function getAnims() {
     send("GA");
+}
+
+function getGeoms() {
+    send("GG");
 }
 
 function getPalettes() {
@@ -90,15 +170,15 @@ function getState() {
     send("GX");
 }
 
-function setUnit() {
-    var t = $("#unitToSet").val().trim();
-    if (!t) {
-        alert("Nothing to set");
-        return;
-    }
+// function setUnit() {
+//     var t = $("#unitToSet").val().trim();
+//     if (!t) {
+//         alert("Nothing to set");
+//         return;
+//     }
 
-    send("SU"+t);
-}
+//     send("SU"+t);
+// }
 
 function setPalette() {
     var t = $("#paletteToSet").val().trim();
@@ -122,9 +202,9 @@ function setAnim() {
 
 /////////
 
-function setUnitType(num) {
-    send("SU"+num);    
-}
+// function setUnitType(num) {
+//     send("SU"+num);    
+// }
 
 function setPaletteNum(num) {
     send("SP"+num);    
@@ -176,6 +256,10 @@ function setReverse(shouldReverse) {
     send("SR"+(shouldReverse?"+":"-"));
 }
 
+function setWantDeviceLogs(wantLogs) {
+    send("SL"+(wantLogs?"+":"-"));    
+}
+
 function showColorChooser(shouldShow) {
     if (shouldShow) {
         send("C+");
@@ -218,8 +302,22 @@ function colorChange(event) {
     var val = $("#colorChooser").spectrum("get");
     log("change: "+val);
 }
-/////
 
+/////
+function cbDeviceLogChange(event) {
+    var val = $("#cbDeviceLog").prop("checked");
+    log("want device logs "+val);
+
+    setWantDeviceLogs(val);
+}
+
+function cbShowNetworkChange(event) {
+    var val = $("#cbShowNetwork").prop("checked");
+
+    showNetwork = val;
+}
+
+/////
 $("#colorChooser").spectrum({
     flat: true
     , showInput: true
@@ -228,3 +326,7 @@ $("#colorChooser").spectrum({
     , move: colorMove
     , change: colorChange
 });
+
+
+/////////////////
+openSocket();

@@ -44,6 +44,11 @@ wss.on('connection', function connection(ws, req) {
       ws.send("ANIMS:WebUIStatus;Sparkle;Rainbow;Rando Fill");
       return;
     }
+
+    if (message=="GG") {
+      ws.send("GEOMS:+Basic;+All;-Special;");
+      return;
+    }
   });
 
   ws.send('something');
