@@ -1,0 +1,76 @@
+<!DOCTYPE html><html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.5">
+    <title>LED Art</title>
+    <script src="config.js" type="text/javascript"></script>
+    <script src="jquery.js" type="text/javascript"></script>
+    <script src="spectrum.js" type="text/javascript"></script>
+
+    <link rel="stylesheet" type="text/css" href="spectrum.css">
+    <link rel="stylesheet" type="text/css" href="ledart.css">
+</head>
+<body>
+    <div>
+        Start:
+        <button onClick="requestNextAnim(false);">Next</button>
+        <button onClick="requestNextAnim(true);">RANDOM</button>
+        <span id="animButtons"></span>
+    </div>
+
+    <div>
+        <input type="text" id="brightnessToSet" value="192"/><button onClick="setBrightness();">Set Brightness</button>
+        <button onClick="setBrightness(255);">Max</button>    
+        <button onClick="setBrightness(192);">Mid</button>    
+        <button onClick="setBrightness(0);">Off</button>    
+    </div>
+
+    <div>
+        <input type="text" id="durationToSet" value="300"/><button onClick="setDuration();">Set Max Duration (seconds)</button>
+    </div>
+
+    <div>
+        <input type="text" id="speedFactorToSet" value="1.0"/><button onClick="setSpeedFactor();">Set Speed Factor</button>
+    </div>
+
+    <div>
+        <button onClick="showColorChooser(true);">Show ColorChooser</button>
+        <button onClick="showColorChooser(false);">Hide Color Chooser</button>
+        <button onClick="setNexusColor(true);">Set Foreground</button>
+        <button onClick="setNexusColor(false);">Set Background</button>
+    </div>
+
+    <div>
+    Unit Type:
+    <button onClick="setUnitType(0);">Single</button>
+    <button onClick="setUnitType(1);">Each</button>
+    <button onClick="setUnitType(2);">Rows</button>
+    <button onClick="setUnitType(3);">Cols</button>
+    <button onClick="setUnitType(4);">US Cols</button>
+    <button onClick="setUnitType(5);">US Rows</button>
+    </div>
+
+    <div>
+    Palette:
+    <button onClick="setPaletteNum(0);">Red Blue</button>
+    <button onClick="setPaletteNum(1);">RYB</button>
+    <button onClick="setPaletteNum(2);">White Black</button>
+    <button onClick="setPaletteNum(3);">Blues</button>
+    <button onClick="setPaletteNum(4);">Pinks</button>
+    <button onClick="setPaletteNum(5);">Reds</button>
+    </div>
+
+    <div>
+    Reverse :
+    <button onClick="setReverse(true);">On</button>
+    <button onClick="setReverse(false);">Off</button>
+    </div>
+
+    <div id="colorString">
+    </div>
+    <div>
+        <input type='text' id="colorChooser" />
+    </div>
+    <div id="logXXX"></div>    
+
+    <script src="ledart.js" type="text/javascript"></script>
+</body></html>

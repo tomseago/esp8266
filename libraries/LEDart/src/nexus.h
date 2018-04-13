@@ -97,7 +97,7 @@ private:
 
     struct NexusState {
         uint8_t palette;
-        float speedFactor;
+        float speedFactor = 1.0;
         RgbColor foreground;
         RgbColor background;
         bool reverse;

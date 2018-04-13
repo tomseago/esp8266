@@ -638,6 +638,7 @@ MsgTube::startSTAConnect(bool isSecondary)
     }
 
     // Start by making sure we are consistently disconnected
+    Log.printf("MT: SSC WiFi.disconnect(true)\n");
     WiFi.disconnect(true);
 
     if (nodeId == MTMasterAddr)
@@ -645,6 +646,7 @@ MsgTube::startSTAConnect(bool isSecondary)
         // Special case for master node, disabled
         staStatus = Disabled;
         nextSTACheck = (uint32_t)-1;
+        Log.printf("MT: SSC isMaster, disabling sta connect, return\n");
         return;
     }
 
@@ -653,6 +655,7 @@ MsgTube::startSTAConnect(bool isSecondary)
     char szNextNodeName[strlen(szBaseName) + 3];
     sprintf(szNextNodeName, "%s%d", szBaseName, nextNodeId);
 
+    Log.printf("MT: SSC WiFi.begin(%s)\n", szNextNodeName);
     WiFi.begin(szNextNodeName, szPassword);
 
     // Start checking status to see if we get connected
@@ -660,6 +663,7 @@ MsgTube::startSTAConnect(bool isSecondary)
     staStatus = isSecondary ? TryingSecondary : TryingPrimary;
     nextSTACheck = staAttemptBegan + 2000;
     staCheckAttempts = 0;
+    Log.printf("MT: SSC staAttemptBegan=%d now we wait...\n", staAttemptBegan);
 }
 
 void

@@ -139,10 +139,12 @@ void setup() {
 //  // elsewhere right now
     art.startAnimation(&webui.statusAnim, false);
 
-//    art.startAnimation(&unitFill, false);
+    art.startAnimation(&unitFill, false);
 //    art.startAnimation(&wifiSync.statusAnim, false);
 
+// Need to begin the strip when debugging, but art.begin() does this on it's own
 //    art.strip.Begin();
+
   webui.begin();
   wifiSync.begin();
   

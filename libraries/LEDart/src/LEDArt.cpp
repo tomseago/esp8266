@@ -368,6 +368,7 @@ LEDArtPiece::nextGeometry(bool randomize)
     }
 }
 
+int logLimit = 10;
 
 void
 LEDArtPiece::animateChannel(LEDAnimationType type, uint32_t now) 
@@ -377,6 +378,7 @@ LEDArtPiece::animateChannel(LEDAnimationType type, uint32_t now)
     if (!pAnim)
     {
         // Nothing on the channel is running
+        // Log.printf("PIECE: AC nothing on %d.\n", type);
         return;
     }
 
@@ -410,6 +412,11 @@ LEDArtPiece::animateChannel(LEDAnimationType type, uint32_t now)
         param.progress = 1.0 - param.progress;
     }
 
+    if (logLimit)
+    {
+        logLimit--;
+        Log.printf("PIECE: AC chan(%d) ce:%d le:%d ld: %d sf:%f lad:%d prog:%f state=%d\n", type, channelElapsed, loopElapsed, pAnim->loopDuration, nexus.speedFactor, loopAdjustedDuration, param.progress, param.state);
+    }
     // Dispatch for the update
     pAnim->animate(*this, param);
 
@@ -422,10 +429,12 @@ LEDArtPiece::animateChannel(LEDAnimationType type, uint32_t now)
         // This base or overlay is OVER
         if (type == LEDAnimationType_BASE)
         {
+            Log.printf("PIECE: AC nextBaseAnimation(true, now).\n");
             nextBaseAnimation(true, now);
         }
         else
         {
+            Log.printf("PIECE: AC stopAnimation(%d).\n", type);
             stopAnimation(type);
         }
         return;
@@ -444,12 +453,12 @@ LEDArtPiece::animateChannel(LEDAnimationType type, uint32_t now)
             LEDArtAnimation* pNext = baseAnimForName(szPreparedAnimName);
             if (!pNext)
             {
-                Log.printf("PIECE: Did not find requested animation '%s' from prepared state\n", szPreparedAnimName);
+                Log.printf("PIECE: AC Did not find requested animation '%s' from prepared state\n", szPreparedAnimName);
                 nexus.clearPreparedState();
             }
             else
             {
-                Log.printf("PIECE: Starting prepared animation '%s'\n", szPreparedAnimName);
+                Log.printf("PIECE: AC Starting prepared animation '%s'\n", szPreparedAnimName);
                 nexus.usePreparedState();
                 nexus.clearPreparedState();
 
@@ -466,7 +475,7 @@ LEDArtPiece::animateChannel(LEDAnimationType type, uint32_t now)
                     {
                         geomRotated = false;
                     }
-                    Log.printf("PIECE: Using prepared geom '%s' rotated=%s\n", szPreparedGeomName, geomRotated ? "true" : "false");
+                    Log.printf("PIECE: AC Using prepared geom '%s' rotated=%s\n", szPreparedGeomName, geomRotated ? "true" : "false");
 
                     // The nexus may care that we changed things
                     nexus.setGeometry(pCurrentGeom->szName, geomRotated, (uint32_t)this);                   
@@ -479,7 +488,7 @@ LEDArtPiece::animateChannel(LEDAnimationType type, uint32_t now)
         }
         else
         {
-            Log.printf("PIECE: Prepared state had no anim name, ignoring\n");
+            Log.printf("PIECE: AC Prepared state had no anim name, ignoring\n");
             nexus.clearPreparedState();
         }
     }
@@ -487,16 +496,18 @@ LEDArtPiece::animateChannel(LEDAnimationType type, uint32_t now)
     // Was that completed though?
     // If it has finished, it might be time to start something new though
     if (param.state == LEDAnimationState_Completed) {
+        if (logLimit) Log.printf("PIECE: AC Completed(%d) pAnim->loops=%d forced=%d\n", type, pAnim->loops, nexus.forcedForeverLoop);
         if (pAnim->loops || nexus.forcedForeverLoop) {
             // Restart it - woo hoo!
+            if (logLimit) Log.printf("PIECE: AC Restart animation\n");
             startAnimation(pAnim, true, now);
         } else if (type == LEDAnimationType_BASE) {
             // Only base will automatically move to a new animation
 
             // Need to find a next animation for this channel
+            if (logLimit) Log.printf("PIECE: AC do nextBaseAnimation\n");
             nextBaseAnimation(true, now);
         }
-        return;
     }
 }
 
