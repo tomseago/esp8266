@@ -200,9 +200,13 @@ WebUI::h_socket(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEvent
                         setAnimation(data, len);
                         break;
 
-                    case 'U': // Unit
-                        setUnit(data, len);
+                    case 'G': // Geometry
+                        setGeometry(data, len);
                         break;
+
+                    // case 'U': // Unit
+                    //     setUnit(data, len);
+                    //     break;
 
                     case 'P': // Palette
                         setPalette(data, len);
@@ -296,15 +300,15 @@ WebUI::getAnimations(AsyncWebSocketClient * client)
     bstring s = bfromcstr("ANIMS:");
 
 
-    for(uint8_t ix = 0; ix<nexus.numAnimations(); ix++)
-    {
-        char* sz = nexus.animName(ix);
-        if (ix > 0)
-        {
-            bconchar(s, ';');
-        }
-        bcatcstr(s, sz);
-    }
+    // for(uint8_t ix = 0; ix<nexus.numAnimations(); ix++)
+    // {
+    //     char* sz = nexus.animName(ix);
+    //     if (ix > 0)
+    //     {
+    //         bconchar(s, ';');
+    //     }
+    //     bcatcstr(s, sz);
+    // }
 
     client->text(bdata(s));
 }
@@ -351,8 +355,7 @@ WebUI::getState(AsyncWebSocketClient * client)
 {
     bstring s = bfromcstr("STATE:");
 
-    bformata(s,"%d;%d;",
-        nexus.unitType,
+    bformata(s,"%d;",
         nexus.palette);
 
     char buf[8];
@@ -363,7 +366,7 @@ WebUI::getState(AsyncWebSocketClient * client)
         nexus.foreground.G,
         nexus.foreground.B,
 
-        nexus.currentAnim
+        nexus.getCurrentAnimName()
         );
 
     client->text(bdata(s));
@@ -386,21 +389,37 @@ WebUI::setAnimation(uint8_t *data, size_t len)
 }
 
 void
-WebUI::setUnit(uint8_t *data, size_t len)
+WebUI::setGeometry(uint8_t *data, size_t len)
 {
     if (len < 3) {
         return;
     }
 
-    uint8_t t = atoi((const char *)&data[2]);
-
-    if (t >= 6) {
-        return;
+    bool rotated = false;
+    if (data[2]=='+') {
+        rotated = true;
     }
 
-    nexus.unitType = t;
-    nexus.checkUnitType();
+    char* szName = (len==3) ? NULL : (char*)&data[3];
+    nexus.sendUserGeometryRequest(szName, rotated, (uint32_t)this);
 }
+
+// void
+// WebUI::setUnit(uint8_t *data, size_t len)
+// {
+//     if (len < 3) {
+//         return;
+//     }
+
+//     uint8_t t = atoi((const char *)&data[2]);
+
+//     if (t >= 6) {
+//         return;
+//     }
+
+//     nexus.unitType = (LEDArtAnimation::LEDUnitType)t;
+//     nexus.checkUnitType();
+// }
 
 void
 WebUI::setPalette(uint8_t *data, size_t len)

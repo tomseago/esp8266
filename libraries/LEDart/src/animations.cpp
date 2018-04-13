@@ -193,234 +193,311 @@ LAA_UnitMapper::LAA_UnitMapper(char* szName) :
 
 uint16_t
 LAA_UnitMapper::numUnits(LEDArtPiece& piece) {
-    switch(currentType) {
-    case Unit_Single:
-        return 1;
+    return piece.geomPrimaryCount();
+    // switch(currentType) {
+    // case Unit_Single:
+    //     return 1;
 
-    case Unit_Each:
-        return piece.strip.PixelCount();
+    // case Unit_Each:
+    //     return piece.strip.PixelCount();
 
-    case Unit_Rows:
-        return piece.topo.getHeight();
+    // case Unit_Rows:
+    //     return piece.topo.getHeight();
 
-    case Unit_Cols:
-        return piece.topo.getWidth();
+    // case Unit_Cols:
+    //     return piece.topo.getWidth();
 
-    case Unit_SpecificRows:
-        if (piece.specificGeometry) 
-        {
-            return piece.specificGeometry->height;
-        }
-        else
-        {
-            return piece.topo.getHeight();
-        }
+    // case Unit_SpecificRows:
+    //     if (piece.specificGeometry) 
+    //     {
+    //         return piece.specificGeometry->height;
+    //     }
+    //     else
+    //     {
+    //         return piece.topo.getHeight();
+    //     }
 
-    case Unit_SpecificCols:
-        if (piece.specificGeometry)
-        {
-            return piece.specificGeometry->width;
-        }
-        else
-        {
-            return piece.topo.getWidth();
-        }
-    }
+    // case Unit_SpecificCols:
+    //     if (piece.specificGeometry)
+    //     {
+    //         return piece.specificGeometry->width;
+    //     }
+    //     else
+    //     {
+    //         return piece.topo.getWidth();
+    //     }
+    // }
 
-    return 0;
+    // case Unit_AltRows:
+    //     if (piece.altGeometry) 
+    //     {
+    //         return piece.altGeometry->height;
+    //     }
+    //     else
+    //     {
+    //         return piece.topo.getHeight();
+    //     }
+
+    // case Unit_AltCols:
+    //     if (piece.altGeometry)
+    //     {
+    //         return piece.altGeometry->width;
+    //     }
+    //     else
+    //     {
+    //         return piece.topo.getWidth();
+    //     }
+    // }
+
+    // return 0;
 }
 
 
 uint16_t 
 LAA_UnitMapper::unitSize(LEDArtPiece& piece) {
-    switch(currentType) {
-    case Unit_Single:
-        return piece.strip.PixelCount();
+    return piece.geomSecondaryCount();
+    // switch(currentType) {
+    // case Unit_Single:
+    //     return piece.strip.PixelCount();
 
-    case Unit_Each:
-        return 1;
+    // case Unit_Each:
+    //     return 1;
 
-    case Unit_Rows:
-        return piece.topo.getWidth();
+    // case Unit_Rows:
+    //     return piece.topo.getWidth();
 
-    case Unit_Cols:
-        return piece.topo.getHeight();
+    // case Unit_Cols:
+    //     return piece.topo.getHeight();
 
-    case Unit_SpecificRows:
-        if (piece.specificGeometry)
-        {
-            return piece.specificGeometry->width;
-        }
-        else
-        {
-            return piece.topo.getWidth();
-        }
+    // case Unit_SpecificRows:
+    //     if (piece.specificGeometry)
+    //     {
+    //         return piece.specificGeometry->width;
+    //     }
+    //     else
+    //     {
+    //         return piece.topo.getWidth();
+    //     }
 
-    case Unit_SpecificCols:
-        if (piece.specificGeometry)
-        {
-            return piece.specificGeometry->height;
-        }
-        else
-        {
-            return piece.topo.getHeight();
-        }
-    }
+    // case Unit_SpecificCols:
+    //     if (piece.specificGeometry)
+    //     {
+    //         return piece.specificGeometry->height;
+    //     }
+    //     else
+    //     {
+    //         return piece.topo.getHeight();
+    //     }
+    // }
 
-    return 0;
+    // case Unit_AltRows:
+    //     if (piece.altGeometry)
+    //     {
+    //         return piece.altGeometry->width;
+    //     }
+    //     else
+    //     {
+    //         return piece.topo.getWidth();
+    //     }
+
+    // case Unit_AltCols:
+    //     if (piece.altGeometry)
+    //     {
+    //         return piece.altGeometry->height;
+    //     }
+    //     else
+    //     {
+    //         return piece.topo.getHeight();
+    //     }
+    // }
+
+    // return 0;
 }
 
 void 
 LAA_UnitMapper::setFullUnitColor(LEDArtPiece& piece, uint16_t unitIx, RgbColor color)
 {
-    switch(currentType) {
-    case Unit_Single:
-        piece.strip.ClearTo(color);
-        break;
+    piece.setPrimaryColor(unitIx, color);
 
-    case Unit_Each:
-        piece.strip.SetPixelColor(unitIx, color);
-        break;
+    // switch(currentType) {
+    // case Unit_Single:
+    //     piece.strip.ClearTo(color);
+    //     break;
 
-    case Unit_Rows:
-        for(int16_t i=0; i<piece.topo.getWidth(); i++) {
-            piece.strip.SetPixelColor(piece.topo.Map(i, unitIx), color);
-        }
-        break;
+    // case Unit_Each:
+    //     piece.strip.SetPixelColor(unitIx, color);
+    //     break;
 
-    case Unit_Cols:
-        for(int16_t i=0; i<piece.topo.getHeight(); i++) {
-            piece.strip.SetPixelColor(piece.topo.Map(unitIx, i), color);
-        }
-        break;
+    // case Unit_Rows:
+    //     for(int16_t i=0; i<piece.topo.getWidth(); i++) {
+    //         piece.strip.SetPixelColor(piece.topo.Map(i, unitIx), color);
+    //     }
+    //     break;
 
-    case Unit_SpecificRows:
-        if (piece.specificGeometry) {
-            for(int16_t i=0; i<piece.topo.getWidth(); i++) {
-                piece.strip.SetPixelColor(piece.specificGeometry->Map(i, unitIx), color);
-            }
-        }
-        else
-        {
-            for(int16_t i=0; i<piece.topo.getWidth(); i++) {
-                piece.strip.SetPixelColor(piece.topo.Map(i, unitIx), color);
-            }            
-        }
-        break;
+    // case Unit_Cols:
+    //     for(int16_t i=0; i<piece.topo.getHeight(); i++) {
+    //         piece.strip.SetPixelColor(piece.topo.Map(unitIx, i), color);
+    //     }
+    //     break;
 
-    case Unit_SpecificCols:
-        if (piece.specificGeometry) {
-            for(int16_t i=0; i<piece.topo.getHeight(); i++) {
-                piece.strip.SetPixelColor(piece.specificGeometry->Map(unitIx, i), color);
-            }
-        }
-        else
-        {
-            for(int16_t i=0; i<piece.topo.getHeight(); i++) {
-                piece.strip.SetPixelColor(piece.topo.Map(unitIx, i), color);
-            }            
-        }
-        break;
-    }
+    // case Unit_SpecificRows:
+    //     if (piece.specificGeometry) {
+    //         for(int16_t i=0; i<piece.topo.getWidth(); i++) {
+    //             piece.strip.SetPixelColor(piece.specificGeometry->Map(i, unitIx), color);
+    //         }
+    //     }
+    //     else
+    //     {
+    //         for(int16_t i=0; i<piece.topo.getWidth(); i++) {
+    //             piece.strip.SetPixelColor(piece.topo.Map(i, unitIx), color);
+    //         }            
+    //     }
+    //     break;
+
+    // case Unit_SpecificCols:
+    //     if (piece.specificGeometry) {
+    //         for(int16_t i=0; i<piece.topo.getHeight(); i++) {
+    //             piece.strip.SetPixelColor(piece.specificGeometry->Map(unitIx, i), color);
+    //         }
+    //     }
+    //     else
+    //     {
+    //         for(int16_t i=0; i<piece.topo.getHeight(); i++) {
+    //             piece.strip.SetPixelColor(piece.topo.Map(unitIx, i), color);
+    //         }            
+    //     }
+    //     break;
+    // }
+
+    // case Unit_AltRows:
+    //     if (piece.altGeometry) {
+    //         for(int16_t i=0; i<piece.topo.getWidth(); i++) {
+    //             piece.strip.SetPixelColor(piece.altGeometry->Map(i, unitIx), color);
+    //         }
+    //     }
+    //     else
+    //     {
+    //         for(int16_t i=0; i<piece.topo.getWidth(); i++) {
+    //             piece.strip.SetPixelColor(piece.topo.Map(i, unitIx), color);
+    //         }            
+    //     }
+    //     break;
+
+    // case Unit_SpecificCols:
+    //     if (piece.specificGeometry) {
+    //         for(int16_t i=0; i<piece.topo.getHeight(); i++) {
+    //             piece.strip.SetPixelColor(piece.specificGeometry->Map(unitIx, i), color);
+    //         }
+    //     }
+    //     else
+    //     {
+    //         for(int16_t i=0; i<piece.topo.getHeight(); i++) {
+    //             piece.strip.SetPixelColor(piece.topo.Map(unitIx, i), color);
+    //         }            
+    //     }
+    //     break;
+    // }
 }
 
 void 
 LAA_UnitMapper::setUnitPixelColor(LEDArtPiece& piece, uint16_t unitIx, uint16_t pixelIx, RgbColor color)
 {
-    switch(currentType) {
-    case Unit_Single:
-        piece.strip.SetPixelColor(pixelIx, color);
-        break;
+    piece.setSecondaryColorInPrimary(unitIx, pixelIx, color);
+    // switch(currentType) {
+    // case Unit_Single:
+    //     piece.strip.SetPixelColor(pixelIx, color);
+    //     break;
 
-    case Unit_Each:
-        piece.strip.SetPixelColor(unitIx, color);
+    // case Unit_Each:
+    //     piece.strip.SetPixelColor(unitIx, color);
 
-    case Unit_Rows:
-        piece.strip.SetPixelColor(piece.topo.Map(pixelIx, unitIx), color);
-        break;
+    // case Unit_Rows:
+    //     piece.strip.SetPixelColor(piece.topo.Map(pixelIx, unitIx), color);
+    //     break;
 
-    case Unit_Cols:
-        piece.strip.SetPixelColor(piece.topo.Map(unitIx, pixelIx), color);
-        break;
+    // case Unit_Cols:
+    //     piece.strip.SetPixelColor(piece.topo.Map(unitIx, pixelIx), color);
+    //     break;
 
-    case Unit_SpecificRows:
-        if (piece.specificGeometry)
-        {
-            piece.strip.SetPixelColor(piece.specificGeometry->Map(pixelIx, unitIx), color);
-        }
-        else
-        {
-            piece.strip.SetPixelColor(piece.topo.Map(pixelIx, unitIx), color);
-        }
-        break;
+    // case Unit_SpecificRows:
+    //     if (piece.specificGeometry)
+    //     {
+    //         piece.strip.SetPixelColor(piece.specificGeometry->Map(pixelIx, unitIx), color);
+    //     }
+    //     else
+    //     {
+    //         piece.strip.SetPixelColor(piece.topo.Map(pixelIx, unitIx), color);
+    //     }
+    //     break;
 
-    case Unit_SpecificCols:
-        if (piece.specificGeometry)
-        {
-            piece.strip.SetPixelColor(piece.specificGeometry->Map(unitIx, pixelIx), color);
-        }
-        else
-        {
-            piece.strip.SetPixelColor(piece.topo.Map(unitIx, pixelIx), color);            
-        }
-        break;
-    }
+    // case Unit_SpecificCols:
+    //     if (piece.specificGeometry)
+    //     {
+    //         piece.strip.SetPixelColor(piece.specificGeometry->Map(unitIx, pixelIx), color);
+    //     }
+    //     else
+    //     {
+    //         piece.strip.SetPixelColor(piece.topo.Map(unitIx, pixelIx), color);            
+    //     }
+    //     break;
+    // }
 }
 
 void 
 LAA_UnitMapper::setAllUnitsPixelColor(LEDArtPiece& piece, uint16_t pixelIx, RgbColor color)
 {
-    switch(currentType) {
-    case Unit_Single:
-        piece.strip.SetPixelColor(pixelIx, color);
-        break;
+    piece.setSecondaryColor(pixelIx, color);
+    // switch(currentType) {
+    // case Unit_Single:
+    //     piece.strip.SetPixelColor(pixelIx, color);
+    //     break;
 
-    case Unit_Each:
-        piece.strip.ClearTo(color);
-        break;
+    // case Unit_Each:
+    //     piece.strip.ClearTo(color);
+    //     break;
 
-    case Unit_Rows:
-        for(int16_t i=0; i<piece.topo.getHeight(); i++) {
-            piece.strip.SetPixelColor(piece.topo.Map(pixelIx, i), color);
-        }
-        break;
+    // case Unit_Rows:
+    //     for(int16_t i=0; i<piece.topo.getHeight(); i++) {
+    //         piece.strip.SetPixelColor(piece.topo.Map(pixelIx, i), color);
+    //     }
+    //     break;
 
-    case Unit_Cols:
-        for(int16_t i=0; i<piece.topo.getWidth(); i++) {
-            piece.strip.SetPixelColor(piece.topo.Map(i, pixelIx), color);
-        }
-        break;
+    // case Unit_Cols:
+    //     for(int16_t i=0; i<piece.topo.getWidth(); i++) {
+    //         piece.strip.SetPixelColor(piece.topo.Map(i, pixelIx), color);
+    //     }
+    //     break;
 
-    case Unit_SpecificRows:
-        if (piece.specificGeometry)
-        {
-            for(int16_t i=0; i<piece.topo.getHeight(); i++) {
-                piece.strip.SetPixelColor(piece.specificGeometry->Map(pixelIx, i), color);
-            }            
-        }
-        else
-        {
-            for(int16_t i=0; i<piece.topo.getHeight(); i++) {
-                piece.strip.SetPixelColor(piece.topo.Map(pixelIx, i), color);
-            }            
-        }
-        break;
+    // case Unit_SpecificRows:
+    //     if (piece.specificGeometry)
+    //     {
+    //         for(int16_t i=0; i<piece.topo.getHeight(); i++) {
+    //             piece.strip.SetPixelColor(piece.specificGeometry->Map(pixelIx, i), color);
+    //         }            
+    //     }
+    //     else
+    //     {
+    //         for(int16_t i=0; i<piece.topo.getHeight(); i++) {
+    //             piece.strip.SetPixelColor(piece.topo.Map(pixelIx, i), color);
+    //         }            
+    //     }
+    //     break;
 
-    case Unit_SpecificCols:
-        if (piece.specificGeometry)
-        {
-            for(int16_t i=0; i<piece.topo.getWidth(); i++) {
-                piece.strip.SetPixelColor(piece.specificGeometry->Map(i, pixelIx), color);
-            }            
-        }
-        else
-        {
-            for(int16_t i=0; i<piece.topo.getWidth(); i++) {
-                piece.strip.SetPixelColor(piece.topo.Map(i, pixelIx), color);
-            }
-        }
-        break;    
-    }
+    // case Unit_SpecificCols:
+    //     if (piece.specificGeometry)
+    //     {
+    //         for(int16_t i=0; i<piece.topo.getWidth(); i++) {
+    //             piece.strip.SetPixelColor(piece.specificGeometry->Map(i, pixelIx), color);
+    //         }            
+    //     }
+    //     else
+    //     {
+    //         for(int16_t i=0; i<piece.topo.getWidth(); i++) {
+    //             piece.strip.SetPixelColor(piece.topo.Map(i, pixelIx), color);
+    //         }
+    //     }
+    //     break;    
+    // }
 }
 
 ///////////////////
@@ -437,7 +514,7 @@ LAA_Rainbow::LAA_Rainbow(char* szName) :
 void
 LAA_Rainbow::animate(LEDArtPiece& piece, LEDAnimationParam p) {
 
-    currentType = (LAA_UnitMapper::UnitType)piece.nexus.unitType;
+    // currentType = piece.nexus.unitType;
 
     uint16_t unitCount = numUnits(piece);
     for(uint16_t ix=0; ix<unitCount; ix++) {
@@ -464,7 +541,7 @@ LAA_Line::LAA_Line(char* szName) :
 
 void
 LAA_Line::animate(LEDArtPiece& piece, LEDAnimationParam p) {
-    currentType = (LAA_UnitMapper::UnitType)piece.nexus.unitType;
+    // currentType = piece.nexus.unitType;
 
     piece.strip.ClearTo(black);
 
@@ -497,15 +574,17 @@ LAA_BoxOutline::animate(LEDArtPiece& piece, LEDAnimationParam p) {
     //     piece.strip.SetPixelColor(piece.topo.Map(w-1, i), blue);
     // }
 
-    currentType = Unit_SpecificCols;
+    //////////
+    // currentType = Unit_SpecificRows;
 
-    setFullUnitColor(piece, 0, green);
-    setFullUnitColor(piece, numUnits(piece), blue);
+    // setFullUnitColor(piece, 0, cyan);
+    // setFullUnitColor(piece, numUnits(piece)-1, purple);
 
-    currentType = Unit_SpecificRows;
+    // currentType = Unit_SpecificCols;
 
-    setFullUnitColor(piece, 0, cyan);
-    setFullUnitColor(piece, numUnits(piece), purple);
+    // setFullUnitColor(piece, 1, green);
+    // setFullUnitColor(piece, numUnits(piece)-2, blue);
+
 }
 
 
@@ -531,7 +610,7 @@ LAA_HalfWhite::LAA_HalfWhite(char* szName) :
     LAA_UnitMapper(szName)
 {
     type = LEDAnimationType_OVERLAY;
-    currentType = Unit_SpecificCols;
+    // currentType = Unit_SpecificCols;
 }
 
 void
@@ -548,7 +627,14 @@ LAA_HalfWhite::animate(LEDArtPiece& piece, LEDAnimationParam p) {
 
 ///////////////////
 
-LAA_RandoFill::LAA_RandoFill(char* szName) : 
+// UnitFill
+//
+// At the start of a loop it determins an order for the primary units
+// and then fills that order of the course of the loop using current
+// foreground and background. This base animation will always use
+// the "natural" ordering, and will respect the reverse setting.
+
+LAA_UnitFill::LAA_UnitFill(char* szName) : 
     LAA_UnitMapper(szName),
     unitOrder(NULL)
 {
@@ -556,15 +642,28 @@ LAA_RandoFill::LAA_RandoFill(char* szName) :
 }
 
 void
-LAA_RandoFill::animate(LEDArtPiece& piece, LEDAnimationParam p) 
+LAA_UnitFill::animate(LEDArtPiece& piece, LEDAnimationParam p) 
 {
-    if (p.state == LEDAnimationState_Started || !unitOrder || calculatedFor != piece.nexus.unitType) {
+    // if (p.state == LEDAnimationState_Started)
+    // {
+    //     // Make sure the unit type isn't boring
+    //     if (piece.nexus.unitType == Unit_Single)
+    //     {
+    //         piece.nexus.nextUnitType((uint32_t)this);
+    //     }
+    // }
+
+    if (p.state == LEDAnimationState_Started || !unitOrder || calculatedFor != piece.geomId()) {
 
         calculateOrder(piece);
     }
 
     uint16_t nUnits = numUnits(piece);
-    uint16_t floodedDistance = nUnits * p.progress;
+
+    // Adding 1 to the number to flood gives us both a start of no units and an end of all
+    // units. Think of the case of either 1 unit or of 2 units. These cases make it apparent
+    // that we actually want 2 and 3 states respectively.
+    uint16_t floodedDistance = (nUnits + 1) * p.progress;
 
     for(uint16_t i=0; i< nUnits; i++) { 
         setFullUnitColor(piece, unitOrder[i], (i < floodedDistance) ? piece.nexus.foreground : piece.nexus.background);
@@ -572,11 +671,8 @@ LAA_RandoFill::animate(LEDArtPiece& piece, LEDAnimationParam p)
 }
 
 void
-LAA_RandoFill::calculateOrder(LEDArtPiece& piece) 
+LAA_UnitFill::calculateOrder(LEDArtPiece& piece) 
 {
-
-    currentType = (LAA_UnitMapper::UnitType)piece.nexus.unitType;
-
     // For the moment the calculated order is identical to the native order
     if (unitOrder) {
         delete unitOrder;
@@ -586,12 +682,94 @@ LAA_RandoFill::calculateOrder(LEDArtPiece& piece)
     unitOrder = new uint16_t[nUnits];
     for(uint16_t unitIx=0; unitIx < nUnits; unitIx++)
     {
-        unitOrder[unitIx] = unitIx;
+        // This base implementation always just respects the natural order
+        uint16_t target = unitIx;
+        if (piece.nexus.reverse)
+        {
+            target = nUnits - 1 - unitIx;
+        }
+        unitOrder[target] = unitIx;
     }
 
-    calculatedFor = (uint8_t)currentType;
+    calculatedFor = piece.geomId();
 }
 
+// RandoFill, an extension of UnitFill
+//
+// Overrides the calculateOrder function to determine a random order
+// instead of using the natural order.
+
+LAA_RandoFill::LAA_RandoFill(char* szName) : 
+    LAA_UnitFill(szName)
+{
+}
+
+void
+LAA_RandoFill::calculateOrder(LEDArtPiece& piece) 
+{
+
+    // For the moment the calculated order is identical to the native order
+    if (unitOrder) {
+        delete unitOrder;
+    }
+
+    uint16_t nUnits = numUnits(piece);
+    unitOrder = new uint16_t[nUnits];
+    memset(unitOrder, 0xff, nUnits * sizeof(uint16_t));
+    for(uint16_t unitIx=0; unitIx < nUnits; unitIx++)
+    {
+        // Pick a random location for it
+        int target = rand(nUnits);
+        while(unitOrder[target] != 0xffff)
+        {
+            target++;
+            if (target == nUnits) target = 0;
+        }
+        unitOrder[target] = unitIx;
+    }
+
+    calculatedFor = piece.geomId();
+}
+
+
+// PaletteFill, an extension of UnitFill
+//
+// Instead of simply filling with foreground, it fills with the palette
+// over a black background
+
+LAA_PaletteFill::LAA_PaletteFill(char* szName) : 
+    LAA_UnitFill(szName)
+{
+}
+
+void
+LAA_PaletteFill::animate(LEDArtPiece& piece, LEDAnimationParam p) 
+{
+    // if (p.state == LEDAnimationState_Started)
+    // {
+    //     // Make sure the unit type isn't boring
+    //     if (piece.nexus.unitType == Unit_Single)
+    //     {
+    //         piece.nexus.nextUnitType((uint32_t)this);
+    //     }
+    // }
+
+    if (p.state == LEDAnimationState_Started || !unitOrder || calculatedFor != piece.geomId()) {
+
+        calculateOrder(piece);
+    }
+
+    uint16_t nUnits = numUnits(piece);
+
+    // Adding 1 to the number to flood gives us both a start of no units and an end of all
+    // units. Think of the case of either 1 unit or of 2 units. These cases make it apparent
+    // that we actually want 2 and 3 states respectively.
+    uint16_t floodedDistance = (nUnits + 1) * p.progress;
+
+    for(uint16_t i=0; i< nUnits; i++) { 
+        setFullUnitColor(piece, unitOrder[i], (i < floodedDistance) ? colorInPalette(piece.nexus.palette, ((float)i / (float)floodedDistance)) : black);
+    }
+}
 ///////////////////
 
 LAA_DimDebug::LAA_DimDebug(char* szName) : 

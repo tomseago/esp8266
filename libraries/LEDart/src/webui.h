@@ -46,7 +46,7 @@ private:
     void getState(AsyncWebSocketClient * client);
 
     void setAnimation(uint8_t *data, size_t len);
-    void setUnit(uint8_t *data, size_t len);
+    void setGeometry(uint8_t *data, size_t len);
     void setPalette(uint8_t *data, size_t len);
 
     void setChooserColor(uint8_t *data, size_t len);

@@ -171,7 +171,7 @@ WiFiSync::handleMTMessage(MTMessage* msgIn)
         }
 
         // Do we know our next state? If not, query for it
-        if (!nexus.nextPreparedState(NULL))
+        if (!nexus.nextPreparedState(NULL, NULL, NULL))
         {
             Log.printf("WIFISYNC: Time response but no state, querying for it\n");
             queryState();

@@ -38,18 +38,7 @@ public:
 
 class LAA_UnitMapper : public LEDArtAnimation {
 public:
-    enum UnitType {
-        Unit_Single = 0,
-        Unit_Each,
-        Unit_Rows,
-        Unit_Cols,
-        Unit_SpecificRows,
-        Unit_SpecificCols,
-
-        Unit_Last,
-    };
-
-    UnitType currentType = Unit_Single;
+    LEDUnitType currentType = Unit_Single;
     LAA_UnitMapper(char* szName);
 
     uint16_t numUnits(LEDArtPiece& piece);
@@ -99,16 +88,33 @@ public:
     virtual void animate(LEDArtPiece& piece, LEDAnimationParam p);
 };
 
-class LAA_RandoFill : public LAA_UnitMapper {
+
+class LAA_UnitFill : public LAA_UnitMapper {
+protected:
     uint8_t calculatedFor = (uint8_t)Unit_Last;
     uint16_t* unitOrder;
 
-    void calculateOrder(LEDArtPiece& piece);
+    virtual void calculateOrder(LEDArtPiece& piece);
 public:
-    LAA_RandoFill(char* szName);
+    LAA_UnitFill(char* szName);
 
     virtual void animate(LEDArtPiece& piece, LEDAnimationParam p);
 };
+
+class LAA_RandoFill : public LAA_UnitFill {
+protected:
+    virtual void calculateOrder(LEDArtPiece& piece);
+public:
+    LAA_RandoFill(char* szName);
+};
+
+class LAA_PaletteFill : public LAA_UnitFill {
+public:
+    LAA_PaletteFill(char* szName);
+    virtual void animate(LEDArtPiece& piece, LEDAnimationParam p);
+};
+
+
 
 class LAA_DimDebug : public LAA_UnitMapper {
 public:

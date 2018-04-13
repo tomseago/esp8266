@@ -101,7 +101,8 @@ QuickButtons::loop() {
     }
 
     if (buttons[3].fell()) {
-        piece.nexus.nextUnitType((uint32_t)this);
+        piece.nextGeometry(false);
+        // piece.nexus.nextUnitType((uint32_t)this);
     }
 
 }
