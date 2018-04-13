@@ -46,7 +46,7 @@ const uint16_t Height = 4;
 // Bottom straps 15 x 2 = 30
 // Total =  58
 
-const uint8_t MaxBrightness = 255;
+const uint8_t MaxBrightness = 170;
 const uint16_t PixelCount = 58;
 const uint16_t Width = 30;
 const uint16_t Height = 2;
