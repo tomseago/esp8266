@@ -229,6 +229,8 @@ protected:
 
     uint8_t lastGeomId;
 
+    void updateBrightness(LEDArtAnimation* pAnim);
+
     void animateChannel(LEDAnimationType type, uint32_t now);
 
     LEDArtGeometry* geomForName(char* szName);

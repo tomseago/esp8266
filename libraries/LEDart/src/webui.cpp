@@ -266,10 +266,12 @@ WebUI::h_socket(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEvent
     //pong message was received (in response to a ping request maybe)
     os_printf("ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len)?(char*)data:"");
   } else if(type == WS_EVT_DATA){
+
     //data packet
     AwsFrameInfo * info = (AwsFrameInfo*)arg;
     if(info->final && info->index == 0 && info->len == len){
       //the whole message is in a single frame and we got all of it's data
+
       os_printf("ws[%s][%u] %s-message[%llu]: ", server->url(), client->id(), (info->opcode == WS_TEXT)?"text":"binary", info->len);
       if(info->opcode == WS_TEXT){
         data[len] = 0;
@@ -638,8 +640,10 @@ WebUI::setBrightness(uint8_t *data, size_t len)
         return;
     }
 
-    bstring s = blk2bstr(data+2, len-2);
-    uint8_t t = atoi(bdata(s));
+    // Log.printf("setBrightness(%s)\n", &data[2]);
+    uint8_t t = atoi((const char *)&data[2]);
+    // bstring s = blk2bstr(data+2, len-2);
+    // uint8_t t = atoi(bdata(s));
 
     nexus.maxBrightness = t;
 }

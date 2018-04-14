@@ -22,6 +22,8 @@ app.get("/config.js", function(req, resp) {
         socketPath: "ws://localhost:3000/socket"
     };
 
+    config.socketPath = "ws://192.168.0.13:3000/socket"
+
     r.push("config = ");
     r.push(JSON.stringify(config));
     r.push(";");

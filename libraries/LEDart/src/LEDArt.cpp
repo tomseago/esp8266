@@ -320,17 +320,23 @@ LEDArtPiece::loop()
 
 
 void
+LEDArtPiece::updateBrightness(LEDArtAnimation* pAnim)
+{
+    if (!pAnim) return;
+
+    // strip.SetBrightness(maxBrightness * pAnim->brightness);
+    uint8_t b = nexus.maxBrightness * pAnim->brightness;
+    // Serial.print("Set Brightness to "); Serial.print(b); Serial.print("\n");
+    strip.SetBrightness(b);
+}
+
+void
 LEDArtPiece::startAnimation(LEDArtAnimation* pAnim, bool isLoop, uint32_t now) 
 {
 
     if (!pAnim) {
         return;
     }
-
-    // strip.SetBrightness(maxBrightness * pAnim->brightness);
-    uint8_t b = nexus.maxBrightness * pAnim->brightness;
-    // Serial.print("Set Brightness to "); Serial.print(b); Serial.print("\n");
-    strip.SetBrightness(b);
 
     if (!now) 
     {
@@ -348,6 +354,8 @@ LEDArtPiece::startAnimation(LEDArtAnimation* pAnim, bool isLoop, uint32_t now)
         //Log.printf("PIECE: Loop animation %s\n", pAnim->szName);
     }
     nexus.setAnimation(pAnim->szName, (uint32_t)this);
+
+    updateBrightness(pAnim);
 
     // Dispatch time 0
     LEDAnimationParam param;
@@ -478,6 +486,9 @@ LEDArtPiece::animateChannel(LEDAnimationType type, uint32_t now)
         logLimit--;
         Log.printf("PIECE: AC chan(%d) ce:%d le:%d ld: %d sf:%f lad:%d prog:%f state=%d\n", type, channelElapsed, loopElapsed, pAnim->loopDuration, nexus.speedFactor, loopAdjustedDuration, param.progress, param.state);
     }
+
+    updateBrightness(pAnim);
+    
     // Dispatch for the update
     pAnim->animate(*this, param);
 
