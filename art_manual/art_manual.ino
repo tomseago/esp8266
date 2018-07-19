@@ -22,7 +22,7 @@
 #include <animations.h>
 #include <manual.h>
 #include <log.h>
-//#include <msg_tube.h>
+#include <haus_fan.h>
 #include <wifisync.h>
 
 #include <Bounce2.h>
@@ -39,19 +39,9 @@ Nexus nx;
 #ifdef TEST_FOUR
 const uint8_t MaxBrightness = 128;
 const uint16_t PixelCount = 4;
-const uint16_t Width = 1;
-const uint16_t Height = 4;
 #else
-
-// Top straps 14 x 2 = 28
-// Bottom straps 15 x 2 = 30
-// Total =  58
-
-//
 const uint8_t MaxBrightness = 170;
-const uint16_t PixelCount = 300;
-const uint16_t Width = 300;
-const uint16_t Height = 1;
+const uint16_t PixelCount = 10;
 #endif
 
 LEDArtPiece art(nx, PixelCount, MaxBrightness);
@@ -79,7 +69,7 @@ LAA_PaletteFill paletteFill("Palette Fill");
 QuickButtons buttons(art, &halfWhite);
 
 WebManual webManual(nx, art);
-WiFiSync wifiSync(nx);
+//WiFiSync wifiSync(nx);
 
 //Pinger pinger;
 
@@ -94,12 +84,15 @@ void setup() {
   Log.printf("DB Log start\n");
 
   /////// Configure network and hardware UI
-  msgTube.configure(NODE_ID, "TomArtMan", "ILoveTwinks");
-  msgTube.begin();
+  hausFan.configure("TomArtMan", "ILoveTwinks");
+  hausFan.setPossibleNet(false, "Haus", "GundamWing");
+  hausFan.begin();
   
   buttons.begin();
 
   /////// Configure the art piece
+  geomAll.canRotate = true;
+  
 //  art.registerGeometry(&geomHarnessZ);
 //  art.registerGeometry(&geomHarness);
   art.registerGeometry(&geomAll);
@@ -126,29 +119,31 @@ void setup() {
 //  art.registerAnimation(&halfWhite);
 //
 //  art.registerAnimation(&flood);
-  art.registerAnimation(&unitFill);
-  art.registerAnimation(&randoFill);
-  art.registerAnimation(&paletteFill);
-  art.registerAnimation(&sparkle);
+//  art.registerAnimation(&unitFill);
+//  art.registerAnimation(&randoFill);
+//  art.registerAnimation(&paletteFill);
+//  art.registerAnimation(&sparkle);
 //  art.registerAnimation(&line);
-  art.registerAnimation(&rainbow);
+    art.registerAnimation(&rainbow);
 //  art.registerAnimation(&boxOutline);
   art.begin();
 //
     nx.addListener(&art);
+    nx.forcedForeverLoop = true;
+    nx.palette = LEDArtAnimation::LEDPalette_RYB;
 
 //  // Start the webui animation just so we don't have to deal with it
 //  // elsewhere right now
     art.startAnimation(&webManual.statusAnim, false);
 
-    art.startAnimation(&unitFill, false);
+    art.startAnimation(&rainbow, false);
 //    art.startAnimation(&wifiSync.statusAnim, false);
 
 // Need to begin the strip when debugging, but art.begin() does this on it's own
 //    art.strip.Begin();
 
   webManual.begin();
-  wifiSync.begin();
+//  wifiSync.begin();
   
 //  pinger.begin();
 //  if (NODE_ID == 2)
@@ -160,8 +155,8 @@ void setup() {
 uint8_t count = 0;
 
 void loop() {
-  msgTube.loop();
-  wifiSync.loop();
+  hausFan.loop();
+//  wifiSync.loop();
   webManual.loop();
 //  pinger.loop();
 

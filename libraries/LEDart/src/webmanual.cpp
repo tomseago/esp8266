@@ -4,6 +4,7 @@
 #include <bstrlib.h>
 #include "nexus.h"
 #include "log.h"
+#include "butil.h"
 
 // #include <StandardCplusplus.h>
 // #include <string>
@@ -272,16 +273,12 @@ WebManual::h_socket(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsE
     if(info->final && info->index == 0 && info->len == len){
       //the whole message is in a single frame and we got all of it's data
 
-      os_printf("ws[%s][%u] %s-message[%llu]: ", server->url(), client->id(), (info->opcode == WS_TEXT)?"text":"binary", info->len);
-      if(info->opcode == WS_TEXT){
-        data[len] = 0;
-        os_printf("%s\n", (char*)data);
-      } else {
-        for(size_t i=0; i < info->len; i++){
-          os_printf("%02x ", data[i]);
-        }
-        os_printf("\n");
-      }
+      // os_printf("ws[%s][%u] %s-message[%llu]: ", server->url(), client->id(), (info->opcode == WS_TEXT)?"text":"binary", info->len);
+      //   for(size_t i=0; i < info->len; i++){
+      //     os_printf("%02x ", data[i]);
+      //   }
+      //   os_printf("\n");
+      // }
 
       ////////////////////
       // Handle the specific message
@@ -368,7 +365,7 @@ WebManual::h_socket(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsE
                 }
                 break;
           }
-    }
+      }
       ////////////////////
 
       // if(info->opcode == WS_TEXT)
@@ -582,7 +579,7 @@ WebManual::setPalette(uint8_t *data, size_t len)
     }
 
     uint8_t max = (uint8_t)LEDArtAnimation::LEDPalette_LAST;
-    uint8_t t = atoi((const char *)&data[2]);
+    int t = buf_toi(data+2, len-2);
 
     if (t >= max) {
         return;
@@ -640,11 +637,7 @@ WebManual::setBrightness(uint8_t *data, size_t len)
         return;
     }
 
-    // Log.printf("setBrightness(%s)\n", &data[2]);
-    uint8_t t = atoi((const char *)&data[2]);
-    // bstring s = blk2bstr(data+2, len-2);
-    // uint8_t t = atoi(bdata(s));
-
+    uint8_t t = buf_toi(data + 2, len-2);
     nexus.maxBrightness = t;
 }
 
@@ -655,7 +648,7 @@ WebManual::setDuration(uint8_t *data, size_t len)
         return;
     }
 
-    uint32_t t = atoi((const char *)&data[2]);
+    uint32_t t = buf_toi(data + 2, len-2);
 
     nexus.maxDuration = t * 1000;
 }
@@ -667,7 +660,7 @@ WebManual::setSpeedFactor(uint8_t *data, size_t len)
         return;
     }
 
-    float t = (float)atoi((const char *)&data[2]);
+    float t = (float)buf_toi(data + 2, len-2);
 
     nexus.speedFactor = t / 100.0f;
 }

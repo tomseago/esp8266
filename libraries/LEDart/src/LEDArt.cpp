@@ -205,7 +205,7 @@ LEDArtPiece::registerGeometry(LEDArtGeometry* pGeom)
     {
         // The first one, yay! Set it as default.
         pCurrentGeom = pGeom;
-        geomRotated = true;        
+        //geomRotated = true;        
     }
 
     return pGeom;
