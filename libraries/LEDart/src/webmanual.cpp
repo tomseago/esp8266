@@ -117,12 +117,12 @@ WebManual::ctxForClient(AsyncWebSocketClient* client)
     return NULL;
 }
 
-uint32_t lastPoke = 0;
+uint32_t lastPokeX = 0;
 void
 WebManual::loop()
 {
     // uint32_t now = millis();
-    // if (now - lastPoke > 3000)
+    // if (now - lastPokeX > 3000)
     // {
     //     // Log.print("poke\n");
     //     printf("poke!\n");
@@ -467,7 +467,7 @@ WebManual::getAnimations(AsyncWebSocketClient * client)
 }
 
 void
-addPalette(bstring s, LEDArtAnimation::LEDPaletteType type) 
+addPaletteX(bstring s, LEDArtAnimation::LEDPaletteType type) 
 {
     for(uint8_t i = 0; i<LEDArtAnimation::paletteSizes[type]; i++) 
     {
@@ -492,7 +492,7 @@ WebManual::getPalettes(AsyncWebSocketClient * client)
     LEDArtAnimation::LEDPaletteType type = (LEDArtAnimation::LEDPaletteType)0;
     while(type != LEDArtAnimation::LEDPalette_LAST)
     {
-        addPalette(s, type);
+        addPaletteX(s, type);
 
         // C++ is stupid sometimes...
         type = (LEDArtAnimation::LEDPaletteType)((uint8_t)type + 1);
