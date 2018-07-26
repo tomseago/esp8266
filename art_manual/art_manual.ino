@@ -40,8 +40,8 @@ Nexus nx;
 const uint8_t MaxBrightness = 128;
 const uint16_t PixelCount = 4;
 #else
-const uint8_t MaxBrightness = 170;
-const uint16_t PixelCount = 10;
+const uint8_t MaxBrightness = 64;
+const uint16_t PixelCount = 111;
 #endif
 
 LEDArtPiece art(nx, PixelCount, MaxBrightness);
