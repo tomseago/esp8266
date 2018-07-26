@@ -1,0 +1,26 @@
+<!DOCTYPE html><html>
+<head>
+    <title>Debug</title>
+    <script src="config.js" type="text/javascript"></script>
+    <script src="jquery.js" type="text/javascript"></script>
+    <script src="spectrum.js" type="text/javascript"></script>
+
+    <link rel="stylesheet" type="text/css" href="ledart.css">
+    <link rel="stylesheet" type="text/css" href="spectrum.css">
+</head>
+<body>
+    <div>
+        <input type="text" id="unitToSet"/><button onClick="setUnit();">Set Unit</button>
+    </div>
+    <button onClick="showColorChooser(true);">Show ColorChooser</button>
+    <button onClick="showColorChooser(false);">Hide Color Chooser</button>
+    </div>
+    <div id="colorString">
+    </div>
+    <div>
+        <input type='text' id="colorChooser" />
+    </div>
+    <div id="log"></div>    
+
+    <script src="ledart.js" type="text/javascript"></script>
+</body></html>

@@ -1,5 +1,6 @@
 #include "webui.h"
 #include <FS.h>
+#include <string.h>
 
 #include <bstrlib.h>
 #include "nexus.h"
@@ -247,162 +248,183 @@ WebUI::h_404(AsyncWebServerRequest *req)
 void 
 WebUI::h_socket(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len)
 {
-  if(type == WS_EVT_CONNECT){
-    //client connected
-    os_printf("ws[%s][%u] connect\n", server->url(), client->id());
-    // client->printf("Hello Client %u :)", client->id());
-    client->ping();
+    if(type == WS_EVT_CONNECT){
+        //client connected
+        os_printf("ws[%s][%u] connect\n", server->url(), client->id());
+        // client->printf("Hello Client %u :)", client->id());
+        client->ping();
 
-    addClient(client);
+        addClient(client);
 
-  } else if(type == WS_EVT_DISCONNECT){
-    //client disconnected
-    os_printf("ws[%s][%u] disconnect: %u\n", server->url(), client->id());
-    removeClient(client);
+    } else if(type == WS_EVT_DISCONNECT){
+        //client disconnected
+        os_printf("ws[%s][%u] disconnect: %u\n", server->url(), client->id());
+        removeClient(client);
 
-  } else if(type == WS_EVT_ERROR){
-    //error was received from the other end
-    os_printf("ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t*)arg), (char*)data);
-  } else if(type == WS_EVT_PONG){
-    //pong message was received (in response to a ping request maybe)
-    os_printf("ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len)?(char*)data:"");
-  } else if(type == WS_EVT_DATA){
+    } else if(type == WS_EVT_ERROR){
+        //error was received from the other end
+        os_printf("ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t*)arg), (char*)data);
+    } else if(type == WS_EVT_PONG){
+        //pong message was received (in response to a ping request maybe)
+        os_printf("ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len)?(char*)data:"");
+    } else if(type == WS_EVT_DATA) {
 
-    //data packet
-    AwsFrameInfo * info = (AwsFrameInfo*)arg;
-    if(info->final && info->index == 0 && info->len == len){
-      //the whole message is in a single frame and we got all of it's data
+        //data packet
+        AwsFrameInfo * info = (AwsFrameInfo*)arg;
+        if(info->final && info->index == 0 && info->len == len){
+            //the whole message is in a single frame and we got all of it's data
 
-      // os_printf("ws[%s][%u] %s-message[%llu]: ", server->url(), client->id(), (info->opcode == WS_TEXT)?"text":"binary", info->len);
-      //   for(size_t i=0; i < info->len; i++){
-      //     os_printf("%02x ", data[i]);
-      //   }
-      //   os_printf("\n");
-      // }
+            // os_printf("ws[%s][%u] %s-message[%llu]: ", server->url(), client->id(), (info->opcode == WS_TEXT)?"text":"binary", info->len);
+            //   for(size_t i=0; i < info->len; i++){
+            //     os_printf("%02x ", data[i]);
+            //   }
+            //   os_printf("\n");
+            // }
 
-      ////////////////////
-      // Handle the specific message
+            if (info->opcode != WS_TEXT) {
+                // TODO: Handle binary??
+                os_printf("ws do not handle binary messages\n");
+                return;
+            }
 
-      if (len>=2) {
-          switch (data[0]) {
-            case 'G': // Get
-                switch(data[1]) {
-                    case 'G':
-                        getGeometries(client);
-                        break;
+            // It is text
 
-                    case 'A':
-                        getAnimations(client);
-                        break;
+            if (len<2) {
+                os_printf("ws message was too short. Needs to be 2 bytes\n");
+                return;
+            }
 
-                    case 'P':
-                        getPalettes(client);
-                        break;
+            ////////////////////
+            // Handle the specific message
 
-                    case 'X':
-                        getState(client);
-                        break;
+            // Life is WAY better if the message is a null terminated string
+            uint8_t* szTemp = (uint8_t*)strndup((char*)data, len);
+            if (!szTemp) {
+                os_printf("ws OOM couldn't create szTemp to handle the message\n");
+                return;
+            }
+
+            handleTextMessage(client, szTemp, len);
+            free(szTemp);
+
+        
+        } else {
+            //message is comprised of multiple frames or the frame is split into multiple packets
+            if (info->index == 0) {
+                if(info->num == 0)
+                    os_printf("ws[%s][%u] %s-message start\n", server->url(), client->id(), (info->message_opcode == WS_TEXT)?"text":"binary");
+                os_printf("ws[%s][%u] frame[%u] start[%llu]\n", server->url(), client->id(), info->num, info->len);
+            }
+
+            os_printf("ws[%s][%u] frame[%u] %s[%llu - %llu]: ", server->url(), client->id(), info->num, (info->message_opcode == WS_TEXT)?"text":"binary", info->index, info->index + len);
+            if(info->message_opcode == WS_TEXT) {
+                data[len] = 0;
+                os_printf("%s\n", (char*)data);
+            } else {
+                for(size_t i=0; i < len; i++){
+                    os_printf("%02x ", data[i]);
                 }
-                break;
+                os_printf("\n");
+            }
 
-            case 'S':
-                switch(data[1]) {
-                    case 'G': // Geometry
-                        setGeometry(data, len);
-                        break;
-
-                    case 'A': // Animation
-                        setAnimation(data, len);
-                        break;
-
-                    case 'P': // Palette
-                        setPalette(data, len);
-                        break;
-
-                    case 'B': // Brightness
-                        setBrightness(data, len);
-                        break;
-
-                    case 'D': // Max Duration (in seconds)
-                        setDuration(data, len);
-                        break;
-
-                    case 'S': // Speed factor as integer in cents
-                        setSpeedFactor(data, len);
-                        break;
-
-                    case 'R': // Reverse state
-                        setReverse(data, len);
-                        break;
-
-                    case 'L':
-                        setWantLogs(client, data, len);
-                        break;
+            if((info->index + len) == info->len) {
+                os_printf("ws[%s][%u] frame[%u] end[%llu]\n", server->url(), client->id(), info->num, info->len);
+                if(info->final) {
+                    os_printf("ws[%s][%u] %s-message end\n", server->url(), client->id(), (info->message_opcode == WS_TEXT)?"text":"binary");
+                    if(info->message_opcode == WS_TEXT)
+                        client->text("I got your text message");
+                    else
+                        client->binary("I got your binary message");
                 }
-                break;
-
-            case 'C':
-                switch(data[1]) {
-                    case '+': // On
-                        showingColorChooser = true;
-                        break;
-
-                    case '-': // Off
-                        showingColorChooser = false;
-                        break;
-
-                    case '#':
-                        setChooserColor(data, len);
-                        break;
-
-                    case 'F': // Foreground
-                        setNexusColor(true, data, len);
-                        break;
-
-                    case 'B': // Background
-                        setNexusColor(false, data, len);
-                        break;
-                }
-                break;
-          }
-    }
-      ////////////////////
-
-      // if(info->opcode == WS_TEXT)
-      //   client->text("I got your text message");
-      // else
-      //   client->binary("I got your binary message");
-    } else {
-      //message is comprised of multiple frames or the frame is split into multiple packets
-      if(info->index == 0){
-        if(info->num == 0)
-          os_printf("ws[%s][%u] %s-message start\n", server->url(), client->id(), (info->message_opcode == WS_TEXT)?"text":"binary");
-        os_printf("ws[%s][%u] frame[%u] start[%llu]\n", server->url(), client->id(), info->num, info->len);
-      }
-
-      os_printf("ws[%s][%u] frame[%u] %s[%llu - %llu]: ", server->url(), client->id(), info->num, (info->message_opcode == WS_TEXT)?"text":"binary", info->index, info->index + len);
-      if(info->message_opcode == WS_TEXT){
-        data[len] = 0;
-        os_printf("%s\n", (char*)data);
-      } else {
-        for(size_t i=0; i < len; i++){
-          os_printf("%02x ", data[i]);
+            }
         }
-        os_printf("\n");
-      }
-
-      if((info->index + len) == info->len){
-        os_printf("ws[%s][%u] frame[%u] end[%llu]\n", server->url(), client->id(), info->num, info->len);
-        if(info->final){
-          os_printf("ws[%s][%u] %s-message end\n", server->url(), client->id(), (info->message_opcode == WS_TEXT)?"text":"binary");
-          if(info->message_opcode == WS_TEXT)
-            client->text("I got your text message");
-          else
-            client->binary("I got your binary message");
-        }
-      }
     }
-  }
+}
+
+void
+WebUI::handleTextMessage(AsyncWebSocketClient* client, uint8_t* data, size_t len)
+{
+    switch (data[0]) {
+    case 'G': // Get
+        switch(data[1]) {
+            case 'G':
+                getGeometries(client);
+                break;
+
+            case 'A':
+                getAnimations(client);
+                break;
+
+            case 'P':
+                getPalettes(client);
+                break;
+
+            case 'X':
+                getState(client);
+                break;
+        }
+        break;
+
+    case 'S':
+        switch(data[1]) {
+            case 'G': // Geometry
+                setGeometry(data, len);
+                break;
+
+            case 'A': // Animation
+                setAnimation(data, len);
+                break;
+
+            case 'P': // Palette
+                setPalette(data, len);
+                break;
+
+            case 'B': // Brightness
+                setBrightness(data, len);
+                break;
+
+            case 'D': // Max Duration (in seconds)
+                setDuration(data, len);
+                break;
+
+            case 'S': // Speed factor as integer in cents
+                setSpeedFactor(data, len);
+                break;
+
+            case 'R': // Reverse state
+                setReverse(data, len);
+                break;
+
+            case 'L':
+                setWantLogs(client, data, len);
+                break;
+        }
+        break;
+
+    case 'C':
+        switch(data[1]) {
+            case '+': // On
+                showingColorChooser = true;
+                break;
+
+            case '-': // Off
+                showingColorChooser = false;
+                break;
+
+            case '#':
+                setChooserColor(data, len);
+                break;
+
+            case 'F': // Foreground
+                setNexusColor(true, data, len);
+                break;
+
+            case 'B': // Background
+                setNexusColor(false, data, len);
+                break;
+        }
+        break;
+    }    
 }
 
 void

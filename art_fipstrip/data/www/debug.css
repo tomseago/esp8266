@@ -1,0 +1,13 @@
+body {
+    font-family: "Helvetica", "Helvetica-Neue", sans-serif;
+}
+
+#output {
+    white-space: pre-wrap;
+    background-color: #050505;
+    color: #00f000;
+    padding: 5px;
+    font-size: 0.8em;
+    line-height: 1.4em;
+    font-family: courier, monospace;
+}

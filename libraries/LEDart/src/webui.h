@@ -91,6 +91,7 @@ private:
 
     void h_socket(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
 
+    void handleTextMessage(AsyncWebSocketClient* client, uint8_t* data, size_t len);
 
     void getGeometries(AsyncWebSocketClient * client);
     void getAnimations(AsyncWebSocketClient * client);
