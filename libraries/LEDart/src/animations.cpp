@@ -45,7 +45,7 @@ LAA_Sparkle::LAA_Sparkle(char* szName, uint16_t pixelCount) :
     LEDArtAnimation(szName), pixelCount(pixelCount)
 {
     loopDuration = 50;
-    maxDuration = 8000;
+    // maxDuration = 8000;
 
     for(int i=0; i<3; i++) {
         ppGenerations[i] = new bool[pixelCount];
