@@ -2871,6 +2871,11 @@ button {
     line-height: 1.7em;
 }
 
+button.current {
+    text-decoration: underline;
+    font-weight: 600;
+}
+
 #log {
     white-space: pre-wrap;
     background-color: #050505;
@@ -2900,6 +2905,15 @@ input[type="text"] {
     margin-top: 1em;
 }
 
+.colorBlock {
+    width: 2em;
+    height: 1em;
+    display: inline-block;
+    border: 1px solid #cccccc;
+    margin: 0.5em;
+    vertical-align: middle;
+}
+
 </style>
 
 </head>
@@ -2919,6 +2933,15 @@ input[type="text"] {
         <i>Socket open!</i>
     </div>
 
+    <div class="section">
+    State :
+        <button onClick="getStateJSON();">Get</button>
+        <button onClick="setWantJSON(true);">On</button>
+        <button onClick="setWantJSON(false);">Off</button>
+        <div id="rawStateJSON"></div>
+        <div id="stateTime"></div>
+    </div>
+
     <div id="geoms" class="section">
         Geometry:
         <div id="geomButtons"></div>
@@ -2930,6 +2953,13 @@ input[type="text"] {
         <button onClick="requestNextAnim(true);">RANDOM</button>
         <span id="animButtons"></span>
     </div>
+
+    <div id="reverse" class="section">
+        Reverse :
+        <button id="reverseOn" onClick="setReverse(true);">On</button>
+        <button id="reverseOff" onClick="setReverse(false);">Off</button>
+    </div>
+
 
     <div class="section">
         <input type="text" id="brightnessToSet" value="192" size=5/><button onClick="setBrightness();">Set Brightness</button>
@@ -2965,6 +2995,18 @@ input[type="text"] {
         </div>
     </div>
 
+    <div id="paletteButtons" class="section">
+        Palette:
+        <button id="palette0" onClick="setPaletteNum(0);">Red Blue</button>
+        <button id="palette1" onClick="setPaletteNum(1);">RGB</button>
+        <button id="palette2" onClick="setPaletteNum(2);">RYB</button>
+        <button id="palette3" onClick="setPaletteNum(3);">White Black</button>
+        <button id="palette4" onClick="setPaletteNum(4);">Mardi Gras</button>
+        <button id="palette5" onClick="setPaletteNum(5);">Blues</button>
+        <button id="palette6" onClick="setPaletteNum(6);">Pinks</button>
+        <button id="palette7" onClick="setPaletteNum(7);">Reds</button>
+    </div>
+
     <div class="section">
         <button onClick="showColorChooser(true);">Show ColorChooser</button>
         <button onClick="showColorChooser(false);">Hide Color Chooser</button>
@@ -2972,26 +3014,28 @@ input[type="text"] {
         <button onClick="setNexusColor(false);">Set Background</button>
     </div>
 
-    <div class="section">
-    Palette:
-    <button onClick="setPaletteNum(0);">Red Blue</button>
-    <button onClick="setPaletteNum(1);">RGB</button>
-    <button onClick="setPaletteNum(2);">RYB</button>
-    <button onClick="setPaletteNum(3);">White Black</button>
-    <button onClick="setPaletteNum(4);">Mardi Gras</button>
-    <button onClick="setPaletteNum(5);">Blues</button>
-    <button onClick="setPaletteNum(6);">Pinks</button>
-    <button onClick="setPaletteNum(7);">Reds</button>
+    <div>
+        Chooser state: <span id="chooserShown"></span>
     </div>
 
-    <div class="section">
-    Reverse :
-    <button onClick="setReverse(true);">On</button>
-    <button onClick="setReverse(false);">Off</button>
+    <div id="colorDisplay">
+        <div class="colorItem" id="foreground">
+            Foreground: 
+            <div class="colorBlock"></div>
+            <span class="colorString">??</span>
+        </div>
+        <div class="colorItem" id="background">
+            Background:
+            <div class="colorBlock"></div>
+            <span class="colorString">??</span>
+        </div>
+        <div class="colorItem" id="chosen">
+            Chosen:
+            <div class="colorBlock"></div>
+            <span class="colorString">??</span>
+        </div>
     </div>
 
-    <div id="colorString">
-    </div>
     <div>
         <input type='text' id="colorChooser" />
     </div>
@@ -3061,7 +3105,7 @@ function openSocket() {
 
         var parts = msg.split(":");
         if (parts && parts.length > 0) {
-            handleMessageParts(parts);
+            handleMessageParts(parts, msg.substring(parts[0].length+1));
         }
     });
 
@@ -3099,7 +3143,7 @@ function send(msg) {
 }
 
 
-function handleMessageParts(parts) {
+function handleMessageParts(parts, msgData) {
     if (parts[0]=="GEOMS") {
         handleGeomsList(parts[1].split(";"));
         return;
@@ -3110,11 +3154,25 @@ function handleMessageParts(parts) {
         return;
     }
 
+    if (parts[0]=="STATEJSON") {
+        handleStateJSON(msgData);
+    }
+
     if (parts[0]=="L") {
         var out = parts.slice(1,parts.length);
         out.unshift("DEV) ");
         log(out.join(":").trim());
     }
+}
+
+function nameToId(name, prefix) {
+    var out = "";
+    if (prefix) {
+        out += prefix;
+    }
+    out += name.replace(/ /g, "");
+
+    return out;
 }
 
 function handleGeomsList(list) {
@@ -3136,11 +3194,11 @@ function handleGeomsList(list) {
         if (!name) return;
 
         log("Adding geom: '"+name+"'");
-        el.append("<button onClick='requestGeom(\""+name+"\", false);'>"+name+"</button>");
+        el.append("<button id='"+nameToId(name,"geom")+"' onClick='requestGeom(\""+name+"\", false);'>"+name+"</button>");
 
         if (canRotate) {
             // A second rotated version
-            el.append("<button onClick='requestGeom(\""+name+"\", true);'>"+name+" Rotated</button>");
+            el.append("<button id='"+nameToId(name,"geom")+"R' onClick='requestGeom(\""+name+"\", true);'>"+name+" Rotated</button>");
         }            
     });
 }
@@ -3157,8 +3215,87 @@ function handleAnimsList(list) {
     list.forEach(function(name) {
         if (!name) return;
         log("Adding animation: '"+name+"'");
-        el.append("<button onClick='requestAnim(\""+name+"\");'>"+name+"</button>");
+        el.append("<button id='"+nameToId(name,"anim")+"' onClick='requestAnim(\""+name+"\");'>"+name+"</button>");
     });
+}
+
+function colorFromArray(ar) {
+    return tinycolor({r: ar[0], g: ar[1], b: ar[2]});
+}
+
+function handleStateJSON(str) {
+    try {
+        var st = JSON.parse(str);
+        //$("#rawStateJSON").text(str);
+    } catch (e) {
+        log("Error handling json state: "+str);
+        log(e);
+        return;
+    }
+
+    // Do things with it....
+
+    // Update geometry button
+    $("#geomButtons button").removeClass("current");
+    if (st.geomName) {
+        var id = nameToId(st.geomName, "#geom");
+        if (st.geomRotated) {
+            id += "R";
+        }
+        $(id).addClass("current");
+    } else {
+        log("No current geometry");
+    }
+
+    $("#animButtons button").removeClass("current");
+    if (st.animName) {
+        var id = nameToId(st.animName, "#anim");
+        $(id).addClass("current");
+    } else {
+        log("No current animation");
+    }
+
+    $("#reverse button").removeClass("current");
+    var id = "#reverse" + (st.reverse ? "On" : "Off");
+    $(id).addClass("current");
+
+
+    if (typeof st.maxBrightness != undefined) {
+        var v = parseInt(Math.floor(st.maxBrightness));
+        $("#brightnessToSet").val(""+v);
+    }
+
+    if (typeof st.maxDuration != undefined) {
+        var v = parseInt(Math.floor(st.maxDuration / 1000.0));
+        $("#durationToSet").val(""+v);
+    }
+
+    if (typeof st.speedFactor != undefined) {
+        var v = st.speedFactor.toFixed(3);
+        $("#speedFactorToSet").val(""+v);
+    }
+
+    $("#paletteButtons button").removeClass("current");
+    if (typeof st.palette != undefined) {
+        var id = "#palette"+st.palette;
+        $(id).addClass("current");
+    } else {
+        log("No palette number");
+    }
+
+    if (st.foreground) {
+        var color = colorFromArray(st.foreground);
+        updateColorBlock("foreground", color);
+    }
+
+    if (st.background) {
+        var color = colorFromArray(st.background);
+        updateColorBlock("background", color);
+    }
+
+    $("#chooserShown").text(st.chooserShown ? "Shown" : "Hidden");
+
+    $("#stateTime").text(new Date());
 }
 
 function requestNextAnim(randomize) {
@@ -3187,6 +3324,10 @@ function getPalettes() {
 
 function getState() {
     send("GX");
+}
+
+function getStateJSON() {
+    send("GJ");
 }
 
 // function setUnit() {
@@ -3293,6 +3434,12 @@ function setWantDeviceLogs(wantLogs) {
     send("SL"+(wantLogs?"+":"-"));    
 }
 
+function setWantJSON(wantJSON) {
+    send("SJ"+(wantJSON?"+":"-"));    
+}
+
+
+
 function showColorChooser(shouldShow) {
     if (shouldShow) {
         send("C+");
@@ -3309,6 +3456,9 @@ function setColorChooserColor(val) {
 function setNexusColor(isForeground) {
     var val = $("#colorChooser").spectrum("get");
     var color = tinycolor(val);
+
+    updateColorBlock(isForeground ? "foreground" : "background", color);
+
     var hex = color.toHexString();
 
     send("C"+(isForeground?"F":"B") + val);
@@ -3318,11 +3468,27 @@ function updateColor() {
     var val = $("#colorChooser").spectrum("get");
 
     var color = tinycolor(val);
-    var rgb = color.toRgb();
-    $("#colorString").text("RgbColor("+rgb.r+", "+rgb.g+", "+rgb.b+")");
+    updateColorBlock("chosen", color);
 
     var hex = color.toHexString();
     setColorChooserColor(hex);
+}
+
+/*
+    <div id="colorDisplay">
+        <div class="colorItem" id="foreground">
+            <span class="colorString"></span>
+            <div class="colorBlock"></div>
+        </div>
+*/
+function updateColorBlock(which, color) {
+    var cd = $("#colorDisplay");
+    var item = cd.find("#"+which);
+
+    var hex = color.toHexString();
+    var rgb = color.toRgb();
+    item.find(".colorString").text(hex+ "  RgbColor("+rgb.r+", "+rgb.g+", "+rgb.b+")");
+    item.find(".colorBlock").css("background-color",hex);
 }
 
 function colorMove(event) {
@@ -3333,7 +3499,7 @@ function colorMove(event) {
 
 function colorChange(event) {
     var val = $("#colorChooser").spectrum("get");
-    log("change: "+val);
+    //log("change: "+val);
 }
 
 /////

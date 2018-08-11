@@ -416,6 +416,24 @@ LEDArtPiece::nextBaseAnimation(bool randomize, uint32_t now)
         nexus.randomizeAll((uint32_t)this);
     }    
 
+    // Find a geometry that this animation can use
+    LEDArtGeometry* pGeomStart = pCurrentGeom;
+    bool startRotation = geomRotated;
+    bool triedEverything = false;
+
+    while (!triedEverything && !pAnim->canUseGeom(*this)) {
+        nextGeometry(false);
+        if (pCurrentGeom == pGeomStart && geomRotated == startRotation) {
+            triedEverything = true;
+        }
+    }
+
+    if (triedEverything) {
+        // Aack! go one more deeper I guess - hopefully we find something???
+        nextBaseAnimation(randomize, now);
+        return;
+    }
+
     startAnimation(pAnim, false, now);
 }
 

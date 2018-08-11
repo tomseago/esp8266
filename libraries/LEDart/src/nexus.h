@@ -39,9 +39,9 @@ public:
     uint32_t maxDuration = 1280000;
     bool reverse = false;
 
-    // For pringles, 180
-    // float maxBrightness = 180; // This has a range of 0 to 255, unlike brightness elsewhere which is 0.0 to 1.0
-    float maxBrightness = 180.0; // This has a range of 0 to 255, unlike brightness elsewhere which is 0.0     
+    // Brightness has a float range of 0.0 to 255.0 
+    // It is initially set by the art piece when the piece is constructed.
+    float maxBrightness; 
 
     Nexus();
 

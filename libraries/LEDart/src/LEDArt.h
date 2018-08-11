@@ -101,6 +101,8 @@ public:
 
     virtual void animate(LEDArtPiece& piece, LEDAnimationParam p) = 0;
 
+    virtual bool canUseGeom(LEDArtPiece& piece) { return true; }
+
     enum LEDUnitType {
         Unit_Single = 0,
         Unit_Each,
@@ -180,9 +182,9 @@ public:
     uint16_t geomPrimaryCount() { return geomHeight(); }
     uint16_t geomSecondaryCount(int16_t primaryIx=-1) { return geomWidth(primaryIx); }
 
-    void setPrimaryColor(uint16_t primaryIx, RgbColor color);
-    void setSecondaryColor(uint16_t secondaryIx, RgbColor color);
-    void setSecondaryColorInPrimary(uint16_t primaryIx, uint16_t secondaryIx, RgbColor color);
+    void setPrimaryColor(uint16_t primaryIx, RgbColor color); // set row to color
+    void setSecondaryColor(uint16_t secondaryIx, RgbColor color); // set column to color
+    void setSecondaryColorInPrimary(uint16_t primaryIx, uint16_t secondaryIx, RgbColor color); // set pixel 
 
 
     // These are not for general use

@@ -2,7 +2,6 @@
 #include <FS.h>
 #include <string.h>
 
-#include <bstrlib.h>
 #include "nexus.h"
 #include "log.h"
 #include "butil.h"
@@ -130,6 +129,7 @@ WebUI::loop()
     //     printf("poke!\n");
     //     lastPoke = now;
     // }    
+    sendUpdates();
 }
 
 
@@ -362,6 +362,10 @@ WebUI::handleTextMessage(AsyncWebSocketClient* client, uint8_t* data, size_t len
             case 'X':
                 getState(client);
                 break;
+
+            case 'J':
+                getStateJSON(client);
+                break;
         }
         break;
 
@@ -396,9 +400,14 @@ WebUI::handleTextMessage(AsyncWebSocketClient* client, uint8_t* data, size_t len
                 break;
 
             case 'L':
-                setWantLogs(client, data, len);
+                setWantsLogs(client, data, len);
+                break;
+
+            case 'J':
+                setWantsStateJSON(client, data, len);
                 break;
         }
+        setUpdateNeeded(client);
         break;
 
     case 'C':
@@ -423,6 +432,7 @@ WebUI::handleTextMessage(AsyncWebSocketClient* client, uint8_t* data, size_t len
                 setNexusColor(false, data, len);
                 break;
         }
+        setUpdateNeeded(client);
         break;
     }    
 }
@@ -544,6 +554,54 @@ WebUI::getState(AsyncWebSocketClient * client)
     client->text(bdata(s));
 }
 
+
+bstring
+WebUI::makeStateJSONMsg()
+{
+    bstring s = bfromcstr("STATEJSON:{");
+    char buf[8];
+
+    bformata(s,"\"palette\":%d",nexus.palette);
+
+    bcatcstr(s, ",\"speedFactor\":");
+    bcatcstr(s,dtostrf(nexus.speedFactor, -7, 3, buf));
+
+    bcatcstr(s, ",\"maxDuration\":");
+    bcatcstr(s,dtostrf(nexus.maxDuration, -7, 3, buf));
+
+    bcatcstr(s, ",\"maxBrightness\":");
+    bcatcstr(s,dtostrf(nexus.maxBrightness, -7, 3, buf));
+
+    bformata(s,",\"foreground\":[%d,%d,%d]",
+        nexus.foreground.R,
+        nexus.foreground.G,
+        nexus.foreground.B
+        );
+    bformata(s,",\"background\":[%d,%d,%d]",
+        nexus.background.R,
+        nexus.background.G,
+        nexus.background.B
+        );
+    bformata(s,",\"reverse\":%s", nexus.reverse ? "true" : "false");
+    bformata(s,",\"geomRotated\":%s", nexus.isGeomRotated() ? "true" : "false");
+    bformata(s,",\"geomName\":\"%s\"", nexus.getCurrentGeomName());
+    bformata(s,",\"animName\":\"%s\"", nexus.getCurrentAnimName());
+
+    bcatcstr(s,"}");
+
+    return s;    
+}
+
+void
+WebUI::getStateJSON(AsyncWebSocketClient * client)
+{
+    bstring s = makeStateJSONMsg();
+
+    client->text(bdata(s));
+
+    bdestroy(s);
+}
+
 void
 WebUI::setAnimation(uint8_t *data, size_t len)
 {
@@ -611,21 +669,37 @@ WebUI::setPalette(uint8_t *data, size_t len)
 }
 
 void
-WebUI::setWantLogs(AsyncWebSocketClient* client, uint8_t *data, size_t len)
+WebUI::setWantsLogs(AsyncWebSocketClient* client, uint8_t *data, size_t len)
 {
     if (!client) return;
 
     if (len < 3) return;
 
-    bool wantsLog = (data[2] == '+');
+    bool wantsIt = (data[2] == '+');
 
     ClientCtx* ctx = ctxForClient(client);
     if (ctx)
     {
-        ctx->wantsDeviceLogs = wantsLog;
+        ctx->wantsDeviceLogs = wantsIt;
     }
 }
 
+
+void
+WebUI::setWantsStateJSON(AsyncWebSocketClient* client, uint8_t *data, size_t len)
+{
+    if (!client) return;
+
+    if (len < 3) return;
+
+    bool wantsIt = (data[2] == '+');
+
+    ClientCtx* ctx = ctxForClient(client);
+    if (ctx)
+    {
+        ctx->wantsStateJSON = wantsIt;
+    }
+}
 
 void
 WebUI::setChooserColor(uint8_t *data, size_t len)
@@ -698,6 +772,56 @@ WebUI::setReverse(uint8_t *data, size_t len)
     }
 
     nexus.reverse = (data[2] == '+');
+}
+
+
+///////////////////////
+void 
+WebUI::setUpdateNeeded(AsyncWebSocketClient* client)
+{
+    ClientCtx* ctx = ctxForClient(client);
+    if (ctx && ctx->wantsStateJSON)
+    {
+        ctx->needsStateJSON = true;
+    }
+}
+
+void
+WebUI::sendUpdates()
+{
+    ClientCtx* pCur = pClientCtxs;
+    if (!pCur) return;
+
+    bool haveMsg = false;
+    bstring s;
+
+    while(pCur)
+    {
+        if (pCur->wantsStateJSON && pCur->needsStateJSON)
+        {
+            if (!haveMsg) {
+                s = makeStateJSONMsg();
+                haveMsg = true;
+            }
+
+            AsyncWebSocketClient* client = socket.client(pCur->id);
+            // Log.printf("DL For %d got %d\n", pCur->id, client);
+            if (!client)
+            {
+                // Error of some type???
+            }
+            else
+            {
+                client->text(bdata(s));
+            }
+        }
+        pCur->needsStateJSON = false;
+
+        pCur = pCur->pNext;
+    }
+
+    bdestroy(s);
+    return; 
 }
 
 ///////////////////////

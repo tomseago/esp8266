@@ -22,7 +22,7 @@ app.get("/config.js", function(req, resp) {
         socketPath: "ws://localhost:3000/socket"
     };
 
-    config.socketPath = "ws://192.168.0.13:3000/socket"
+    // config.socketPath = "ws://192.168.0.13:3000/socket"
 
     r.push("config = ");
     r.push(JSON.stringify(config));
@@ -51,6 +51,12 @@ wss.on('connection', function connection(ws, req) {
       ws.send("GEOMS:+Basic;+All;-Special;");
       return;
     }
+
+    if (message=="GJ") {
+      ws.send('STATEJSON:{"palette":5,"speedFactor":0.500,"maxDuration":64000.000,"maxBrightness":170.000,"foreground":[173,50,204],"background":[66,35,59],"reverse":true,"geomRotated":true,"geomName":"All","animName":"WebUIStatus","chooserShown":true}');
+      return;
+    }
+
   });
 
   ws.send('something');
@@ -58,7 +64,7 @@ wss.on('connection', function connection(ws, req) {
 
 
 server.listen(3000, function () {
-  console.log('Example app listening on port 3000!')
+  console.log('Local app listening on port 3000!')
 })
 
 

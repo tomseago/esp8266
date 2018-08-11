@@ -1,7 +1,7 @@
 #define NODE_ID 1
 
 #include <ESP8266WiFi.h>
-
+  
 #include <ESPAsyncWebServer.h>
 
 //#include <ESP8266WiFiAP.h>
@@ -56,6 +56,11 @@ LAA_UnitFill unitFill("Unit Fill");
 LAA_RandoFill randoFill("Rando Fill");
 LAA_PaletteFill paletteFill("Palette Fill");
 
+LAA_Kitt kitt("Kitt");
+LAA_KittSmooth kittSmooth("Kitt Smooth");
+
+LAA_KittPallete kittPallete("Kitt Pallete");
+
 QuickButtons buttons(art, &halfWhite);
 
 WebUI webui(nx, art);
@@ -94,7 +99,7 @@ void setup() {
   // Default animation time is 16 seconds which is 8 bars at 120bpm
   // so when using a small duration setting it to a multiple of this is good
   // nx.maxDuration = 32000;
- nx.maxDuration = 64000;
+ nx.maxDuration = 256000;
   
   art.registerAnimation(&webui.statusAnim);
 
@@ -105,10 +110,13 @@ void setup() {
   art.registerAnimation(&unitFill);
   art.registerAnimation(&randoFill);
   art.registerAnimation(&paletteFill);
-  art.registerAnimation(&sparkle);
+//  art.registerAnimation(&sparkle);
 //  art.registerAnimation(&line);
   art.registerAnimation(&rainbow);
 //  art.registerAnimation(&boxOutline);
+//  art.registerAnimation(&kitt);
+  art.registerAnimation(&kittSmooth);
+  art.registerAnimation(&kittPallete);
   art.begin();
 //
     nx.addListener(&art);
@@ -119,6 +127,7 @@ void setup() {
 
     art.startAnimation(&unitFill, false);
 //    art.startAnimation(&wifiSync.statusAnim, false);
+    art.startAnimation(&kittPallete, false);
 
 // Need to begin the strip when debugging, but art.begin() does this on it's own
 //    art.strip.Begin();
@@ -126,6 +135,11 @@ void setup() {
   webui.begin();
   // wifiSync.begin();
   hausFan.begin();
+
+  // Do these last so randomization doesn't affect it
+  nx.foreground = RgbColor(255,0,0);
+  nx.background = RgbColor(0, 0, 0);
+  nx.speedFactor = 1.0;
   
 //  pinger.begin();
 //  if (NODE_ID == 2)

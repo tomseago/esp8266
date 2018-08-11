@@ -99,6 +99,7 @@ public:
     LAA_UnitFill(char* szName);
 
     virtual void animate(LEDArtPiece& piece, LEDAnimationParam p);
+    virtual bool canUseGeom(LEDArtPiece& piece);
 };
 
 class LAA_RandoFill : public LAA_UnitFill {
@@ -121,4 +122,33 @@ public:
     LAA_DimDebug(char* szName);
 
     virtual void animate(LEDArtPiece& piece, LEDAnimationParam p);
+};
+
+
+
+class LAA_Kitt : public LEDArtAnimation {
+
+public:
+    LAA_Kitt(char* szName);
+
+    virtual void animate(LEDArtPiece& piece, LEDAnimationParam p);
+};
+
+
+class LAA_KittSmooth : public LEDArtAnimation {
+
+public:
+    LAA_KittSmooth(char* szName);
+
+    virtual void animate(LEDArtPiece& piece, LEDAnimationParam p);
+    virtual bool canUseGeom(LEDArtPiece& piece);
+};
+
+class LAA_KittPallete : public LEDArtAnimation {
+
+public:
+    LAA_KittPallete(char* szName);
+
+    virtual void animate(LEDArtPiece& piece, LEDAnimationParam p);
+    virtual bool canUseGeom(LEDArtPiece& piece);
 };

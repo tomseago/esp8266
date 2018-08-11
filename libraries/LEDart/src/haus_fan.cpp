@@ -41,6 +41,7 @@ HausFan::begin()
     // Don't worry about storing things in flash
     WiFi.persistent(false);
     WiFi.setAutoConnect(false);
+    WiFi.setAutoReconnect(false);
 
     //------ Configure the AP side of things
 
@@ -119,10 +120,10 @@ HausFan::checkSTA()
 void
 HausFan::startSTAConnect(bool isSecondary)
 {    
-    Log.printf("MT: startSTAConnect(isSecondary=%s)\n", isSecondary ? "true": "false");
-
     const char* szName = this->szSTAName[isSecondary ? 1 : 0];
     const char* szPassword = this->szSTAPassword[isSecondary ? 1 : 0];
+
+    Log.printf("HF: startSTAConnect(isSecondary=%s) szName=%s\n", isSecondary ? "true": "false", szName ? szName : "NULL");
 
     if (!szName) 
     {
@@ -137,6 +138,7 @@ HausFan::startSTAConnect(bool isSecondary)
 
     Log.printf("HF: SSC WiFi.begin(%s,%s)\n", szName, szPassword);
     WiFi.begin(szName, szPassword);
+    Log.printf("HF: SSC WiFi.begin() returned\n");
 
     // Start checking status to see if we get connected
     staAttemptBegan = millis();
@@ -159,16 +161,30 @@ HausFan::checkSTAAttempt(bool isSecondary)
     }
     else
     {        
-        Log.printf("%d ", wifiStatus);
+        Log.printf("HF: staCheckAttempts=%d, wifiStatus=%d\n", wifiStatus);
     }
 
     if (staCheckAttempts == 40)
     {
-        Log.print("\n");
+        // Log.print("\n");
         staCheckAttempts = 1;
     }
     nextSTACheck = millis() + 2000;
 
+/*
+~/Library/Arduino15/packages/esp8266/hardware/esp8266/2.4.1/libraries/ESP8266WiFi/src/include/wl_definitions.h
+
+typedef enum {
+    WL_NO_SHIELD        = 255,   // for compatibility with WiFi Shield library
+    WL_IDLE_STATUS      = 0,
+    WL_NO_SSID_AVAIL    = 1,
+    WL_SCAN_COMPLETED   = 2,
+    WL_CONNECTED        = 3,
+    WL_CONNECT_FAILED   = 4,
+    WL_CONNECTION_LOST  = 5,
+    WL_DISCONNECTED     = 6
+} wl_status_t;
+*/
 
     // This is the only thing that means it's all good
     if (WL_CONNECTED == wifiStatus) {
@@ -212,13 +228,17 @@ HausFan::checkSTAAttempt(bool isSecondary)
         // How long has it been?
         if (millis() - staAttemptBegan < HF_STA_Attempt_Window) {
             // This is cool, let it keep trying
+            Log.printf("HF: WL_DISCONNECTED but inside %d is inside window of %d, waiting...\n", millis() - staAttemptBegan, HF_STA_Attempt_Window);
             return;
         }
 
         // Aack, timeout. That's the same as an error
-    }
+        Log.printf("HF: WL_DISCONNECTED and window exceeded. New attempt!\n");
+     }
 
-    // Some sort of error has occurred
+    // Some sort of error has occurred, likely state = 1 WL_NO_SSID_AVAIL
+
+    Log.printf("HF: Giving up on this connect attempt, starting a new one\n");
 
     if (!isSecondary)
     {

@@ -283,12 +283,14 @@ Nexus::randomizeState(NexusState* state)
 
     // Base unit is 8 bar loop. 120bpm, 4 beats = 2s = 1 bar. 8bars = 16s
     switch(rand(6)) {
-        case 0: // 1 bar = 1/8 speed
-            state->speedFactor = 0.125;
+        case 0: // 1 bar = 1/8 duration (fast)
+            // state->speedFactor = 0.125;
+            state->speedFactor = 0.5;
             break;
 
-        case 1: // 4 bar = 1/2 speed
-            state->speedFactor = 0.5;
+        case 1: // 4 bar = 1/2 duration 
+            // state->speedFactor = 0.5;
+            state->speedFactor = 0.75;
             break;
 
         case 2: // 8 bar = 1.0
@@ -305,8 +307,10 @@ Nexus::randomizeState(NexusState* state)
     }
 
     // speedFactor = 1.0;
-    state->foreground = RgbColor(HslColor(((float)rand(1000))/1000.0, 0.6, 0.5));
-    state->background = RgbColor(HslColor(((float)rand(1000))/1000.0, 0.3, 0.2));
+    // state->foreground = RgbColor(HslColor(((float)rand(1000))/1000.0, 0.6, 0.5));
+    // state->background = RgbColor(HslColor(((float)rand(1000))/1000.0, 0.3, 0.2));
+    state->foreground = RgbColor(HslColor(((float)rand(1000))/1000.0, 1.0, (((float)rand(1000))/2000.0)+0.2));
+    state->background = RgbColor(HslColor(((float)rand(1000))/1000.0, 1.0, 0.2));
 
     // Even steven on reversie
     state->reverse = rand(10) < 5;

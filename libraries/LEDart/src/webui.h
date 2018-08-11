@@ -4,6 +4,7 @@
 #include <ESPAsyncWebserver.h>
 #include <Hash.h>
 #include <functional>
+#include <bstrlib.h>
 
 #include "LEDArt.h"
 
@@ -56,6 +57,9 @@ private:
     typedef struct ClientCtx {
         uint32_t id;
         bool wantsDeviceLogs;
+        
+        bool wantsStateJSON; // if they have requested it
+        bool needsStateJSON; // if something has changed since we last updated them
 
         ClientCtx* pNext;
 
@@ -96,13 +100,15 @@ private:
     void getGeometries(AsyncWebSocketClient * client);
     void getAnimations(AsyncWebSocketClient * client);
     void getPalettes(AsyncWebSocketClient * client);
-    void getState(AsyncWebSocketClient * client);
+    void getState(AsyncWebSocketClient * client);\
+    void getStateJSON(AsyncWebSocketClient * client);
 
     void setGeometry(uint8_t *data, size_t len);
     void setAnimation(uint8_t *data, size_t len);
     void setPalette(uint8_t *data, size_t len);
 
-    void setWantLogs(AsyncWebSocketClient* client, uint8_t *data, size_t len);
+    void setWantsLogs(AsyncWebSocketClient* client, uint8_t *data, size_t len);
+    void setWantsStateJSON(AsyncWebSocketClient* client, uint8_t *data, size_t len);
 
     void setChooserColor(uint8_t *data, size_t len);
     void setNexusColor(bool isForeground, uint8_t *data, size_t len);
@@ -112,4 +118,7 @@ private:
     void setSpeedFactor(uint8_t *data, size_t len);
     void setReverse(uint8_t *data, size_t len);
 
+    void setUpdateNeeded(AsyncWebSocketClient* client);
+    bstring makeStateJSONMsg();
+    void sendUpdates();
 };
