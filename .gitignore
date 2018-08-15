@@ -1,32 +1,27 @@
-# Prerequisites
-*.d
-
+ehthumbs.db
 # Compiled Object files
-*.slo
+# Folder config file
 *.lo
-*.o
 *.obj
-
+$RECYCLE.BIN/
 # Precompiled Headers
-*.gch
-*.pch
-
+# Windows Installer files
+*.msm
 # Compiled Dynamic libraries
-*.so
 *.dylib
 *.dll
-
-# Fortran module files
-*.mod
+# =========================
 *.smod
-
-# Compiled Static libraries
+# OSX
 *.lai
+.DS_Store
+.AppleDouble
+.LSOverride
 *.la
-*.a
+# Icon must ends with two \r.
 *.lib
-
+# Thumbnails
 # Executables
-*.exe
 *.out
-*.app
+# Files that might appear on external disk
+.Spotlight-V100
