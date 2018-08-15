@@ -4,19 +4,6 @@
   
 #include <ESPAsyncWebServer.h>
 
-//#include <ESP8266WiFiAP.h>
-//#include <ESP8266WiFiGeneric.h>
-//#include <ESP8266WiFiMulti.h>
-//#include <ESP8266WiFiScan.h>
-//#include <ESP8266WiFiSTA.h>
-//#include <ESP8266WiFiType.h>
-//#include <WiFiClient.h>
-//#include <WiFiClientSecure.h>
-//#include <WiFiServer.h>
-//#include <WiFiUdp.h>
-
-//#include <WiFi.h>
-
 #include <LEDArt.h>
 #include <nexus.h>
 #include <animations.h>
@@ -25,21 +12,39 @@
 #include <haus_fan.h> // instead of msg_tube when it won't have peers
 //#include <msg_tube.h>
 // #include <wifisync.h>
+//#include <pinger.h>
 
 #include <Bounce2.h>
-#include <quickbuttons.h>
+//#include <quickbuttons.h>
 #include <webui.h>
-//#include <pinger.h>
+
+#include <badclock.h>
 
 // Force use of specific geometry instead of natural rows and cols because it's not square
 Nexus nx;
 
+
+// Circle LED layout
+// Outside to inside 24, 16, 12, 8, 1 = 61  
+// 3.66 amps at full brightness, 2.7 amps @ 74% brightness = 188
+
 const uint8_t MaxBrightness = 32;
-const uint16_t PixelCount = 155; // fip strip = 111, 114 for clock, 94 for backup strip, 61 for a circle, 
+const uint16_t PixelCount = 114; // 4* 28 + 2 dots
 
 LEDArtPiece art(nx, PixelCount, MaxBrightness);
 
 LEDArtSingleGeometry geomAll("All", PixelCount);
+
+/*
+uint16_t table[][24] = {
+  {  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23 },
+  { 24, 25, 25, 26, 27, 27, 28, 29, 29, 30, 31, 31, 32, 33, 33, 34, 35, 35, 36, 37, 37, 38, 39, 39 },
+  { 40, 40, 41, 41, 42, 42, 43, 43, 44, 44, 45, 45, 46, 46, 47, 47, 48, 48, 49, 49, 50, 50, 51, 51 },
+  { 52, 52, 53, 53, 53, 54, 54, 54, 55, 55, 55, 56, 56, 56, 57, 57, 57, 58, 58, 58, 59, 59, 59, 52 },
+  { 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60 }
+};
+LEDArtTableGeometry geomRays("Rays", 5, 24, (uint16_t**)table);
+*/
 
 // Bottom straps size
 //HarnessGeometry geom(30, 2);
@@ -61,10 +66,12 @@ LAA_KittSmooth kittSmooth("Kitt Smooth");
 
 LAA_KittPallete kittPallete("Kitt Pallete");
 
-QuickButtons buttons(art, &halfWhite);
+//QuickButtons buttons(art, &halfWhite);
 
 WebUI webui(nx, art);
 //WiFiSync wifiSync(nx);
+
+BadClock badClock(nx, art);
 
 //Pinger pinger;
 
@@ -81,14 +88,16 @@ void setup() {
   /////// Configure network and hardware UI
   // msgTube.configure(NODE_ID, "TomArtFIPStrip", "ILoveTwinks");
   // msgTube.begin();
-  hausFan.configure("TomArtFIPStrip", "ILoveTwinks");
+  hausFan.configure("TomArtBadClock", "ILoveTwinks");
   hausFan.setPossibleNet(false, "Haus", "GundamWing");
   hausFan.begin();
   
-  buttons.begin();
-
+//  buttons.begin();
+  badClock.begin();
+  
   /////// Configure the art piece
   art.registerGeometry(&geomAll);
+//  art.registerGeometry(&geomRays);
 
   // Could set different defaults here if we care
   // nx.unitType = 1;
@@ -102,6 +111,7 @@ void setup() {
  nx.maxDuration = 256000;
   
   art.registerAnimation(&webui.statusAnim);
+  art.registerAnimation(&badClock.digitAnim);
 
 //  art.registerAnimation(&allWhite);
 //  art.registerAnimation(&halfWhite);
@@ -124,6 +134,7 @@ void setup() {
 //  // Start the webui animation just so we don't have to deal with it
 //  // elsewhere right now
     art.startAnimation(&webui.statusAnim, false);
+    art.startAnimation(&badClock.digitAnim, false);
 
     art.startAnimation(&unitFill, false);
 //    art.startAnimation(&wifiSync.statusAnim, false);
@@ -135,6 +146,8 @@ void setup() {
   webui.begin();
   // wifiSync.begin();
   hausFan.begin();
+
+  // badClock.begin();
 
   // Do these last so randomization doesn't affect it
   nx.foreground = RgbColor(255,0,0);
@@ -155,9 +168,10 @@ void loop() {
   // wifiSync.loop();
   hausFan.loop();
   webui.loop();
+  badClock.loop();
 //  pinger.loop();
 
-  buttons.loop();
+//  buttons.loop();
   art.loop();
   
 
