@@ -1,0 +1,22 @@
+body {
+    font-family: "Helvetica", "Helvetica-Neue", sans-serif;
+}
+
+#log {
+    white-space: pre-wrap;
+    background-color: #050505;
+    color: #00f000;
+    padding: 5px;
+    font-size: 0.8em;
+    line-height: 1.4em;
+    font-family: courier, monospace;
+}
+
+#colorString {
+    padding: 1em;
+    font-family: courier, monospace;    
+}
+
+.sp-picker-container {
+    width: 300px;
+}

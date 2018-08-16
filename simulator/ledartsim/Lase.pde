@@ -33,6 +33,8 @@ enum PS {
   WantVarTag,
   WantVarType,
   GotVarValue,
+  
+  MustStop,
 }
 
 public class LaseClient {
@@ -66,11 +68,11 @@ public class LaseClient {
    */
   void receiveData(Client client) {
     int read = client.readBytes(buffer);
-    printBytes(buffer, read);
+    //printBytes(buffer, read);
     
     int cursor = 0;
     while(cursor < read) {
-      println(cursor, buffer[cursor] & 0x00ff, parseState);
+      //println(cursor, buffer[cursor] & 0x00ff, parseState);
       switch(parseState) {
         /////
         case WantMsgType:
@@ -177,7 +179,7 @@ public class LaseClient {
           intBuffer = intBuffer << 8;
           intBuffer += buffer[cursor++] & 0x00ff;
           parseState = afterRead;
-          println("Read int "+intBuffer);
+          //println("Read int "+intBuffer);
           break;
           
         
@@ -188,9 +190,19 @@ public class LaseClient {
             parseState = afterRead;
           } else {
             // Add this character
-            stringBuffer.appendCodePoint(buffer[cursor++]);
+            try {
+              stringBuffer.appendCodePoint(buffer[cursor++]);
+            } catch (Exception ex) {
+              println("ERROR with string data, closing the client");
+              client.stop();
+              return;
+            }
           }
           break;
+          
+        case MustStop:
+          client.stop();
+          return;
       }
     }
   }
@@ -215,6 +227,11 @@ public class LaseClient {
         
       case 4: // State values
         parseState = PS.WantVarTag;
+        break;
+        
+      default:
+        println("ERROR: Unknown message type");
+        parseState = PS.MustStop;
         break;
     }
   }
@@ -255,7 +272,7 @@ public class LaseClient {
         break;
     }
     if (value != null) {
-      println("Got state value tag="+varTag+"  value="+value);
+      //println("Got state value tag="+varTag+"  value="+value);
       stateVars.put(new Integer(varTag), value);
     }
     
@@ -274,8 +291,8 @@ public class LaseClient {
   }
     
   void sendPixelData() {
-    print("SetPixelData ");
-    printBytes(pixelData, pixelData.length);
+    //print("SetPixelData ");
+    //printBytes(pixelData, pixelData.length);
     
     LEDArtPiece piece = findPiece();
     if (piece == null) return;

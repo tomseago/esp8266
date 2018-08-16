@@ -227,6 +227,7 @@ Nexus::usePreparedState()
 void
 Nexus::clearPreparedState() 
 {
+    // We have used the active one we had
     nextState.time = 0;
 
     if (szNextGeom)
@@ -239,6 +240,14 @@ Nexus::clearPreparedState()
     {
         free(szNextAnim);
         szNextAnim = NULL;
+    }
+
+    // Do we have a queued state though?
+    if (nextNextStateData) {
+        deserializePreparedState(nextNextStateLength, nextNextStateData);
+
+        free(nextNextStateData);
+        nextNextStateData = NULL;
     }
 
     // testSerializer();
@@ -258,6 +267,26 @@ Nexus::serializePreparedState(uint8_t* into)
 bool
 Nexus::deserializePreparedState(uint16_t length, const uint8_t* from)
 {
+    if (nextState.time) {
+        Log.printf("NEXUS: Got a new prepared state before using the last one. Queing it up...\n");
+        stateQEvents++;
+
+        // If it's on top of something else, remove the old one
+        if (nextNextStateData) {
+            free(nextNextStateData);
+        }
+        nextNextStateData = (uint8_t*)malloc(length);
+        if (!nextNextStateData) {
+            Log.printf("NEXUS: OOM Error queing new state\n");
+            return false;
+        }
+        nextNextStateLength = length;
+        memcpy(nextNextStateData, from, length);
+        return true;
+    }
+
+    // Free to do a regular deserialization
+
     if (szNextGeom)
     {
         free(szNextGeom);
@@ -270,7 +299,7 @@ Nexus::deserializePreparedState(uint16_t length, const uint8_t* from)
         szNextAnim = NULL;
     }
 
-    deserializeState(&nextState, &szNextGeom, &szNextAnim, length, from);
+    return deserializeState(&nextState, &szNextGeom, &szNextAnim, length, from);
 }
 
 

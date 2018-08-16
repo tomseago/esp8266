@@ -1,4 +1,5 @@
-#define NODE_ID 1
+// The master node id is 1 to avoid weirdness with IP addresses
+#define NODE_ID 2
 
 #include <ESP8266WiFi.h>
   
@@ -9,10 +10,10 @@
 #include <animations.h>
 #include <log.h>
 
-#include <haus_fan.h> // instead of msg_tube when it won't have peers
-//#include <msg_tube.h>
-// #include <wifisync.h>
-//#include <pinger.h>
+//#include <haus_fan.h> // instead of msg_tube when it won't have peers
+#include <msg_tube.h>
+#include <wifisync.h>
+#include <pinger.h>
 
 #include <Bounce2.h>
 #include <quickbuttons.h>
@@ -23,26 +24,15 @@
 Nexus nx;
 
 
-// Circle LED layout
-// Outside to inside 24, 16, 12, 8, 1 = 61  
-// 3.66 amps at full brightness, 2.7 amps @ 74% brightness = 188
-
-const uint8_t MaxBrightness = 180;
-const uint16_t PixelCount = 61;
+// 104 leds total
+// 16 on short sides, 36 on long sides
+const uint8_t MaxBrightness = 255;  // Hell to the yeah!
+const uint16_t PixelCount = 104;
 
 LEDArtPiece art(nx, PixelCount, MaxBrightness);
 
 LEDArtSingleGeometry geomAll("All", PixelCount);
 
-
-uint16_t table[][24] = {
-  {  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23 },
-  { 24, 25, 25, 26, 27, 27, 28, 29, 29, 30, 31, 31, 32, 33, 33, 34, 35, 35, 36, 37, 37, 38, 39, 39 },
-  { 40, 40, 41, 41, 42, 42, 43, 43, 44, 44, 45, 45, 46, 46, 47, 47, 48, 48, 49, 49, 50, 50, 51, 51 },
-  { 52, 52, 53, 53, 53, 54, 54, 54, 55, 55, 55, 56, 56, 56, 57, 57, 57, 58, 58, 58, 59, 59, 59, 52 },
-  { 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60 }
-};
-LEDArtTableGeometry geomRays("Rays", 5, 24, (uint16_t**)table);
 
 // Bottom straps size
 //HarnessGeometry geom(30, 2);
@@ -50,28 +40,28 @@ LEDArtTableGeometry geomRays("Rays", 5, 24, (uint16_t**)table);
 //LAA_Flood flood("Flood", RgbColor(128,0,0));
 LAA_Sparkle sparkle("Sparkle", PixelCount);
 LAA_Rainbow rainbow("Rainbow");
-LAA_Line line("Line");
-LAA_BoxOutline boxOutline("Box Outline");
+//LAA_Line line("Line");
+//LAA_BoxOutline boxOutline("Box Outline");
 LAA_AllWhite allWhite("All White");
-LAA_HalfWhite halfWhite("Half White");
-
+//LAA_HalfWhite halfWhite("Half White");
+//
 LAA_UnitFill unitFill("Unit Fill");
-LAA_RandoFill randoFill("Rando Fill");
-LAA_PaletteFill paletteFill("Palette Fill");
+//LAA_RandoFill randoFill("Rando Fill");
+//LAA_PaletteFill paletteFill("Palette Fill");
+//
+//LAA_Kitt kitt("Kitt");
+//LAA_KittSmooth kittSmooth("Kitt Smooth");
+//
+//LAA_KittPallete kittPallete("Kitt Pallete");
 
-LAA_Kitt kitt("Kitt");
-LAA_KittSmooth kittSmooth("Kitt Smooth");
-
-LAA_KittPallete kittPallete("Kitt Pallete");
-
-QuickButtons buttons(art, &halfWhite);
+QuickButtons buttons(art, &allWhite);
 
 WebUI webui(nx, art);
-//WiFiSync wifiSync(nx);
+WiFiSync wifiSync(nx);
 
 //Pinger pinger;
 
-Lase lase(IPAddress(10,0,1,10), nx, art);
+Lase lase(IPAddress(10,0,1,10), NODE_ID-1, nx, art);
 
 void setup() {
 
@@ -84,11 +74,13 @@ void setup() {
   Log.printf("DB Log start\n");
 
   /////// Configure network and hardware UI
-  // msgTube.configure(NODE_ID, "TomArtFIPStrip", "ILoveTwinks");
-  // msgTube.begin();
-  hausFan.configure("TomArtBrainHat", "ILoveTwinks");
-  hausFan.setPossibleNet(false, "Haus", "GundamWing");
-  hausFan.begin();
+//   msgTube.configure(NODE_ID, "InfinityBed", "Password");
+   msgTube.configure(NODE_ID, "Haus", "GundamWing");
+   msgTube.enableStatic();
+   msgTube.begin();
+//  hausFan.configure("InfinityBed", "Password");
+//  hausFan.setPossibleNet(false, "Haus", "GundamWing");
+//  hausFan.begin();
   
   buttons.begin();
 
@@ -105,7 +97,10 @@ void setup() {
   // Default animation time is 16 seconds which is 8 bars at 120bpm
   // so when using a small duration setting it to a multiple of this is good
   // nx.maxDuration = 32000;
- nx.maxDuration = 256000;
+ //nx.maxDuration = 256000;
+
+  // For testing message tube we want small duration
+  nx.maxDuration = 8000;
   
   art.registerAnimation(&webui.statusAnim);
 
@@ -114,15 +109,15 @@ void setup() {
 //
 //  art.registerAnimation(&flood);
   art.registerAnimation(&unitFill);
-  art.registerAnimation(&randoFill);
-  art.registerAnimation(&paletteFill);
+//  art.registerAnimation(&randoFill);
+//  art.registerAnimation(&paletteFill);
 //  art.registerAnimation(&sparkle);
 //  art.registerAnimation(&line);
   art.registerAnimation(&rainbow);
 //  art.registerAnimation(&boxOutline);
 //  art.registerAnimation(&kitt);
-  art.registerAnimation(&kittSmooth);
-  art.registerAnimation(&kittPallete);
+//  art.registerAnimation(&kittSmooth);
+//  art.registerAnimation(&kittPallete);
   art.begin();
 //
     nx.addListener(&art);
@@ -131,26 +126,27 @@ void setup() {
 //  // elsewhere right now
     art.startAnimation(&webui.statusAnim, false);
 
-    art.startAnimation(&unitFill, false);
+    art.startAnimation(&rainbow, false);
 //    art.startAnimation(&wifiSync.statusAnim, false);
-    art.startAnimation(&kittPallete, false);
+//    art.startAnimation(&kittPallete, false);
 
 // Need to begin the strip when debugging, but art.begin() does this on it's own
 //    art.strip.Begin();
 
   webui.begin();
-  // wifiSync.begin();
-  hausFan.begin();
+   wifiSync.begin();
+//  hausFan.begin();
 
   // Do these last so randomization doesn't affect it
   nx.foreground = RgbColor(255,0,0);
   nx.background = RgbColor(0, 0, 0);
   nx.speedFactor = 1.0;
+  nx.palette = LEDArtAnimation::LEDPalette_RYB;
   
 //  pinger.begin();
 //  if (NODE_ID == 2)
 //  {
-//    pinger.startPings(0, 5000);
+//    pinger.startPings(1, 5000);
 //  }
 
   lase.begin();
@@ -159,9 +155,9 @@ void setup() {
 uint8_t count = 0;
 
 void loop() {
-  // msgTube.loop();
-  // wifiSync.loop();
-  hausFan.loop();
+   msgTube.loop();
+   wifiSync.loop();
+//  hausFan.loop();
   webui.loop();
 //  pinger.loop();
 

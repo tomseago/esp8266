@@ -108,14 +108,18 @@ protected:
         ConnectedPrimary,
         TryingSecondary,
         ConnectedSecondary,
-        Disabled
+        Disabled,
+
+        TryingStatic,
+        ConnectedStatic,
     };
 
-    STAStatus staStatus = Nothing;
+    STAStatus staStatus = Nothing;    
 
     uint8_t nodeId;
     char* szBaseName;
     char* szPassword;
+    bool isStaticMode;
 
     MTListener* listeners = NULL;
 
@@ -139,12 +143,22 @@ protected:
     void startSTANothingPeriod();
     void checkSTAStillOk(bool isSecondary);
 
+    void startStaticConnect();
+    void checkStaticAttempt();
+    void checkStaticStillOk();
+
     void handleMessage(MTMessage* msg);
 
 public:
     MsgTube();
 
+    // Before calling begin set config data
     bool configure(const uint8_t nodeId, const char* szBaseName, const char* szPassword);
+
+    // Default mode is mesh, but this will put us into static mode (one time config before
+    // calling begin)
+    void enableStatic();
+
     void begin();
     void loop();
 

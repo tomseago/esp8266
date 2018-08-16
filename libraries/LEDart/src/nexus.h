@@ -43,6 +43,8 @@ public:
     // It is initially set by the art piece when the piece is constructed.
     float maxBrightness; 
 
+    int stateQEvents;
+
     Nexus();
 
     void randomizeAll(uint32_t source);
@@ -111,6 +113,11 @@ private:
     NexusState nextState;
     char* szNextGeom = NULL;
     char* szNextAnim = NULL;
+
+    // If we get a new prepared state before we used the last one, we have to
+    // hold onto it here before we _actually_ deserialize it...
+    uint8_t* nextNextStateData = NULL;
+    uint16_t nextNextStateLength;
 
     void randomizeState(NexusState* state);
     void applyState(NexusState* state);

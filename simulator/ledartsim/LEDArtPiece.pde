@@ -6,6 +6,11 @@ public enum PixelType {
 
 int DATA_TIMEOUT = 1000;
 
+public float SPACING_30_LED = 1000.0 / 30;
+public float SPACING_60_LED = 1000.0 / 60;
+public float SPACING_144_LED = 1000.0 / 144;
+
+
 class LEDArtPiece {
 
   LEDArtPixel pixels[];
@@ -18,6 +23,7 @@ class LEDArtPiece {
   private HashMap values = new HashMap();
   
   private int lastData;
+  FPSCounter pixelTimes = new FPSCounter(20);
   
   public LEDArtPiece() {
   }
@@ -29,10 +35,6 @@ class LEDArtPiece {
   protected void setNumberPixels(int num) {
     pixels = new LEDArtPixel[num];
   }
-  
-  public float SPACING_30_LED = 1000.0 / 30;
-  public float SPACING_60_LED = 1000.0 / 60;
-  public float SPACING_144_LED = 1000.0 / 144;
   
   /**
    * Adds a strip of pixels from a point in a given direction.
@@ -104,7 +106,7 @@ class LEDArtPiece {
     text(number, indexWidth, 20); 
     
     float tableWidth = phWidth - indexWidth - 2;
-    float tableSep = phWidth - (0.5 * tableWidth);
+    float tableSep = phWidth - (0.7 * tableWidth);
         
     textSize(12);
     float vH = textAscent() + textDescent();
@@ -112,7 +114,7 @@ class LEDArtPiece {
     float vHSpace = 2;
     
     float lineY = vSpacing;
-    for(int i=1; i<=3; i++) {
+    for(int i=1; i<=7; i++) {
       Integer key = new Integer(i);
       String label = (String)labels.get(key);
 
@@ -131,9 +133,13 @@ class LEDArtPiece {
       
       lineY += vH + vSpacing;      
     }
+    
+    text(Integer.toString(pixelTimes.avgIFTms()), tableSep, lineY); 
   }
   
   public void setPixelData(byte[] data) {
+    pixelTimes.mark();
+    
     lastData = millis();
     int cursor = 0;
     int pixelIx = 0;
@@ -203,5 +209,41 @@ class SimpleStrip extends LEDArtPiece {
   protected void createPixels() {    
     setNumberPixels(numLeds);
     createPixelStrip(SPACING_30_LED, origin, direction, 0, numLeds);
+  }
+}
+
+final int NUM_SHORT = 16;
+final int NUM_LONG = 36;
+
+float IPWidth = NUM_SHORT * SPACING_30_LED;
+float IPHeight = NUM_LONG * SPACING_30_LED;
+
+class InfinityPanel extends LEDArtPiece {
+  PVector origin;
+  PVector firstDir;
+  PVector secondDir;  
+  
+  InfinityPanel(PVector origin, PVector first, PVector second) {
+    this.origin = origin;
+    this.firstDir = first;
+    this.secondDir = second;
+    
+    createPixels();
+  }
+  
+  protected void createPixels() {
+    setNumberPixels(2 * (NUM_SHORT + NUM_LONG));
+    
+    // First strip from origin 
+    PVector pos = createPixelStrip(SPACING_30_LED, origin, firstDir, 0, NUM_SHORT);
+    
+    // Now a long one
+    pos = createPixelStrip(SPACING_30_LED, pos, secondDir, NUM_SHORT, NUM_LONG);
+    
+    // Reverse the short
+    pos = createPixelStrip(SPACING_30_LED, pos, PVector.mult(firstDir,-1.0), NUM_SHORT+NUM_LONG, NUM_SHORT);
+    
+    // Reverse the long
+    pos = createPixelStrip(SPACING_30_LED, pos, PVector.mult(secondDir,-1.0), NUM_SHORT+NUM_LONG+NUM_SHORT, NUM_LONG);
   }
 }

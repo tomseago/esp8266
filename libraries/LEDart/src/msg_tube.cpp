@@ -11,6 +11,12 @@ const uint32_t STA_Restart_Delay = 20000;
 const uint32_t STA_Connected_Recheck_Delay = 30000;
 const uint32_t STA_Attempt_Window = 20000;
 
+const uint32_t STA_Attempt_Check_Delay = 2000;
+
+// Use , in this ip because it goes in the IPAddress constructor
+#define MT_PEER_BASE_ADDRESS     10,7,10,1
+#define MT_STATIC_MASTER_ADDRESS 10,0,1,200
+
 
 class MTClientConnection {    
 
@@ -19,6 +25,8 @@ class MTClientConnection {
 public:
     AsyncTCPbuffer* tcpBuffer = NULL;
     MTClientConnection* next = NULL;
+
+    bool wantsFlush;
 
     uint8_t addr;
 
@@ -31,6 +39,8 @@ public:
     void messageDone(bool ok);
 
     bool handleDisconnect(AsyncTCPbuffer* obj);
+
+    void flushIfNeeded();
 };
 
 // Clean up the AsyncClient?????
@@ -125,6 +135,16 @@ MTClientConnection::handleDisconnect(AsyncTCPbuffer* obj)
     tcpBuffer = NULL;
     msgTube.connectionClosed(this);
     return true;
+}
+
+void
+MTClientConnection::flushIfNeeded()
+{
+    if (!wantsFlush) return;
+    wantsFlush = false;
+
+    if (!tcpBuffer) return;
+    tcpBuffer->flush();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -322,6 +342,11 @@ MTMessage::sendTo(MTClientConnection* conn)
     {
         conn->tcpBuffer->write(data, length);
     }
+
+    // Can not call flush() from here, probably because we might be responding
+    // to a message, meaning we are on the interrupt task thing, and somehow flush
+    // conflicts with that.
+    conn->wantsFlush = true;
 }
 
 
@@ -345,33 +370,43 @@ MsgTube::configure(const uint8_t nodeId, const char* szBaseName, const char* szP
 }
 
 void
+MsgTube::enableStatic()
+{
+    isStaticMode = true;
+}
+
+void
 MsgTube::begin()
 {
     // Don't worry about storing things in flash
     WiFi.persistent(false);
+    // Don't start wifi on boot
     WiFi.setAutoConnect(false);
+    // Don't try reconnecting because we will handle that case
+    WiFi.setAutoReconnect(false);
 
     //------ Configure the AP side of things
+    if (!isStaticMode)
+    {
+        char szName[strlen(szBaseName) + 3];
+        sprintf(szName, "%s%d", szBaseName, nodeId);
 
-    char szName[strlen(szBaseName) + 3];
-    sprintf(szName, "%s%d", szBaseName, nodeId);
-
-    Log.printf("MT: Starting soft AP %s %s\n", szName, szPassword);
-    WiFi.softAP(szName, szPassword);
-
-
-    IPAddress localIp(10, 7, 0, 1);
-    IPAddress gateway(10, 7, 0, 1);
-    IPAddress subnet(255, 255, 255, 0);
-
-    localIp[2] = nodeId + 10;
-    // localIp[3] = nodeId + 10;
-    gateway = localIp;
+        Log.printf("MT: Starting soft AP %s %s\n", szName, szPassword);
+        WiFi.softAP(szName, szPassword);
 
 
-    Log.printf("MT: Calling softAPConfig(%s, %s, %s)\n", localIp.toString().c_str(), gateway.toString().c_str(), subnet.toString().c_str());
-    WiFi.softAPConfig(localIp, gateway, subnet);
+        IPAddress localIp(10, 7, 0, 1);
+        IPAddress gateway(10, 7, 0, 1);
+        IPAddress subnet(255, 255, 255, 0);
 
+        localIp[2] = nodeId + 10;
+        // localIp[3] = nodeId + 10;
+        gateway = localIp;
+
+
+        Log.printf("MT: Calling softAPConfig(%s, %s, %s)\n", localIp.toString().c_str(), gateway.toString().c_str(), subnet.toString().c_str());
+        WiFi.softAPConfig(localIp, gateway, subnet);
+    }
 
     //------- Setup our server for receiving connections
     server.onClient(std::bind(&MsgTube::sConnect, this, std::placeholders::_1, std::placeholders::_2), NULL);
@@ -386,6 +421,17 @@ void
 MsgTube::loop()
 {
     checkSTA();
+
+    // Flush any connections that need it
+    MTClientConnection* cursor = clientConns;
+    while(cursor)
+    {
+        MTClientConnection* next = cursor->next;
+
+        cursor->flushIfNeeded();
+
+        cursor = next;
+    }
 }
 
 void
@@ -602,7 +648,11 @@ MsgTube::checkSTA()
 
     switch(staStatus) {
     case Nothing:
-        startSTAConnect(false);
+        if (isStaticMode) {
+            startStaticConnect();
+        } else {
+            startSTAConnect(false);
+        }
         break;
 
     case TryingPrimary:
@@ -619,9 +669,18 @@ MsgTube::checkSTA()
 
     case ConnectedSecondary:
         checkSTAStillOk(true);
+        break;
 
     case Disabled:
         // Do nothing
+        break;
+
+    case TryingStatic:
+        checkStaticAttempt();
+        break;
+
+    case ConnectedStatic:
+        checkStaticStillOk();
         break;
     }
 }
@@ -661,7 +720,7 @@ MsgTube::startSTAConnect(bool isSecondary)
     // Start checking status to see if we get connected
     staAttemptBegan = millis();
     staStatus = isSecondary ? TryingSecondary : TryingPrimary;
-    nextSTACheck = staAttemptBegan + 2000;
+    nextSTACheck = staAttemptBegan + STA_Attempt_Check_Delay;
     staCheckAttempts = 0;
     Log.printf("MT: SSC staAttemptBegan=%d now we wait...\n", staAttemptBegan);
 }
@@ -687,7 +746,7 @@ MsgTube::checkSTAAttempt(bool isSecondary)
         Log.print("\n");
         staCheckAttempts = 1;
     }
-    nextSTACheck = millis() + 2000;
+    nextSTACheck = millis() + STA_Attempt_Check_Delay;
 
 
     // This is the only thing that means it's all good
@@ -698,7 +757,7 @@ MsgTube::checkSTAAttempt(bool isSecondary)
 
         // Create the local connection
         AsyncClient* client = new AsyncClient();
-        IPAddress peer(10,7,10,1);
+        IPAddress peer(MT_PEER_BASE_ADDRESS);
         peer[2] += isSecondary ? nodeId - 2 : nodeId - 1;
 
         // touch it yet
@@ -706,7 +765,7 @@ MsgTube::checkSTAAttempt(bool isSecondary)
         client->onConnect(std::bind(&MsgTube::sConnect, this, std::placeholders::_1, std::placeholders::_2), NULL);
         client->onError(std::bind(&MsgTube::conError, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), NULL);
 
-        if (!client->connect(peer, 2000))
+        if (!client->connect(peer, MTServerPort))
         {
             // Aack!
             Log.printf("MT: Unable to create AsyncClient so bailing to Nothing\n");
@@ -722,7 +781,7 @@ MsgTube::checkSTAAttempt(bool isSecondary)
         // }
         // addConnection(conn);
 
-        Log.printf("MT: New client connection for STA. Yay!!");
+        Log.printf("MT: New client connection for STA. Yay!!\n");
 
         return;
     }
@@ -787,6 +846,152 @@ MsgTube::checkSTAStillOk(bool isSecondary)
     // always restart at nothing.
     staStatus = Nothing;
 }
+
+
+
+void
+MsgTube::startStaticConnect()
+{    
+    Log.printf("MT: startStaticConnect()\n");
+
+    // Start by making sure we are consistently disconnected
+    Log.printf("MT: SSt WiFi.disconnect(true)\n");
+    WiFi.disconnect(true);
+
+    // Even if master we must connect to the access point, but
+    // if master we use a fixed ip
+    if (nodeId == MTMasterAddr)
+    {
+        IPAddress ip( MT_STATIC_MASTER_ADDRESS );
+        IPAddress gateway(MT_STATIC_MASTER_ADDRESS);
+        gateway[3] = 1;
+
+        IPAddress subnet(255, 255, 255, 0);
+
+        Log.printf("MT: SSt WiFi.config(%s)\n", ip.toString().c_str());
+        WiFi.config(ip, gateway, subnet);
+    }
+
+    // Use the base name directly because it is an external AP
+    Log.printf("MT: SSt WiFi.begin(%s)\n", szBaseName);
+    WiFi.begin(szBaseName, szPassword);
+
+    // Start checking status to see if we get connected
+    staAttemptBegan = millis();
+    staStatus = TryingStatic;
+    nextSTACheck = staAttemptBegan + STA_Attempt_Check_Delay;
+    staCheckAttempts = 0;
+    Log.printf("MT: SSt staAttemptBegan=%d now we wait...\n", staAttemptBegan);
+}
+
+void
+MsgTube::checkStaticAttempt()
+{
+    wl_status_t wifiStatus = WiFi.status();
+
+    staCheckAttempts++;
+    if (staCheckAttempts == 1)
+    {
+        // First time
+        Log.printf("MT: checkSTAAttempt() wifiStatus=%d\n", wifiStatus);
+    }
+    else
+    {        
+        Log.printf("%d ", wifiStatus);
+    }
+
+    if (staCheckAttempts == 40)
+    {
+        Log.print("\n");
+        staCheckAttempts = 1;
+    }
+    nextSTACheck = millis() + STA_Attempt_Check_Delay;
+
+
+    // This is the only thing that means it's all good
+    if (WL_CONNECTED == wifiStatus) {
+        Log.printf("MT: Static Connected!!!\n");
+        staStatus = ConnectedStatic;
+        nextSTACheck = millis() + STA_Connected_Recheck_Delay;
+
+        if (nodeId == MTMasterAddr) {
+            Log.printf("MT: Master node, wait for connections from others\n");
+            return;
+        }
+
+        // We are not the master, so try to connect to it...
+
+        // Create the local connection
+        AsyncClient* client = new AsyncClient();
+        IPAddress peer(MT_STATIC_MASTER_ADDRESS); 
+
+        // touch it yet
+        Log.printf("MT: Setting onConnect and onError handlers for new client\n");
+        client->onConnect(std::bind(&MsgTube::sConnect, this, std::placeholders::_1, std::placeholders::_2), NULL);
+        client->onError(std::bind(&MsgTube::conError, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), NULL);
+
+        if (!client->connect(peer, MTServerPort))
+        {
+            // Aack!
+            Log.printf("MT: Unable to create AsyncClient so bailing to Nothing\n");
+            startSTANothingPeriod();
+            return;
+        }
+
+        Log.printf("MT: New client connection for Static. Yay!!");
+
+        return;
+    }
+
+    // Anything that is not an error is just "disconnected"
+    if (WL_DISCONNECTED == wifiStatus) {
+        // How long has it been?
+        if (millis() - staAttemptBegan < STA_Attempt_Window) {
+            // This is cool, let it keep trying
+            return;
+        }
+
+        // Aack, timeout. That's the same as an error
+    }
+
+    // Some sort of error has occurred
+
+    startSTANothingPeriod();
+}
+
+void
+MsgTube::checkStaticStillOk()
+{
+    uint32_t before = millis();
+    wl_status_t wifiStatus = WiFi.status();
+    uint32_t after = millis();
+
+    Log.printf("MT: checkStaticStillOk() wifiStatus=%d time=%d\n", wifiStatus, after-before);
+    // This is the only thing that means it's all good
+    if (WL_CONNECTED == wifiStatus) {
+        // Okay we have wifi.
+        nextSTACheck = millis() + STA_Connected_Recheck_Delay;
+
+        // For master, wifi is enough to declare happiness
+        if (nodeId == MTMasterAddr) {
+            return;
+        }
+
+        // For everyone else, we need to have an open MTClientConnection though
+        if (!clientConns) {
+            Log.printf("MT: CSSO Have wifi but no active MTClientConnection. Restart!");
+        } else {
+            return;
+        }
+    }
+
+    // Oh golly, anything else sucks, so we need to re-connect.
+    // If we were connected to primary and it failed, does that mean
+    // we should immediately try secondary or not? For now, just
+    // always restart at nothing.
+    staStatus = Nothing;
+}
+
 
 ///
 

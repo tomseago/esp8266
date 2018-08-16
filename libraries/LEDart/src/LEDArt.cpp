@@ -350,10 +350,13 @@ LEDArtPiece::startAnimation(LEDArtAnimation* pAnim, bool isLoop, uint32_t now)
     {        
         pChannel->channelStartedAt = now;
         Log.printf("PIECE: Start animation %s\n", pAnim->szName);
+
+        if (pAnim->type == LEDAnimationType_BASE) {
+            nexus.setAnimation(pAnim->szName, (uint32_t)this);
+        }
     } else {
         //Log.printf("PIECE: Loop animation %s\n", pAnim->szName);
     }
-    nexus.setAnimation(pAnim->szName, (uint32_t)this);
 
     updateBrightness(pAnim);
 
@@ -385,7 +388,7 @@ LEDArtPiece::startAnimation(LEDArtAnimation* pAnim, bool isLoop, uint32_t now)
         // Oh hey, nothing specified a duration, so ignore this
         if (!minDuration)
         {
-            Log.printf("PIECE: shouldPrepareRandomStatesFor set but not maxDuration anywhere. Ignoring it.\n");
+            Log.printf("PIECE: shouldPrepareRandomStatesFor set but no maxDuration anywhere. Ignoring it.\n");
         }
         else
         {
