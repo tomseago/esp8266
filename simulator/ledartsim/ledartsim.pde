@@ -12,10 +12,11 @@ float phWidth = 200;
 float phHeight = 140;
 float phSpacing = 10;
 
-boolean drawHUD = false;
+boolean drawHUD = true;
+int maxHUDIx = 4;
 
 void setup() {
-  size(1024, 1024, P3D);
+  size(2048, 1024, P3D);
   
   cam = new PeasyCam(this, 5000);
   cam.setMinimumDistance(2000);
@@ -32,6 +33,7 @@ void setup() {
 
 void serverEvent(Server s, Client c) {
   // Somebody new connected to us!
+  println("New connectino from "+c.ip());
   LaseClient lase = new LaseClient();
   laseByClients.put(c, lase);
 }
@@ -80,7 +82,7 @@ void draw() {
   if (drawHUD) {
     cam.beginHUD();
     int hx=0, hy=0;
-    for(int i=0; i<pieces.length; i++) {
+    for(int i=0; i<pieces.length && i<maxHUDIx; i++) {
       pieces[i].drawHUD(i);
       
       if (hx + (2 * (phSpacing + phWidth)) > width) {

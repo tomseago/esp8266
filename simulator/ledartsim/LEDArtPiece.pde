@@ -232,6 +232,7 @@ class InfinityPanel extends LEDArtPiece {
   }
   
   protected void createPixels() {
+    type = PixelType.PT_RGBW;
     setNumberPixels(2 * (NUM_SHORT + NUM_LONG));
     
     // First strip from origin 

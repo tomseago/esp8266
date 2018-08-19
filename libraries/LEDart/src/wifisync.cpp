@@ -16,11 +16,11 @@ WiFiSync::StatusAnim::StatusAnim(WiFiSync& parent) :
 }
 
 
-RgbColor red(255,0,0);
-RgbColor green(0, 255, 0);
-RgbColor blue(0, 0, 255);
+LAColor red(255,0,0);
+LAColor green(0, 255, 0);
+LAColor blue(0, 0, 255);
 
-RgbColor colors[] = { red, green, blue };
+LAColor colors[] = { red, green, blue };
 
 void 
 WiFiSync::StatusAnim::animate(LEDArtPiece& piece, LEDAnimationParam p)
@@ -81,14 +81,32 @@ WiFiSync::begin()
     // Be a listener for messages
     msgTube.addListener(this);
     nexus.addListener(this);
+
+    // This kick in the butt will cause the LEDArtPiece to generate
+    // an initial prepared state in case other things are booting
+    // at basically the same time and need the data
+    if (msgTube.isMaster())
+    {
+        nexus.nextAnimation((uint32_t)this);
+    }
 }
 
 void
 WiFiSync::loop()
 {
-    if (msgTube.isMaster()) {
-        // Um, just hang out for now???
-    } else {
+    if (msgTube.isMaster()) 
+    {
+        // If there were updates via the nexus, we need to send out
+        // the current state to people
+        if (valuesUpdated) 
+        {
+            Log.printf("WIFISYNC: Sending current state\n");
+            sendCurrentState();
+            valuesUpdated = false;            
+        }
+    } 
+    else 
+    {
         // Query for time updates periodically
         uint32_t now = millis();
 
@@ -106,10 +124,15 @@ WiFiSync::handleMTMessage(MTMessage* msgIn)
 {
     if (!msgIn) return true;
 
+    /////////
+    // Handle Broadcasts first
+
     if (msgIn->isBroadcast()) {
+
+        // Only care about PreparedState broadcasts
         if (msgIn->getType() == MT_Type_PreparedState)
         {
-            bool success = nexus.deserializePreparedState(msgIn->getLength(), msgIn->getData());
+            bool success = nexus.deserializeState(false, msgIn->getLength(), msgIn->getData());
             if (!success)
             {
                 Log.printf("ERROR: Failed to deserialize prepared state\n");
@@ -121,13 +144,31 @@ WiFiSync::handleMTMessage(MTMessage* msgIn)
             return true;
         }
 
+        if (msgIn->getType() == MT_Type_CurrentState)
+        {
+            bool success = nexus.deserializeState(true, msgIn->getLength(), msgIn->getData());
+            if (!success)
+            {
+                Log.printf("ERROR: Failed to deserialize current state\n");
+            }
+            else
+            {
+                Log.printf("WIFISYNC: Got a current state\n");
+            }
+            return true;
+        }
+
         // Not for me
         return false;
     }
 
+    
+    /////////
+    // It's a unicast for me! What might it be?
     Log.printf("WIFISYNC: Got message type %d\n", msgIn->getType());
-
     uint32_t now = millis();    
+
+    // Time Query
     if (msgIn->getType() == MT_Type_TimeQuery)
     {
         // Answer it with a pong
@@ -141,6 +182,7 @@ WiFiSync::handleMTMessage(MTMessage* msgIn)
         return true;        
     }
 
+    // Time Response
     if (msgIn->getType() == MT_Type_TimeResponse)
     {
         if (msgIn->getId() != lastId)
@@ -180,6 +222,7 @@ WiFiSync::handleMTMessage(MTMessage* msgIn)
         return true;        
     }
 
+    // State Query
     if (msgIn->getType() == MT_Type_StateQuery)
     {
         if (!msgTube.isMaster()) 
@@ -198,9 +241,18 @@ WiFiSync::handleMTMessage(MTMessage* msgIn)
 void
 WiFiSync::nexusValueUpdate(NexusValueType which, uint32_t source)
 {
-    if (which == NexusListener::NexusValueType::PreparedState && msgTube.isMaster())
+    if (msgTube.isMaster())
     {
-        sendState();
+        if (which == NexusListener::NexusValueType::PreparedState)
+        {
+            sendState();
+        }
+        else
+        {
+            // Will send current state
+            Log.printf("WIFISYNC: Told about updated values %d\n",which);
+            valuesUpdated = true;
+        }
     }
 }
 
@@ -239,11 +291,12 @@ WiFiSync::sendState()
         Log.printf("WIFISYNC: No stateMsg. Can not send broadcast\n");
         return;
     }
+    stateMsg->setType(MT_Type_PreparedState);
 
     uint8_t data[StateSize];
     uint16_t len = 0;
 
-    len = nexus.serializePreparedState(data);
+    len = nexus.serializeState(false, false, data);
     if (!len)
     {
         Log.printf("WIFISYNC: No prepared state to send\n");
@@ -257,6 +310,33 @@ WiFiSync::sendState()
     msgTube.sendMessage(stateMsg);    
 }
 
+void
+WiFiSync::sendCurrentState()
+{
+    // Send this to our people!
+    if (!stateMsg)
+    {
+        Log.printf("WIFISYNC: No stateMsg. Can not send current state broadcast\n");
+        return;
+    }
+    stateMsg->setType(MT_Type_CurrentState);
+
+    uint8_t data[StateSize];
+    uint16_t len = 0;
+
+    len = nexus.serializeState(true, false, data);
+    if (!len)
+    {
+        Log.printf("WIFISYNC: No prepared state to send\n");
+        return;
+    }
+
+    stateMsg->incrementId();
+    stateMsg->setData(data, len);
+    Log.printf("WIFISYNC: Broadcasting CURRENT state\n");
+
+    msgTube.sendMessage(stateMsg);    
+}
 
 void
 WiFiSync::queryTime()

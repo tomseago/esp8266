@@ -4,7 +4,14 @@
 // strips
 // #define LEDART_COLOR_FEATURE  NeoGrbFeature
 // bullets
-#define LEDART_COLOR_FEATURE  NeoRgbFeature  
+//#define LEDART_COLOR_FEATURE  NeoRgbFeature  
+// #define LAColor RgbColor
+
+// Infinity Bed
+#define LEDART_COLOR_FEATURE  NeoRgbwFeature  
+#define LAColor RgbwColor
+
+
 
 // Both???
 // #define LEDART_COLOR_FEATURE NeoGrbRgbFeature

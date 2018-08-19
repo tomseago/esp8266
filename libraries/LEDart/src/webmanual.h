@@ -1,8 +1,8 @@
 #include <Arduino.h>
 #include <Print.h>
 
-#include <ESPAsyncWebserver.h>
-#include <Hash.h>
+// #include <ESPAsyncWebserver.h>
+// #include <Hash.h>
 #include <functional>
 
 #include "LEDArt.h"
@@ -82,7 +82,7 @@ private:
     AsyncWebSocket socket = AsyncWebSocket("/socket"); // access at ws://[esp ip]/socket
 
     bool showingColorChooser = false;
-    RgbColor chooserColor;
+    LAColor chooserColor;
 
     void h_hello(AsyncWebServerRequest *req);
     void h_config_js(AsyncWebServerRequest *req);

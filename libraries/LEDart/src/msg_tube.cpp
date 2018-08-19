@@ -513,6 +513,7 @@ MsgTube::sendMessage(MTMessage* msg)
         // Loop!
         cursor = next;
     }
+    Log.printf("MT: sendMessage() complete\n");
 }
 
 

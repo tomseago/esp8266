@@ -31,7 +31,8 @@ struct LEDAnimationParam
     LEDAnimationState state;
 };
 
-
+// Converts from RGB to RGBW when necessary
+void convertLAColor(LAColor& in);
 
 class LEDArtAnimation {
 public:
@@ -52,7 +53,7 @@ public:
 
     virtual void animate(LEDArtPiece& piece, LEDAnimationParam p) = 0;
 
-    virtual bool canUseGeom(LEDArtPiece& piece) { return true; }
+    virtual bool canUseGeom(uint16_t width, uint16_t height) { return true; }
 
     enum LEDUnitType {
         Unit_Single = 0,
@@ -81,10 +82,10 @@ public:
     };
 
     const static uint8_t paletteSizes[];
-    const static RgbColor* paletteColors[];
+    const static LAColor* paletteColors[];
 
-    RgbColor colorInPalette(LEDPaletteType palette, float progress);
-    void clearTo(LEDArtPiece& piece, RgbColor color, uint16_t start, uint16_t end); 
+    LAColor colorInPalette(LEDPaletteType palette, float progress);
+    void clearTo(LEDArtPiece& piece, LAColor color, uint16_t start, uint16_t end); 
 };
 
 // typedef void (*LEDArtAnimation)(LEDArtPiece& piece, void* context, uint16_t *duration, bool *loops, AnimationParam p);
@@ -117,9 +118,6 @@ public:
     virtual void startAnimation(LEDArtAnimation* pAnim, bool isLoop=false, uint32_t now=0);
     void stopAnimation(LEDAnimationType type);
 
-    void nextGeometry(bool randomize);
-    void nextBaseAnimation(bool randomize, uint32_t now=0);
-
     //////// Geometries
     uint8_t geomId();
 
@@ -133,9 +131,9 @@ public:
     uint16_t geomPrimaryCount() { return geomHeight(); }
     uint16_t geomSecondaryCount(int16_t primaryIx=-1) { return geomWidth(primaryIx); }
 
-    void setPrimaryColor(uint16_t primaryIx, RgbColor color); // set row to color
-    void setSecondaryColor(uint16_t secondaryIx, RgbColor color); // set column to color
-    void setSecondaryColorInPrimary(uint16_t primaryIx, uint16_t secondaryIx, RgbColor color); // set pixel 
+    void setPrimaryColor(uint16_t primaryIx, LAColor color); // set row to color
+    void setSecondaryColor(uint16_t secondaryIx, LAColor color); // set column to color
+    void setSecondaryColorInPrimary(uint16_t primaryIx, uint16_t secondaryIx, LAColor color); // set pixel 
 
 
     // These are not for general use
@@ -186,9 +184,15 @@ protected:
 
     void animateChannel(LEDAnimationType type, uint32_t now);
 
-    LEDArtGeometry* geomForName(char* szName);
-    LEDArtGeometry* findNextGeometry(bool randomize, bool* pRotated);
+    void nextRandomBaseAnimation(uint32_t now=0);
 
-    LEDArtAnimation* findNextBaseAnimation(bool randomize);
+    bool testAnimGeomCompat(LEDArtAnimation* pAnim, LEDArtGeometry* pGeom, bool rotated);
+
+    LEDArtGeometry* geomForName(char* szName);
+    LEDArtGeometry* findNextGeometry(bool randomize, bool withCompat, bool* pRotated);
+    LEDArtGeometry* _searchForGeom(bool randomize, bool withCompat, bool* pRotated, LEDArtGeometry* pStart, LEDArtGeometry* pEnd);
+
     LEDArtAnimation* baseAnimForName(char* szName);
+    LEDArtAnimation* findNextBaseAnimation(bool randomize, LEDArtGeometry* pGeom=NULL, bool rotated=false);
+
 };

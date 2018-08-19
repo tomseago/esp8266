@@ -3,11 +3,11 @@
 #include <LEDArt.h>
 
 class LAA_Flood : public LEDArtAnimation {
-    RgbColor background;
-    RgbColor foreground;    
+    LAColor background;
+    LAColor foreground;    
 
 public:
-    LAA_Flood(char* szName, RgbColor background);
+    LAA_Flood(char* szName, LAColor background);
 
     virtual void animate(LEDArtPiece& piece, LEDAnimationParam p);
 };
@@ -44,9 +44,9 @@ public:
     uint16_t numUnits(LEDArtPiece& piece);
     uint16_t unitSize(LEDArtPiece& piece);
 
-    void setFullUnitColor(LEDArtPiece& piece, uint16_t unitIx, RgbColor color);
-    void setUnitPixelColor(LEDArtPiece& piece, uint16_t unitIx, uint16_t pixelIx, RgbColor color);
-    void setAllUnitsPixelColor(LEDArtPiece& piece, uint16_t pixelIx, RgbColor color);
+    void setFullUnitColor(LEDArtPiece& piece, uint16_t unitIx, LAColor color);
+    void setUnitPixelColor(LEDArtPiece& piece, uint16_t unitIx, uint16_t pixelIx, LAColor color);
+    void setAllUnitsPixelColor(LEDArtPiece& piece, uint16_t pixelIx, LAColor color);
 };
 
 
@@ -60,7 +60,7 @@ public:
 
 class LAA_Line : public LAA_UnitMapper {
 public:
-    RgbColor foreground;    
+    LAColor foreground;    
 
     LAA_Line(char* szName);
 
@@ -99,7 +99,7 @@ public:
     LAA_UnitFill(char* szName);
 
     virtual void animate(LEDArtPiece& piece, LEDAnimationParam p);
-    virtual bool canUseGeom(LEDArtPiece& piece);
+    virtual bool canUseGeom(uint16_t width, uint16_t height);
 };
 
 class LAA_RandoFill : public LAA_UnitFill {
@@ -141,7 +141,7 @@ public:
     LAA_KittSmooth(char* szName);
 
     virtual void animate(LEDArtPiece& piece, LEDAnimationParam p);
-    virtual bool canUseGeom(LEDArtPiece& piece);
+    virtual bool canUseGeom(uint16_t width, uint16_t height);
 };
 
 class LAA_KittPallete : public LEDArtAnimation {
@@ -150,5 +150,5 @@ public:
     LAA_KittPallete(char* szName);
 
     virtual void animate(LEDArtPiece& piece, LEDAnimationParam p);
-    virtual bool canUseGeom(LEDArtPiece& piece);
+    virtual bool canUseGeom(uint16_t width, uint16_t height);
 };

@@ -1,15 +1,15 @@
 #include <Arduino.h>
 #include <Print.h>
 
-#include <ESPAsyncWebserver.h>
-#include <Hash.h>
+// // #include <ESPAsyncWebserver.h>
+// #include <Hash.h>
 #include <functional>
 #include <bstrlib.h>
 
 #include "LEDArt.h"
 
 
-class WebUI : public Print
+class WebUI : public Print, NexusListener
 {
 public :
     class StatusAnim : public LEDArtAnimation {
@@ -29,6 +29,12 @@ public :
     void begin();
     void loop();
 
+    virtual void nexusValueUpdate(NexusValueType which, uint32_t source);
+
+    virtual void nexusUserGeometryRequest(char* szName, bool rotated, uint32_t source) { }
+
+    // Can pass NULL as szName to ask for a random selection
+    virtual void nexusUserAnimationRequest(char* szName, bool randomize, uint32_t source) { }
 
     ///////////////
     // The stream interface for writing logs
@@ -86,7 +92,7 @@ private:
     AsyncWebSocket socket = AsyncWebSocket("/socket"); // access at ws://[esp ip]/socket
 
     bool showingColorChooser = false;
-    RgbColor chooserColor;
+    LAColor chooserColor;
 
     void h_hello(AsyncWebServerRequest *req);
     void h_config_js(AsyncWebServerRequest *req);

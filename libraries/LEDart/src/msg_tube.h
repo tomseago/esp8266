@@ -1,6 +1,7 @@
 #pragma once
 
-#include <ESP8266WiFi.h>
+// #include <ESP8266WiFi.h>
+#include <WiFi.h>
 
 #include <ESPAsyncTCP.h>
 
@@ -19,6 +20,7 @@ const uint8_t MT_Type_TimeQuery = 4;
 const uint8_t MT_Type_TimeResponse = 5;
 const uint8_t MT_Type_StateQuery = 6;
 const uint8_t MT_Type_PreparedState = 7;
+const uint8_t MT_Type_CurrentState = 8;
 
 
 class MTMessage;

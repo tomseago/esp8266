@@ -611,7 +611,7 @@ WebManual::setChooserColor(uint8_t *data, size_t len)
     HtmlColor color;
     uint8_t result = color.Parse<HtmlShortColorNames>((const char*)&data[1], len-1);
 
-    chooserColor = RgbColor(color);
+    chooserColor = LAColor(color);
 }
 
 void
@@ -622,11 +622,11 @@ WebManual::setNexusColor(bool isForeground, uint8_t *data, size_t len)
 
     if (isForeground)
     {
-        nexus.foreground = RgbColor(color);
+        nexus.foreground = LAColor(color);
     }
     else
     {
-        nexus.background = RgbColor(color);
+        nexus.background = LAColor(color);
     }
 }
 

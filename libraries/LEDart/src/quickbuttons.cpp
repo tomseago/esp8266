@@ -39,6 +39,12 @@ QuickButtons::QuickButtons(LEDArtPiece& piece, LEDArtAnimation* flashLight) :
     }),
     flashLight(flashLight)
 {
+    // Make sure it is overlay type
+    flashLight->type = LEDAnimationType_OVERLAY;
+    flashLight->maxDuration = 0x0FFFFFFF; // A really long overlay yeah?
+
+    // This is not at all the right way to do a flashlight, but whatever...
+    // It doesn't really work right.
 }
 
 void 
@@ -93,7 +99,7 @@ QuickButtons::loop() {
     }
 
     if (buttons[1].fell()) {
-        piece.nextBaseAnimation(false);
+        piece.nexus.nextAnimation((uint32_t)this);
     }
 
     if (buttons[2].fell()) {
@@ -101,7 +107,7 @@ QuickButtons::loop() {
     }
 
     if (buttons[3].fell()) {
-        piece.nextGeometry(false);
+        piece.nexus.nextGeometry((uint32_t)this);
         // piece.nexus.nextUnitType((uint32_t)this);
     }
 

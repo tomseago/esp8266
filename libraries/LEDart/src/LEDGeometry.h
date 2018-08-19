@@ -16,8 +16,8 @@ public:
     LEDArtGeometry(char* szName, bool canRotate = true) : szName(szName), canRotate(canRotate) {}
     virtual uint16_t map(uint16_t x, uint16_t y) = 0;
 
-    virtual uint16_t getWidth(int16_t rowIx=-1) = 0;
-    virtual uint16_t getHeight() = 0;
+    virtual uint16_t getWidth(int16_t rowIx=-1) = 0; // The default secondary
+    virtual uint16_t getHeight() = 0; // The default primary
 };
 
 class LEDArtSingleGeometry : public LEDArtGeometry {

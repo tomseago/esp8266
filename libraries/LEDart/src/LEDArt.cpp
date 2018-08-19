@@ -16,79 +16,79 @@ const uint8_t LEDArtAnimation::paletteSizes[] = {
     4,  // REDS
 };
 
-const RgbColor black(0,0,0);
+const LAColor black(0,0,0);
 
-const RgbColor Palette_RB[] = {
-    RgbColor(255, 0, 0),
-    RgbColor(0, 0, 255),
+const LAColor Palette_RB[] = {
+    LAColor(255, 0, 0),
+    LAColor(0, 0, 255),
 };
 
-const RgbColor Palette_RGB[] = {
-    RgbColor(255, 0, 0),
-    RgbColor(0, 255, 0),
-    RgbColor(0, 0, 255),
+const LAColor Palette_RGB[] = {
+    LAColor(255, 0, 0),
+    LAColor(0, 255, 0),
+    LAColor(0, 0, 255),
 };
 
-const RgbColor Palette_RYB[] = {
-    RgbColor(255, 0, 0),
-    RgbColor(255, 64, 0),
-    RgbColor(255, 128, 0),
-    RgbColor(255, 191, 0),
-    RgbColor(255, 255, 0),
-    RgbColor(128, 212, 25),
-    RgbColor(0, 168, 51),
-    RgbColor(21, 132, 102),
-    RgbColor(42, 95, 153),
-    RgbColor(85, 48, 140),
-    RgbColor(128, 0, 128),
-    RgbColor(191, 0, 64),
+const LAColor Palette_RYB[] = {
+    LAColor(255, 0, 0),
+    LAColor(255, 64, 0),
+    LAColor(255, 128, 0),
+    LAColor(255, 191, 0),
+    LAColor(255, 255, 0),
+    LAColor(128, 212, 25),
+    LAColor(0, 168, 51),
+    LAColor(21, 132, 102),
+    LAColor(42, 95, 153),
+    LAColor(85, 48, 140),
+    LAColor(128, 0, 128),
+    LAColor(191, 0, 64),
 };
 
-const RgbColor Palette_WHITE_BLACK[] = {
-    RgbColor(0, 0, 0),
-    RgbColor(96, 96, 96),
-    RgbColor(255, 255, 255),
+const LAColor Palette_WHITE_BLACK[] = {
+    LAColor(0, 0, 0),
+    LAColor(96, 96, 96),
+    LAColor(255, 255, 255),
 };
 
-const RgbColor Palette_JORDAN[] = {
-    RgbColor(0, 0, 0),
-    RgbColor(96, 96, 96),
-    RgbColor(255, 255, 255),
+const LAColor Palette_JORDAN[] = {
+    LAColor(0, 0, 0),
+    LAColor(96, 96, 96),
+    LAColor(255, 255, 255),
 };
 
-const RgbColor Palette_MARDI_GRAS[] = {
-    RgbColor(176, 126, 9),
-    RgbColor(176, 126, 9),
-    RgbColor(4, 87, 22),
-    RgbColor(45, 6, 56),
-    RgbColor(45, 6, 56),
+const LAColor Palette_MARDI_GRAS[] = {
+    LAColor(176, 126, 9),
+    LAColor(176, 126, 9),
+    LAColor(4, 87, 22),
+    LAColor(45, 6, 56),
+    LAColor(45, 6, 56),
 };
 
-const RgbColor Palette_BLUES[] = {
-    RgbColor(32, 74, 255),
-    RgbColor(0, 23, 123),
-    RgbColor(3, 19, 21),
-    RgbColor(21, 18, 33),
-    RgbColor(1, 1, 5),
+const LAColor Palette_BLUES[] = {
+    LAColor(32, 74, 255),
+    LAColor(0, 23, 123),
+    LAColor(3, 19, 21),
+    LAColor(21, 18, 33),
+    LAColor(1, 1, 5),
 };
 
 
-const RgbColor Palette_PINKS[] = {
-    RgbColor(255, 59, 51),
-    RgbColor(191, 43, 87),
-    RgbColor(127, 48, 27),
-    RgbColor(64, 15, 13),
-    RgbColor(229, 92, 87),
+const LAColor Palette_PINKS[] = {
+    LAColor(255, 59, 51),
+    LAColor(191, 43, 87),
+    LAColor(127, 48, 27),
+    LAColor(64, 15, 13),
+    LAColor(229, 92, 87),
 };
 
-const RgbColor Palette_REDS[] = {
-    RgbColor(255, 0, 0),
-    RgbColor(225, 32, 5),
-    RgbColor(35, 0, 0),
-    RgbColor(0, 0, 0),
+const LAColor Palette_REDS[] = {
+    LAColor(255, 0, 0),
+    LAColor(225, 32, 5),
+    LAColor(35, 0, 0),
+    LAColor(0, 0, 0),
 };
 
-const RgbColor* LEDArtAnimation::paletteColors[] = {
+const LAColor* LEDArtAnimation::paletteColors[] = {
     Palette_RB,
     Palette_RGB,
     Palette_RYB,
@@ -101,10 +101,10 @@ const RgbColor* LEDArtAnimation::paletteColors[] = {
 
 // const uint8_t LEDArtAnimation::rybRainbowColorsCount = 3;
 
-// const RgbColor LEDArtAnimation::rybRainbowColors[] = {
-//     RgbColor(0, 0, 255),
-//     RgbColor(255, 0, 0),
-//     RgbColor(0, 255, 0),
+// const LAColor LEDArtAnimation::rybRainbowColors[] = {
+//     LAColor(0, 0, 255),
+//     LAColor(255, 0, 0),
+//     LAColor(0, 255, 0),
 // };
 LEDArtAnimation::LEDArtAnimation(char* szName) {
     this->szName = strdup(szName);
@@ -114,7 +114,7 @@ LEDArtAnimation::~LEDArtAnimation() {
     free(szName);
 }
 
-RgbColor
+LAColor
 LEDArtAnimation::colorInPalette(LEDPaletteType palette, float progress) {
     if (progress > 1.0) {
         double iPart;
@@ -139,14 +139,14 @@ LEDArtAnimation::colorInPalette(LEDPaletteType palette, float progress) {
     // Serial.print(" idist="); Serial.print(intervalDistance,3);
     // Serial.printf(" lowIx=%d, highIx=%d", lowIx, highIx);
 
-    RgbColor color = RgbColor::LinearBlend(paletteColors[palette][lowIx], paletteColors[palette][highIx], intervalDistance);
+    LAColor color = LAColor::LinearBlend(paletteColors[palette][lowIx], paletteColors[palette][highIx], intervalDistance);
 
     // Serial.printf(" ==> (%3d, %3d, %3d)\n", color.R, color.G, color.B);
     return color;
 }
 
 void
-LEDArtAnimation::clearTo(LEDArtPiece& piece, RgbColor color, uint16_t start, uint16_t end) {
+LEDArtAnimation::clearTo(LEDArtPiece& piece, LAColor color, uint16_t start, uint16_t end) {
     for(uint16_t ix=start; ix<end; ix++) {
         piece.strip.SetPixelColor(ix, color);
     }
@@ -154,41 +154,61 @@ LEDArtAnimation::clearTo(LEDArtPiece& piece, RgbColor color, uint16_t start, uin
 
 /////
 
-// LEDArtPiece *pSingleton = NULL;
 
-// void AnimateBaseGlue(AnimationParam param) {
-//     // Presume the singleton is set
-//     pSingleton->animateChannel(param, AnimationType_BASE);
-// }
+#if LAColor == RGBWColor
 
+float saturation(LAColor& rgbw) {
+    float low = min(rgbw.R, min(rgbw.G, rgbw.B));
+    float high = max(rgbw.R, max(rgbw.G, rgbw.B));
+    if (high == 0.0) return 0;
 
-// void AnimateOverlayGlue(AnimationParam param) {
-//     // Presume the singleton is set
-//     pSingleton->animateChannel(param, AnimationType_OVERLAY);
-// }
+    uint8_t s = round(100.0 * ((high - low) / high));
+    // Log.printf("\n   sat=%d\n",s);
+    return s;
+}
 
+uint8_t getWhite(LAColor& rgbw) {
+    float a = (255.0 - saturation(rgbw)) / 255.0;
+    float b = ((uint32_t)rgbw.R + (uint32_t)rgbw.G + (uint32_t)rgbw.B) / 3;
+    // Log.printf("\n %f * %f\n", a, b);
+    return a * b;
+}
 
-// void AnimateStatusGlue(AnimationParam param) {
-//     // Presume the singleton is set
-//     pSingleton->animateChannel(param, AnimationType_STATUS);
-// }
+uint8_t getWhite(LAColor& rgbw, uint8_t rMax, uint8_t gMax, uint8_t bMax) {
+    rgbw.R = (float)rgbw.R / 255.0 * (float)rMax;
+    rgbw.G = (float)rgbw.G / 255.0 * (float)gMax;
+    rgbw.B = (float)rgbw.B / 255.0 * (float)bMax;
+    return ((255.0 - saturation(rgbw)) / 255.0) * (rgbw.R + rgbw.G + rgbw.B) / 3.0;
+}
 
-// // Can be set to our modified NeoPixelAnimator so that it uses the localTimeOffset
-// unsigned long AnimateTimeFunction() {
-//     return millis() + pSingleton->nexus.localTimeOffset;
-// }
+void
+convertLAColor(LAColor& in) {
+    // Log.printf("Color %2x%2x%2x%2x",
+    //     in.R, in.G, in.B, in.W);
+
+    // Without correction
+    in.W = getWhite(in);
+
+    // With some max correction
+    //out.W = getWhite(in, 255, 200, 200);
+
+    // Log.printf(" -> %2x%2x%2x%2x\n",
+    //     in.R, in.G, in.B, in.W);
+}
+
+#else
+void
+convertLAColor(LAColor& in) {
+}
+
+#endif
 
 
 LEDArtPiece::LEDArtPiece(Nexus& nx, uint16_t pixelCount, uint8_t maxBrightness, uint8_t port) : 
     nexus(nx),
     strip(pixelCount, port)
-    // animator(3)
 {
-    // For offsets
-    // animator.setTimeFunction(&AnimateTimeFunction);
-
-    nx.maxBrightness = (float)maxBrightness;
-    // pSingleton = this;
+    nx.maxBrightness = maxBrightness;
 }
 
 void* 
@@ -205,7 +225,6 @@ LEDArtPiece::registerGeometry(LEDArtGeometry* pGeom)
     {
         // The first one, yay! Set it as default.
         pCurrentGeom = pGeom;
-        //geomRotated = true;        
     }
 
     return pGeom;
@@ -220,11 +239,6 @@ LEDArtPiece::registerAnimation(LEDArtAnimation* pAnim)
 
     pAnim->pNext = pChannel->pRegistrations;
     pChannel->pRegistrations = pAnim;
-
-    // if (pAnim->type == LEDAnimationType_BASE)
-    // {
-    //     nexus.addAnimation(pAnim->szName);
-    // }
 
     return pAnim;
 }
@@ -293,14 +307,24 @@ LEDArtPiece::enumerateAnimations(void* cursor, char** pszName)
 void 
 LEDArtPiece::begin() 
 {
+    // Convert all the colors in the pallettes
+    for(int i=0; i<LEDArtAnimation::LEDPalette_LAST; i++) 
+    {
+        const LAColor* palette = LEDArtAnimation::paletteColors[i];
+
+        for(int j=0; j<LEDArtAnimation::paletteSizes[i]; j++)
+        {
+            LAColor* pC = (LAColor*)(palette + j);
+            convertLAColor(*pC);
+        }
+    }
+
     // Be nice and zero it all out
     strip.Begin();
     strip.Show();
 
     // Start the first base animation
-    nextBaseAnimation(true);
-    // LEDArtAnimation* pAnim = findNextBaseAnimation(true);
-    // startAnimation(pAnim, false);
+    nextRandomBaseAnimation();
 }
 
 
@@ -324,9 +348,9 @@ LEDArtPiece::updateBrightness(LEDArtAnimation* pAnim)
 {
     if (!pAnim) return;
 
-    // strip.SetBrightness(maxBrightness * pAnim->brightness);
     uint8_t b = nexus.maxBrightness * pAnim->brightness;
-    // Serial.print("Set Brightness to "); Serial.print(b); Serial.print("\n");
+
+    // Log.printf("PIECE: strip.SetBrightness(%d)\n", b);
     strip.SetBrightness(b);
 }
 
@@ -347,9 +371,10 @@ LEDArtPiece::startAnimation(LEDArtAnimation* pAnim, bool isLoop, uint32_t now)
     pChannel->pRunning = pAnim;
     pChannel->loopStartedAt = now;    
     if (!isLoop)
-    {        
+    {       
+        // First time through 
         pChannel->channelStartedAt = now;
-        Log.printf("PIECE: Start animation %s\n", pAnim->szName);
+        Log.printf("PIECE: Start animation '%s' type=%d mb=%f\n", pAnim->szName, pAnim->type, nexus.maxBrightness);
 
         if (pAnim->type == LEDAnimationType_BASE) {
             nexus.setAnimation(pAnim->szName, (uint32_t)this);
@@ -369,6 +394,8 @@ LEDArtPiece::startAnimation(LEDArtAnimation* pAnim, bool isLoop, uint32_t now)
     // If we are a channel start, we might need to prepare for the end of times
     if (!isLoop && pAnim->type == LEDAnimationType_BASE && nexus.shouldPrepareRandomStatesFor)
     {
+        // We are the master and thus need to create a new prepared state because 
+        // of the start of a new animation.
         uint32_t minDuration = pAnim->maxDuration;
 
         if (!minDuration)
@@ -394,9 +421,10 @@ LEDArtPiece::startAnimation(LEDArtAnimation* pAnim, bool isLoop, uint32_t now)
         {
             uint32_t nextStateTime = now + minDuration - nexus.shouldPrepareRandomStatesFor;
             bool rotated = false;
-            LEDArtGeometry* pNextGeom = findNextGeometry(true, &rotated);
-            LEDArtAnimation* pNextAnim = findNextBaseAnimation(true);
-            nexus.prepareRandomStateFor(nextStateTime, pNextGeom->szName, rotated, pNextAnim->szName, (uint32_t)this);
+            LEDArtGeometry* pNextGeom = findNextGeometry(true, false, &rotated);
+            LEDArtAnimation* pNextAnim = findNextBaseAnimation(true, pNextGeom, rotated);
+            // Log.printf("PIECE: rotated=%s\n", rotated ? "true" : "false");
+            nexus.prepareStateFor(nextStateTime, true, pNextGeom->szName, rotated, pNextAnim->szName, (uint32_t)this);
         }
     }
 }
@@ -410,53 +438,34 @@ LEDArtPiece::stopAnimation(LEDAnimationType type)
 }
 
 void 
-LEDArtPiece::nextBaseAnimation(bool randomize, uint32_t now) 
+LEDArtPiece::nextRandomBaseAnimation(uint32_t now) 
 {
-    LEDArtAnimation* pAnim = findNextBaseAnimation(randomize);
-
-    if (randomize) {
-        nextGeometry(randomize);
-        nexus.randomizeAll((uint32_t)this);
-    }    
-
-    // Find a geometry that this animation can use
-    LEDArtGeometry* pGeomStart = pCurrentGeom;
-    bool startRotation = geomRotated;
-    bool triedEverything = false;
-
-    while (!triedEverything && !pAnim->canUseGeom(*this)) {
-        nextGeometry(false);
-        if (pCurrentGeom == pGeomStart && geomRotated == startRotation) {
-            triedEverything = true;
-        }
-    }
-
-    if (triedEverything) {
-        // Aack! go one more deeper I guess - hopefully we find something???
-        nextBaseAnimation(randomize, now);
-        return;
-    }
-
-    startAnimation(pAnim, false, now);
-}
-
-void
-LEDArtPiece::nextGeometry(bool randomize)
-{
+    // Get a new candidate geometry
     bool rotated = false;
+    LEDArtGeometry* pGeom = findNextGeometry(true, false, &rotated);
 
-    LEDArtGeometry* pGeom = findNextGeometry(randomize, &rotated);
+    // A random animation, that will work with that geometry
+    LEDArtAnimation* pAnim = findNextBaseAnimation(true, pGeom, rotated);
 
-    // If we find it, all we have to do is this to set it
-    if (pGeom)
+    if (pAnim != channels->pRunning)
     {
+        // Since it is a new pAnim we can assume that candidate geometry is a good
+        // one, which means do a proper setting of it
         pCurrentGeom = pGeom;
         geomRotated = rotated;
 
-        // The nexus may care that we changed things
-        nexus.setGeometry(pGeom->szName, geomRotated, (uint32_t)this);
+        nexus.setGeometry(pCurrentGeom->szName, geomRotated, (uint32_t)this);
     }
+    // else we failed to find a new animation, so assume we should also
+    // keep using the old geometry, which means don't update it.
+
+    // Randomize other stuff
+    nexus.randomizeAll((uint32_t)this);
+
+    // And finally, start it
+    startAnimation(pAnim, false, now);
 }
+
 
 int logLimit = 10;
 
@@ -522,8 +531,8 @@ LEDArtPiece::animateChannel(LEDAnimationType type, uint32_t now)
         // This base or overlay is OVER
         if (type == LEDAnimationType_BASE)
         {
-            Log.printf("PIECE: AC nextBaseAnimation(true, now).\n");
-            nextBaseAnimation(true, now);
+            Log.printf("PIECE: AC nextRandomBaseAnimation().\n");
+            nextRandomBaseAnimation(now);
         }
         else
         {
@@ -598,87 +607,28 @@ LEDArtPiece::animateChannel(LEDAnimationType type, uint32_t now)
             // Only base will automatically move to a new animation
 
             // Need to find a next animation for this channel
-            if (logLimit) Log.printf("PIECE: AC do nextBaseAnimation\n");
-            nextBaseAnimation(true, now);
+            if (logLimit) Log.printf("PIECE: AC do nextRandomBaseAnimation\n");
+            nextRandomBaseAnimation();
         }
     }
 }
 
 
-LEDArtGeometry*
-LEDArtPiece::findNextGeometry(bool randomize, bool* pRotated)
+
+bool
+LEDArtPiece::testAnimGeomCompat(LEDArtAnimation* pAnim, LEDArtGeometry* pGeom, bool rotated)
 {
-    LEDArtGeometry* pCur = pCurrentGeom;
+    if (!pAnim || !pGeom) return false;
 
-    if (!pCur) 
+    if (rotated) {
+        return pAnim->canUseGeom(pGeom->getHeight(), pGeom->getWidth());
+    }
+    else
     {
-        // Nothing running, use the first registration
-        if (pRotated)
-        {
-            *pRotated = false;
-        }
-        return pGeomRegistrations;
+        return pAnim->canUseGeom(pGeom->getWidth(), pGeom->getHeight());        
     }
-
-    // Can we simply rotate the current geom?
-    if (!geomRotated && pCur->canRotate)
-    {
-        if (pRotated)
-        {
-            *pRotated = true;
-        }
-        return pCur;
-    }
-
-
-    LEDArtGeometry* pNext = pCur->pNext;
-
-    // First half of the search, from this point to the end of the list
-    while(pNext) {
-        if (!randomize)
-        {
-            return pNext;
-        }
-
-        // Don't necessarily select it
-        if ( rand(100) < 60 ) {
-            // Oh okay, we are selecting it, so randomize pRotated
-            if (pRotated)
-            {
-                *pRotated = pNext->canRotate ? (rand(100) < 50) : false;
-            }
-            return pNext;
-        }
-
-        pNext = pNext->pNext;
-    }
-
-    // Second half we restart at the very head of the list and go until
-    // we get to the current one
-    pNext = pGeomRegistrations;
-    while(pNext != pCur) {
-        if (!randomize)
-        {
-            return pNext;
-        }
-
-        // Don't necessarily select it
-        if ( rand(100) < 60 ) {
-            // Oh okay, we are selecting it, so randomize pRotated
-            if (pRotated)
-            {
-                *pRotated = pNext->canRotate ? (rand(100) < 50) : false;
-            }
-            return pNext;
-        }
-
-        pNext = pNext->pNext;
-    }
-
-    // Oops! We didn't find a "next", but because we want to always have 
-    // something, just return the current again...
-    return pCur;
 }
+
 
 
 LEDArtGeometry*
@@ -706,87 +656,152 @@ LEDArtPiece::geomForName(char* szName)
 }
 
 
-LEDArtAnimation*
-LEDArtPiece::findNextBaseAnimation(bool randomize)
+LEDArtGeometry*
+LEDArtPiece::findNextGeometry(bool randomize, bool withCompat, bool* pRotated)
 {
+    LEDArtGeometry* pGeom = pCurrentGeom;
     LEDAnimationChannel* pChannel = channels + LEDAnimationType_BASE;
-    LEDArtAnimation* pCur = pChannel->pRunning;
+    LEDArtAnimation* pAnim = pChannel->pRunning;
 
-    if (!pCur) {
-        // Nothing running, use the first registration
-        return pChannel->pRegistrations;
+    if (!pGeom) 
+    {
+        Log.printf("PIECE: ERROR: No geometries registered before findNextGeometry was called\n");
+        return NULL;
     }
 
-    LEDArtAnimation* pNext = pCur->pNext;
+    // There is a degenerate situation with a single geometry where
+    // if we try to randomize we would ignore the rotated version of
+    // this geometry. To avoid that we special case ignoring randomize
+    // in that situation.
+    if (pGeomRegistrations == pGeom && !pGeom->pNext) 
+    {
+        // Return the alternate, or don't
+        if (pGeom->canRotate && !withCompat || testAnimGeomCompat(pAnim, pGeom, !geomRotated))
+        {
+            // Return the alternative
+            if (pRotated)
+            {
+                // Log.printf("PIECE: Special case 1 geom, rotate it\n");
+                *pRotated = !geomRotated;
+            }
+            return pGeom;
+        }
+        // else, sorry, only got the one, gotta live with it
+        if (pRotated)
+        {
+            // Log.printf("PIECE: Special case 1 geom, no rotation\n");
+            *pRotated = geomRotated;
+        }
+        return pGeom;
+    }
+
+    // Maybe the answer is to just rotate the current one?
+    if (!geomRotated && pGeom->canRotate && !randomize)
+    {
+        // It is a candidate!
+        if (!withCompat || testAnimGeomCompat(pAnim, pGeom, true))
+        {
+            // We either don't care compat or it is okay, so yeah, rotated version of the
+            // current one is our winner
+            if (pRotated)
+            {
+                *pRotated = true;
+            }
+            return pGeom;
+        }
+        // Aack! It didn't work out, fall through to at least the "next"
+    }
+
+    // Search from the current location to the end of the list
+    LEDArtGeometry* pOut = _searchForGeom(randomize, withCompat, pRotated, pGeom->pNext, NULL);
+    if (pOut) return pOut;
+
+    // Search from the head of the list until the current location
+    pOut = _searchForGeom(randomize, withCompat, pRotated, pGeomRegistrations, pGeom);
+    if (pOut) return pOut;
+
+    // If we didn't find anything NEW, we presume the current one is fine
+    if (pRotated)
+    {
+        *pRotated = geomRotated;
+    }
+    return pGeom;
+}
+
+LEDArtGeometry*
+LEDArtPiece::_searchForGeom(bool randomize, bool withCompat, bool* pRotated, LEDArtGeometry* pStart, LEDArtGeometry* pEnd)
+{
+    LEDArtGeometry* pNext = pStart;
+    LEDAnimationChannel* pChannel = channels + LEDAnimationType_BASE;
+    LEDArtAnimation* pAnim = pChannel->pRunning;
 
     // First half of the search, from this point to the end of the list
-    while(pNext) {
-        if (pNext->isEnabled && 
-            (!randomize ||
-                (rand(100) < 60) )) {
-            return pNext;
+    while(pNext != pEnd) {
+        if (!randomize)
+        {
+            // Since we're not randomizing, just use this one, as long as 
+            // it is okay to do so
+            if (!withCompat || testAnimGeomCompat(pAnim, pNext, false)) 
+            {
+                if (pRotated)
+                {
+                    *pRotated = false;
+                }
+                return pNext;
+            }
+
+            // But if we rotate it is okay?
+            if (testAnimGeomCompat(pAnim, pNext, true)) 
+            {
+                if (pRotated)
+                {
+                    *pRotated = true;
+                }
+                return pNext;
+            }
+
+            // Nope, no matter what it sucks. Need to loop
+        }
+        else
+        {
+            // We desire a random selection, so maybe this one is it, but maybe not?
+            if ( rand(100) < 60 ) {
+                // Oh okay, we are selecting it, so randomly choose a rotation
+                bool isRotated = pNext->canRotate ? (rand(100) < 50) : false;
+
+                // See if that works
+                if (!withCompat || testAnimGeomCompat(pAnim, pNext, isRotated)) 
+                {
+                    if (pRotated)
+                    {
+                        *pRotated = isRotated;
+                    }
+                    return pNext;
+                }
+
+                // Since our visitation counter is only to registrations, not registrations
+                // plus states, we have to test all options while visiting this geometry. If
+                // we didn't then a degenerate situation with a single strip geometry that didn't
+                // get the right rotation selection wouldn't select anything
+                if (testAnimGeomCompat(pAnim, pNext, !isRotated)) 
+                {
+                    if (pRotated)
+                    {
+                        *pRotated = !isRotated;
+                    }
+                    return pNext;
+                }
+            }
+            // Didn't decide we liked the look of it, so just loop
         }
 
         pNext = pNext->pNext;
     }
 
-    // Second half we restart at the very head of the list and go until
-    // we get to the current one
-    pNext = pChannel->pRegistrations;
-    while(pNext != pCur) {
-        if (pNext->isEnabled && 
-            (!randomize ||
-                (rand(100) < 60) )) {
-            return pNext;
-        }
-
-        pNext = pNext->pNext;
-    }
-
-    // Oops! We didn't find a "next", but because we want to always have 
-    // something, just return the current again...
-    return pCur;
+    return NULL;
 }
 
 
-void
-LEDArtPiece::nexusValueUpdate(NexusValueType which, uint32_t source) 
-{
-
-}
-
-void
-LEDArtPiece::nexusUserGeometryRequest(char* szName, bool rotated, uint32_t source)
-{
-    LEDArtGeometry* pRequested = geomForName(szName);
-
-    if (!pRequested)
-    {
-        // Whatever... 
-        return;
-    }
-
-    pCurrentGeom = pRequested;
-    geomRotated = rotated;
-
-    nexus.setGeometry(pCurrentGeom->szName, geomRotated, source);
-}
-
-// Can pass NULL as szName to ask for a random selection
-void
-LEDArtPiece::nexusUserAnimationRequest(char* szName, bool randomize, uint32_t source)
-{
-    LEDArtAnimation* pRequested = baseAnimForName(szName);
-
-    // Just do something else
-    if (!pRequested)
-    {
-        nextBaseAnimation(randomize);
-        return;
-    }
-
-    startAnimation(pRequested);
-}
 
 LEDArtAnimation*
 LEDArtPiece::baseAnimForName(char* szName)
@@ -811,6 +826,159 @@ LEDArtPiece::baseAnimForName(char* szName)
 
     // Else, did not find. Tell someone??
     return NULL;
+}
+
+
+LEDArtAnimation*
+LEDArtPiece::findNextBaseAnimation(bool randomize, LEDArtGeometry* pGeom, bool rotated)
+{
+    LEDAnimationChannel* pChannel = channels + LEDAnimationType_BASE;
+    LEDArtAnimation* pAnim = pChannel->pRunning;
+
+    if (!pAnim) {
+        // Nothing running, use the first registration as long as it is compatible
+        // with the current geometry.
+        pAnim = pChannel->pRegistrations;
+
+        if (!pGeom || testAnimGeomCompat(pAnim, pGeom, rotated))
+        {
+            return pAnim;
+        }
+        // Aack, it's not compatible, so go on a hunt
+    }
+
+    LEDArtAnimation* pNext = pAnim->pNext;
+
+    // First half of the search, from this point to the end of the list
+    while(pNext) {
+        if (pNext->isEnabled && 
+            (!randomize ||
+                (rand(100) < 60) )) 
+        {
+            // We _want_ to select it, let's make sure we can
+            if (!pGeom || testAnimGeomCompat(pNext, pGeom, rotated))
+            {
+                // neat
+                return pNext;
+            }
+            // No, no, can't use that one!
+        }
+
+        pNext = pNext->pNext;
+    }
+
+    // Second half we restart at the very head of the list and go until
+    // we get to the current one
+    pNext = pChannel->pRegistrations;
+    while(pNext != pAnim) {
+        if (pNext->isEnabled && 
+            (!randomize ||
+                (rand(100) < 60) )) 
+        {
+            // We _want_ to select it, let's make sure we can
+            if (!pGeom || testAnimGeomCompat(pNext, pGeom, rotated))
+            {
+                // neat
+                return pNext;
+            }
+            // No, no, can't use that one!
+        }
+
+        pNext = pNext->pNext;
+    }
+
+    // Oops! We didn't find a "next", but because we want to always have 
+    // something, just return the current again...
+    return pAnim;
+}
+
+
+
+///////// Nexus Listener
+
+void
+LEDArtPiece::nexusValueUpdate(NexusValueType which, uint32_t source) 
+{
+
+}
+
+
+void
+LEDArtPiece::nexusUserGeometryRequest(char* szName, bool rotated, uint32_t source)
+{
+    LEDArtGeometry* pRequested = geomForName(szName);
+
+    if (pRequested)
+    {
+        // Let's make sure it's actually compatible with the current
+        // anim though...        
+        if (!testAnimGeomCompat(channels->pRunning, pRequested, rotated))
+        {
+            Log.printf("PIECE: Requested geometry is not compatible though, so doing a next operation instead");
+            pRequested = NULL;
+            rotated = false; // no reason to be random
+        }
+    }
+
+    if (!pRequested)
+    {
+        // Find the next one then, using rotated to indicate random or not.
+        // It really _should_ be compatible...
+        pRequested = findNextGeometry(rotated, true, &rotated);
+
+        Log.printf("PIECE: findNextGeom %s %s\n", pCurrentGeom->szName, geomRotated ? "true" : "false");
+    }
+
+    if (!nexus.shouldPrepareRandomStatesFor)
+    {
+        // We are not a master, just do the thing
+        pCurrentGeom = pRequested;
+        geomRotated = rotated;        
+
+        nexus.setGeometry(pCurrentGeom->szName, geomRotated, source);
+    }
+    else
+    {
+        // Make a prepared state for this which will cause it to be
+        // activated next loop through. Yes it will restart the animation,
+        // but that feels like a small price to pay at this point.
+        nexus.prepareStateFor(millis()-1, false, pRequested->szName, rotated, channels->pRunning->szName, (uint32_t)this);
+    }
+}
+
+
+// Can pass NULL as szName to ask for a random selection
+void
+LEDArtPiece::nexusUserAnimationRequest(char* szName, bool randomize, uint32_t source)
+{
+    LEDArtAnimation* pRequested = baseAnimForName(szName);
+
+    if (pRequested)
+    {
+        // But can it run in this geometry?
+        if (!testAnimGeomCompat(pRequested, pCurrentGeom, geomRotated))
+        {
+            Log.printf("PIECE: Requested anim is not compatible with current geom. Doing a next opertaion.");
+            pRequested = NULL;
+        }
+    }
+
+    if (!pRequested)
+    {
+        // Just do something else that does exist and is compatible with
+        // the current geometry.
+        pRequested = findNextBaseAnimation(randomize, pCurrentGeom, geomRotated);
+    }
+
+    if (!nexus.shouldPrepareRandomStatesFor)
+    {
+        // We are not master, just do it
+        startAnimation(pRequested);
+    }
+    else
+    {
+        nexus.prepareStateFor(millis()-1, false, pCurrentGeom->szName, geomRotated, pRequested->szName, (uint32_t)this);        
+    }
 }
 
 
@@ -856,7 +1024,7 @@ LEDArtPiece::geomMap(uint16_t x, uint16_t y)
 }
 
 void
-LEDArtPiece::setPrimaryColor(uint16_t primaryIx, RgbColor color)
+LEDArtPiece::setPrimaryColor(uint16_t primaryIx, LAColor color)
 {
     uint16_t width = geomWidth(primaryIx);
     for(uint16_t secIx=0; secIx<width; secIx++)
@@ -866,7 +1034,7 @@ LEDArtPiece::setPrimaryColor(uint16_t primaryIx, RgbColor color)
 }
 
 void
-LEDArtPiece::setSecondaryColor(uint16_t secondaryIx, RgbColor color)
+LEDArtPiece::setSecondaryColor(uint16_t secondaryIx, LAColor color)
 {
     uint16_t height = geomHeight();
     for(uint16_t priIx=0; priIx<height; priIx++)
@@ -876,7 +1044,7 @@ LEDArtPiece::setSecondaryColor(uint16_t secondaryIx, RgbColor color)
 }
 
 void
-LEDArtPiece::setSecondaryColorInPrimary(uint16_t primaryIx, uint16_t secondaryIx, RgbColor color)
+LEDArtPiece::setSecondaryColorInPrimary(uint16_t primaryIx, uint16_t secondaryIx, LAColor color)
 {
     strip.SetPixelColor(geomMap(secondaryIx, primaryIx), color);
 }

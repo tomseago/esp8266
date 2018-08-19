@@ -6,6 +6,12 @@
 #include "log.h"
 #include "butil.h"
 
+// For free memory
+extern "C" {
+//#include "user_interface.h"
+//#include <esp32/esp_system.h>
+}
+
 // #include <StandardCplusplus.h>
 // #include <string>
 
@@ -30,7 +36,7 @@ WebUI::StatusAnim::animate(LEDArtPiece& piece, LEDAnimationParam p)
 WebUI::WebUI(Nexus& nexus, LEDArtPiece& piece) :
     statusAnim(*this), nexus(nexus), piece(piece), chooserColor(255,128,0)
 {
-
+    nexus.addListener(this);
 }
 
 void
@@ -85,8 +91,8 @@ WebUI::removeClientForId(uint32_t id)
             // Don't modify last
             ClientCtx* pToKill = pCur;
             pCur = pCur->pNext;
-            delete pToKill;
 
+            delete pToKill;
         }
         else
         {
@@ -119,16 +125,27 @@ WebUI::ctxForClient(AsyncWebSocketClient* client)
 }
 
 uint32_t lastPoke = 0;
+uint32_t lastMemCheck = 0;
 void
 WebUI::loop()
 {
-    // uint32_t now = millis();
+    uint32_t now = millis();
+
     // if (now - lastPoke > 3000)
     // {
     //     // Log.print("poke\n");
     //     printf("poke!\n");
     //     lastPoke = now;
     // }    
+
+    // if (now - lastMemCheck > 10000) 
+    // {
+    //     uint32_t free = system_get_free_heap_size();
+    //     os_printf("WebUI: ------ Free memory %d\n", free);
+    //     lastMemCheck = now;
+    // }
+
+
     sendUpdates();
 }
 
@@ -162,6 +179,28 @@ WebUI::begin(){
     // So that we can send these to our clients if they wants them
     Log.addPrint(this);
 }
+
+
+
+void 
+WebUI::nexusValueUpdate(NexusValueType which, uint32_t source)
+{
+    if (source == (uint32_t)this) return;
+
+    ClientCtx* pCur = pClientCtxs;
+    if (!pCur) return;
+
+    while(pCur)
+    {
+        if (pCur->wantsStateJSON)
+        {
+            pCur->needsStateJSON = true;
+        }
+
+        pCur = pCur->pNext;
+    }
+}
+
 
 
 void 
@@ -244,15 +283,23 @@ WebUI::h_404(AsyncWebServerRequest *req)
     req->send(response);  
 }
 
+// int h_socket_count = 1;
 
 void 
 WebUI::h_socket(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len)
-{
+{    
+    // os_printf("h_socket(,,%d,%x,%x,%d)\n", type, arg, data, len);
+
+    // if (h_socket_count==0) {
+    //     os_printf("**** done\n");
+    //     return;
+    // }
+    // h_socket_count--;
+
     if(type == WS_EVT_CONNECT){
         //client connected
         os_printf("ws[%s][%u] connect\n", server->url(), client->id());
-        // client->printf("Hello Client %u :)", client->id());
-        client->ping();
+        // client->ping();
 
         addClient(client);
 
@@ -263,14 +310,22 @@ WebUI::h_socket(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEvent
 
     } else if(type == WS_EVT_ERROR){
         //error was received from the other end
-        os_printf("ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t*)arg), (char*)data);
+        os_printf("ws[%s][%u] error(%u):\n", server->url(), client->id(), *((uint16_t*)arg), (char*)data);
+        // os_printf("ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t*)arg), (char*)data);
+
     } else if(type == WS_EVT_PONG){
         //pong message was received (in response to a ping request maybe)
-        os_printf("ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len)?(char*)data:"");
-    } else if(type == WS_EVT_DATA) {
+        // os_printf("ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len)?(char*)data:"");
+        os_printf("ws[%s][%u] pong[%u]\n", server->url(), client->id(), len);
 
+    } else if(type == WS_EVT_DATA) {
         //data packet
         AwsFrameInfo * info = (AwsFrameInfo*)arg;
+        // os_printf("ws[%s][%u] data final=%d index=%d iLen=%d len=%d\n",
+        //     server->url(), client->id(),
+        //     info->final, info->index, info->len, len
+        // );
+
         if(info->final && info->index == 0 && info->len == len){
             //the whole message is in a single frame and we got all of it's data
 
@@ -303,40 +358,45 @@ WebUI::h_socket(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEvent
                 os_printf("ws OOM couldn't create szTemp to handle the message\n");
                 return;
             }
+            os_printf("ws[%s][%u] handleTextMessage(%s)\n", 
+                server->url(), client->id(),
+                szTemp
+            );
 
             handleTextMessage(client, szTemp, len);
             free(szTemp);
 
         
         } else {
-            //message is comprised of multiple frames or the frame is split into multiple packets
-            if (info->index == 0) {
-                if(info->num == 0)
-                    os_printf("ws[%s][%u] %s-message start\n", server->url(), client->id(), (info->message_opcode == WS_TEXT)?"text":"binary");
-                os_printf("ws[%s][%u] frame[%u] start[%llu]\n", server->url(), client->id(), info->num, info->len);
-            }
+            os_printf("\nXXXX Not handling segmented messages\n");
+            // //message is comprised of multiple frames or the frame is split into multiple packets
+            // if (info->index == 0) {
+            //     if(info->num == 0)
+            //         os_printf("ws[%s][%u] %s-message start\n", server->url(), client->id(), (info->message_opcode == WS_TEXT)?"text":"binary");
+            //     os_printf("ws[%s][%u] frame[%u] start[%llu]\n", server->url(), client->id(), info->num, info->len);
+            // }
 
-            os_printf("ws[%s][%u] frame[%u] %s[%llu - %llu]: ", server->url(), client->id(), info->num, (info->message_opcode == WS_TEXT)?"text":"binary", info->index, info->index + len);
-            if(info->message_opcode == WS_TEXT) {
-                data[len] = 0;
-                os_printf("%s\n", (char*)data);
-            } else {
-                for(size_t i=0; i < len; i++){
-                    os_printf("%02x ", data[i]);
-                }
-                os_printf("\n");
-            }
+            // os_printf("ws[%s][%u] frame[%u] %s[%llu - %llu]: ", server->url(), client->id(), info->num, (info->message_opcode == WS_TEXT)?"text":"binary", info->index, info->index + len);
+            // if(info->message_opcode == WS_TEXT) {
+            //     data[len] = 0;
+            //     os_printf("%s\n", (char*)data);
+            // } else {
+            //     for(size_t i=0; i < len; i++){
+            //         os_printf("%02x ", data[i]);
+            //     }
+            //     os_printf("\n");
+            // }
 
-            if((info->index + len) == info->len) {
-                os_printf("ws[%s][%u] frame[%u] end[%llu]\n", server->url(), client->id(), info->num, info->len);
-                if(info->final) {
-                    os_printf("ws[%s][%u] %s-message end\n", server->url(), client->id(), (info->message_opcode == WS_TEXT)?"text":"binary");
-                    if(info->message_opcode == WS_TEXT)
-                        client->text("I got your text message");
-                    else
-                        client->binary("I got your binary message");
-                }
-            }
+            // if((info->index + len) == info->len) {
+            //     os_printf("ws[%s][%u] frame[%u] end[%llu]\n", server->url(), client->id(), info->num, info->len);
+            //     if(info->final) {
+            //         os_printf("ws[%s][%u] %s-message end\n", server->url(), client->id(), (info->message_opcode == WS_TEXT)?"text":"binary");
+            //         if(info->message_opcode == WS_TEXT)
+            //             client->text("I got your text message");
+            //         else
+            //             client->binary("I got your binary message");
+            //     }
+            // }
         }
     }
 }
@@ -665,7 +725,8 @@ WebUI::setPalette(uint8_t *data, size_t len)
         return;
     }
 
-    nexus.palette = (LEDArtAnimation::LEDPaletteType)t;  
+    nexus.palette = (LEDArtAnimation::LEDPaletteType)t;
+    nexus.sendValueUpdate(NexusListener::Palette, (uint32_t)this);
 }
 
 void
@@ -707,7 +768,7 @@ WebUI::setChooserColor(uint8_t *data, size_t len)
     HtmlColor color;
     uint8_t result = color.Parse<HtmlShortColorNames>((const char*)&data[1], len-1);
 
-    chooserColor = RgbColor(color);
+    chooserColor = LAColor(color);
 }
 
 void
@@ -718,11 +779,13 @@ WebUI::setNexusColor(bool isForeground, uint8_t *data, size_t len)
 
     if (isForeground)
     {
-        nexus.foreground = RgbColor(color);
+        nexus.foreground = LAColor(color);
+        nexus.sendValueUpdate(NexusListener::Foreground, (uint32_t)this);
     }
     else
     {
-        nexus.background = RgbColor(color);
+        nexus.background = LAColor(color);
+        nexus.sendValueUpdate(NexusListener::Background, (uint32_t)this);
     }
 }
 
@@ -738,6 +801,7 @@ WebUI::setBrightness(uint8_t *data, size_t len)
     // uint8_t t = atoi(bdata(s));
     uint8_t t = buf_toi(data + 2, len-2);
     nexus.maxBrightness = t;
+    nexus.sendValueUpdate(NexusListener::MaxBrightness, (uint32_t)this);
 }
 
 void
@@ -750,6 +814,7 @@ WebUI::setDuration(uint8_t *data, size_t len)
     uint32_t t = buf_toi(data + 2, len-2);
 
     nexus.maxDuration = t * 1000;
+    nexus.sendValueUpdate(NexusListener::MaxDuration, (uint32_t)this);
 }
 
 void
@@ -762,6 +827,7 @@ WebUI::setSpeedFactor(uint8_t *data, size_t len)
     float t = (float)buf_toi(data + 2, len-2);
 
     nexus.speedFactor = t / 100.0f;
+    nexus.sendValueUpdate(NexusListener::SpeedFactor, (uint32_t)this);
 }
 
 void
@@ -772,6 +838,7 @@ WebUI::setReverse(uint8_t *data, size_t len)
     }
 
     nexus.reverse = (data[2] == '+');
+    nexus.sendValueUpdate(NexusListener::Reverse, (uint32_t)this);
 }
 
 
@@ -820,7 +887,10 @@ WebUI::sendUpdates()
         pCur = pCur->pNext;
     }
 
-    bdestroy(s);
+    if (haveMsg) 
+    {
+        bdestroy(s);
+    }
     return; 
 }
 
@@ -830,15 +900,6 @@ WebUI::sendUpdates()
 void
 WebUI::flush(void)
 {
-    // if (serialEnabled)
-    // {
-    //     Serial.flush();
-    // }
-
-    // for(uint8_t i=0; i<MAX_STREAMS; i++) 
-    // {
-    //     if (streams[i]) streams[i]->flush();
-    // }
 }
 
 size_t
@@ -846,19 +907,6 @@ WebUI::write(uint8_t c)
 {
     // Should buffer these, but we will not for right now...
     return write(&c, 1);
-    // size_t amtWritten;
-
-    // if (serialEnabled)
-    // {
-    //     amtWritten = Serial.write(c);
-    // }
-
-    // for(uint8_t i=0; i<MAX_STREAMS; i++) 
-    // {
-    //     if (streams[i]) amtWritten = streams[i]->write(c);
-    // }
-
-    // return amtWritten;
 }
 
 size_t
@@ -892,6 +940,8 @@ WebUI::write(const uint8_t *buffer, size_t size)
 
         pCur = pCur->pNext;
     }
+
+    bdestroy(s);
 
     return size;
 }

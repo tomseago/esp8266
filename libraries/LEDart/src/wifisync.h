@@ -39,7 +39,12 @@ protected:
     uint32_t lastQueryAt;
     uint32_t lastId;
 
+    bool valuesUpdated;
+
     void queryTime();
     void queryState();
-    void sendState();
+    void sendState(); // used for normal prepared states
+
+    // used when values update and we need an immediate thing to happen
+    void sendCurrentState();
 };

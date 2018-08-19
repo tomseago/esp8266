@@ -2,18 +2,18 @@
 #include "rand.h"
 #include "nexus.h"
 
-const RgbColor red(255,0,0);
-const RgbColor yellow(255,255,0);
-const RgbColor green(0,255,0);
-const RgbColor cyan(0,255,255);
-const RgbColor blue(0,0,255);
-const RgbColor purple(255,0,255);
+const LAColor red(255,0,0);
+const LAColor yellow(255,255,0);
+const LAColor green(0,255,0);
+const LAColor cyan(0,255,255);
+const LAColor blue(0,0,255);
+const LAColor purple(255,0,255);
 
-const RgbColor white(255,255,255);
-const RgbColor black(0,0,0);
+const LAColor white(255,255,255);
+const LAColor black(0,0,0);
 
 
-LAA_Flood::LAA_Flood(char* szName, RgbColor background) : 
+LAA_Flood::LAA_Flood(char* szName, LAColor background) : 
     LEDArtAnimation(szName),
     background(background),
     foreground(background)
@@ -28,7 +28,7 @@ LAA_Flood::animate(LEDArtPiece& piece, LEDAnimationParam p) {
     if (p.state == LEDAnimationState_Started) {
         background = foreground;
 
-        foreground = RgbColor(HslColor(rand(255)/255.0, 0.6, 0.5));
+        foreground = LAColor(HslColor(rand(255)/255.0, 0.6, 0.5));
     }
 
     uint16_t floodedDistance = piece.strip.PixelCount() * p.progress;
@@ -203,19 +203,19 @@ LAA_UnitMapper::unitSize(LEDArtPiece& piece) {
 }
 
 void 
-LAA_UnitMapper::setFullUnitColor(LEDArtPiece& piece, uint16_t unitIx, RgbColor color)
+LAA_UnitMapper::setFullUnitColor(LEDArtPiece& piece, uint16_t unitIx, LAColor color)
 {
     piece.setPrimaryColor(unitIx, color);
 }
 
 void 
-LAA_UnitMapper::setUnitPixelColor(LEDArtPiece& piece, uint16_t unitIx, uint16_t pixelIx, RgbColor color)
+LAA_UnitMapper::setUnitPixelColor(LEDArtPiece& piece, uint16_t unitIx, uint16_t pixelIx, LAColor color)
 {
     piece.setSecondaryColorInPrimary(unitIx, pixelIx, color);
 }
 
 void 
-LAA_UnitMapper::setAllUnitsPixelColor(LEDArtPiece& piece, uint16_t pixelIx, RgbColor color)
+LAA_UnitMapper::setAllUnitsPixelColor(LEDArtPiece& piece, uint16_t pixelIx, LAColor color)
 {
     piece.setSecondaryColor(pixelIx, color);
 }
@@ -391,9 +391,9 @@ LAA_UnitFill::animate(LEDArtPiece& piece, LEDAnimationParam p)
 }
 
 bool
-LAA_UnitFill::canUseGeom(LEDArtPiece& piece)
+LAA_UnitFill::canUseGeom(uint16_t width, uint16_t height)
 { 
-    return piece.geomPrimaryCount() > piece.geomSecondaryCount(); 
+    return height > width; 
 }
 
 void
@@ -545,7 +545,7 @@ LAA_Kitt::animate(LEDArtPiece& piece, LEDAnimationParam p) {
     int16_t pos = prog * primaryCount;
 
     for(int16_t pIx=0; pIx<primaryCount; pIx++) {
-        RgbColor color = piece.nexus.background;
+        LAColor color = piece.nexus.background;
         if (pIx > pos-3 && pIx < pos+3) {
             color = piece.nexus.foreground;
         }
@@ -580,9 +580,9 @@ LAA_KittSmooth::animate(LEDArtPiece& piece, LEDAnimationParam p) {
         float distance = fabsf(prog - ixProg) * 20.0;
         //distance *= distance;
 
-        RgbColor color;
+        LAColor color;
         if (distance < 1.0) {
-            color = RgbColor::LinearBlend(piece.nexus.foreground, piece.nexus.background, distance);
+            color = LAColor::LinearBlend(piece.nexus.foreground, piece.nexus.background, distance);
         } else {
             color = piece.nexus.background;
         }
@@ -593,9 +593,9 @@ LAA_KittSmooth::animate(LEDArtPiece& piece, LEDAnimationParam p) {
 
 
 bool
-LAA_KittSmooth::canUseGeom(LEDArtPiece& piece)
+LAA_KittSmooth::canUseGeom(uint16_t width, uint16_t height)
 { 
-    return piece.geomPrimaryCount() > piece.geomSecondaryCount(); 
+    return height > width; 
 }
 
 ///////////////////
@@ -626,7 +626,7 @@ LAA_KittPallete::animate(LEDArtPiece& piece, LEDAnimationParam p)
         float distance = fabsf(prog - ixProg) * 8.0;
         //distance *= distance;
 
-        RgbColor color;
+        LAColor color;
         if (distance < 1.0) {
             color = colorInPalette(piece.nexus.palette, distance);
         } else {
@@ -638,7 +638,7 @@ LAA_KittPallete::animate(LEDArtPiece& piece, LEDAnimationParam p)
 }
 
 bool
-LAA_KittPallete::canUseGeom(LEDArtPiece& piece)
+LAA_KittPallete::canUseGeom(uint16_t width, uint16_t height)
 { 
-    return piece.geomPrimaryCount() > piece.geomSecondaryCount(); 
+    return height > width; 
 }

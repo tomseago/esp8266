@@ -143,13 +143,18 @@ Nexus::sendUserAnimationRequest(char* szName, bool randomize, uint32_t source)
 //////
 
 void 
-Nexus::prepareRandomStateFor(uint32_t when, char* szGeomName, bool rotated, char* szAnimName, uint32_t source)
+Nexus::prepareStateFor(uint32_t when, bool randomize, char* szGeomName, bool rotated, char* szAnimName, uint32_t source)
 {
     clearPreparedState();
 
-    randomizeState(&nextState);
+    gatherState(&nextState);
+    if (randomize)
+    {
+        randomizeState(&nextState);
+    }
     nextState.geomRotated = rotated;
     nextState.time = when;
+    nextState.override = !randomize;
 
     if (szGeomName) 
     {
@@ -176,6 +181,10 @@ Nexus::prepareRandomStateFor(uint32_t when, char* szGeomName, bool rotated, char
         }
         // else nothing to dup
     }
+
+
+    Log.printf("NEXUS: prepareStateFor(%d)\n", when);
+    logState(&nextState, szGeomName, szAnimName);
 
     sendValueUpdate(NexusListener::NexusValueType::PreparedState, source);
 }
@@ -244,7 +253,7 @@ Nexus::clearPreparedState()
 
     // Do we have a queued state though?
     if (nextNextStateData) {
-        deserializePreparedState(nextNextStateLength, nextNextStateData);
+        deserializeState(false, nextNextStateLength, nextNextStateData);
 
         free(nextNextStateData);
         nextNextStateData = NULL;
@@ -254,20 +263,55 @@ Nexus::clearPreparedState()
 }
 
 uint16_t
-Nexus::serializePreparedState(uint8_t* into)
+Nexus::serializeState(bool isCurrent, bool withOverride, uint8_t* into)
 {
-    if (!nextState.time)
+    if (isCurrent)
     {
-        return 0;
-    }
+        // Our current state
+        NexusState current;
 
-    return serializeState(&nextState, szNextGeom, szNextAnim, into);
+        gatherState(&current);
+
+        return serializeState(&current, szCurrentGeom, szCurrentAnim, into);
+    }
+    else
+    {
+        // The prepared state
+        if (!nextState.time)
+        {
+            return 0;
+        }
+
+        return serializeState(&nextState, szNextGeom, szNextAnim, into);       
+    }
 }
 
 bool
-Nexus::deserializePreparedState(uint16_t length, const uint8_t* from)
+Nexus::deserializeState(bool isCurrent, uint16_t length, const uint8_t* from)
 {
-    if (nextState.time) {
+    if (isCurrent) 
+    {
+        // We're going to deserialize this and use it right away
+        NexusState update;
+        if (!deserializeState(&update, NULL, NULL, length, from)) 
+        {
+            return false;
+        }
+
+        applyState(&update);
+
+        // Let's assume we don't need to notify anyone. The animation
+        // will poll the stuff it needs.
+        return true;
+    }
+
+    // Cheat and use the knowledge that the first byte is the override
+    // if (from[0])
+    // {
+    //     Log.printf("NEXUS: --- Override state\n");
+    // }
+
+    if (nextState.time && !from[0]) {
         Log.printf("NEXUS: Got a new prepared state before using the last one. Queing it up...\n");
         stateQEvents++;
 
@@ -336,36 +380,64 @@ Nexus::randomizeState(NexusState* state)
     }
 
     // speedFactor = 1.0;
-    // state->foreground = RgbColor(HslColor(((float)rand(1000))/1000.0, 0.6, 0.5));
-    // state->background = RgbColor(HslColor(((float)rand(1000))/1000.0, 0.3, 0.2));
-    state->foreground = RgbColor(HslColor(((float)rand(1000))/1000.0, 1.0, (((float)rand(1000))/2000.0)+0.2));
-    state->background = RgbColor(HslColor(((float)rand(1000))/1000.0, 1.0, 0.2));
+    // state->foreground = LAColor(HslColor(((float)rand(1000))/1000.0, 0.6, 0.5));
+    // state->background = LAColor(HslColor(((float)rand(1000))/1000.0, 0.3, 0.2));
+    state->foreground = LAColor(HslColor(((float)rand(1000))/1000.0, 1.0, (((float)rand(1000))/2000.0)+0.2));
+    state->background = LAColor(HslColor(((float)rand(1000))/1000.0, 1.0, 0.2));
+
+    // To convert to RGBW...
+    convertLAColor(state->foreground);
+    convertLAColor(state->background);
 
     // Even steven on reversie
     state->reverse = rand(10) < 5;
+
+    // Don't want to randomize this but we need to pass through this
+    // function with the current values
+    state->maxBrightness = maxBrightness;
 
     ///////////////////
     // DEBUGGING ANIMATIONS
     // state->palette = 2;
     // state->speedFactor = 1.0;
-    // state->foreground = RgbColor(255, 0, 0);
-    // state->background = RgbColor(0, 0, 255);
+    // state->foreground = LAColor(255, 0, 0);
+    // state->background = LAColor(0, 0, 255);
     // state->reverse = false;
 }
 
 void
 Nexus::applyState(NexusState* state)
 {
+    Log.printf("NEXUS: applyState state->mb=%d\n", state->maxBrightness);
+
     palette = (LEDArtAnimation::LEDPaletteType)state->palette;
     speedFactor = state->speedFactor;
+    reverse = state->reverse;
 
     foreground = state->foreground;
     background = state->background;
+    maxBrightness = state->maxBrightness;
 
-    reverse = state->reverse;
+    geomRotated = state->geomRotated;
 
     // TODO: Update listeners????
 }
+
+void
+Nexus::gatherState(NexusState* state)
+{
+    state->palette = palette;
+    state->speedFactor = speedFactor;
+    state->reverse = reverse;
+
+    state->foreground = foreground;
+    state->background = background;
+    state->maxBrightness = maxBrightness;
+    Log.printf("NEXUS: mb=%f state->mb=%d\n", maxBrightness, state->maxBrightness);
+
+    state->geomRotated = geomRotated;
+}
+
 
 void
 Nexus::logName(uint16_t len, char* sz)
@@ -379,17 +451,35 @@ Nexus::logName(uint16_t len, char* sz)
     {
         Log.printf("NULL");
     }        
-    Log.printf("\n");
-
 }
 
+#define BOOL_STR(x) (x ? "T" : "F")
 void
 Nexus::logState(NexusState* state, char* szGeomName, char* szAnimName)
 {
-    Log.printf("NEXUS STATE: p=%d, sf=%f, fg=(%d,%d,%d) bg=(%d,%d,%d)", state->palette, state->speedFactor, state->foreground.R, state->foreground.G, state->foreground.B, state->background.R, state->background.G, state->background.B);
+#if LAColor == RGBWColor
+    Log.printf("NEXUS STATE: p=%d, sf=%f, fg=(%d,%d,%d,%d) bg=(%d,%d,%d,%d) rev=%s geomRot=%s mb=%d", 
+        state->palette, state->speedFactor, 
+        state->foreground.R, state->foreground.G, state->foreground.B, state->foreground.W, 
+        state->background.R, state->background.G, state->background.B, state->background.W,
+        BOOL_STR(state->reverse),
+        BOOL_STR(state->geomRotated),
+        state->maxBrightness
+        );
+#else
+    Log.printf("NEXUS STATE: p=%d, sf=%f, fg=(%d,%d,%d) bg=(%d,%d,%d) rev=%s geomRot=%s mb=%d", 
+        state->palette, state->speedFactor, 
+        state->foreground.R, state->foreground.G, state->foreground.B, 
+        state->background.R, state->background.G, state->background.B,
+        BOOL_STR(state->reverse),
+        BOOL_STR(state->geomRotated),
+        state->maxBrightness
+        );
+#endif
 
     logName(state->geomNameLen, szGeomName);
     logName(state->animNameLen, szAnimName);
+    Log.printf("\n");
 }
 
 uint16_t

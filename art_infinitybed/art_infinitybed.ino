@@ -1,9 +1,10 @@
 // The master node id is 1 to avoid weirdness with IP addresses
-#define NODE_ID 2
+#define NODE_ID 1
 
-#include <ESP8266WiFi.h>
-  
-#include <ESPAsyncWebServer.h>
+#include <Arduino.h>
+//#include <WiFi.h>
+//
+//#include <ESPAsyncWebServer.h>
 
 #include <LEDArt.h>
 #include <nexus.h>
@@ -19,6 +20,8 @@
 #include <quickbuttons.h>
 #include <webui.h>
 #include <lase.h>
+
+#include <evil_doer.h>
 
 // Force use of specific geometry instead of natural rows and cols because it's not square
 Nexus nx;
@@ -63,6 +66,8 @@ WiFiSync wifiSync(nx);
 
 Lase lase(IPAddress(10,0,1,10), NODE_ID-1, nx, art);
 
+EvilDoer evil(nx);
+
 void setup() {
 
   ////// Configure logging / debugging
@@ -78,6 +83,7 @@ void setup() {
    msgTube.configure(NODE_ID, "Haus", "GundamWing");
    msgTube.enableStatic();
    msgTube.begin();
+
 //  hausFan.configure("InfinityBed", "Password");
 //  hausFan.setPossibleNet(false, "Haus", "GundamWing");
 //  hausFan.begin();
@@ -96,14 +102,15 @@ void setup() {
 
   // Default animation time is 16 seconds which is 8 bars at 120bpm
   // so when using a small duration setting it to a multiple of this is good
-  // nx.maxDuration = 32000;
- //nx.maxDuration = 256000;
+  nx.maxDuration = 32000;
+  //nx.maxDuration = 256000;
 
   // For testing message tube we want small duration
-  nx.maxDuration = 8000;
+  // nx.maxDuration = 3000;
   
   art.registerAnimation(&webui.statusAnim);
 
+  // Generally these shouldn't be registered because they're for flashlight mode  
 //  art.registerAnimation(&allWhite);
 //  art.registerAnimation(&halfWhite);
 //
@@ -150,11 +157,21 @@ void setup() {
 //  }
 
   lase.begin();
+
+  evil.begin();
 }
 
-uint8_t count = 0;
+bool didOnce = false;
 
 void loop() {
+  if (!didOnce) {
+    didOnce = true;
+    uint8_t a = 200;
+    float f = a;
+    uint8_t b = f;
+    Log.printf("a=%d f=%f b=%d\n", a, f, b);
+  }
+  
    msgTube.loop();
    wifiSync.loop();
 //  hausFan.loop();
@@ -165,4 +182,6 @@ void loop() {
   art.loop();
 
   lase.loop();
+
+//  evil.loop();
 }

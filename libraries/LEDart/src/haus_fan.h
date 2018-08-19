@@ -1,8 +1,8 @@
 #pragma once
 
-#include <ESP8266WiFi.h>
+// #include <ESP8266WiFi.h>
 
-#include <ESPAsyncTCP.h>
+// #include <ESPAsyncTCP.h>
 
 
 class HausFan {

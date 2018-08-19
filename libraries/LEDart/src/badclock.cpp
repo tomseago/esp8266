@@ -26,20 +26,20 @@
 
 // using namespace std;
 
-const RgbColor red(255,0,0);
-const RgbColor yellow(255,255,0);
-const RgbColor green(0,255,0);
-const RgbColor cyan(0,255,255);
-const RgbColor blue(0,0,255);
-const RgbColor purple(255,0,255);
+const LAColor red(255,0,0);
+const LAColor yellow(255,255,0);
+const LAColor green(0,255,0);
+const LAColor cyan(0,255,255);
+const LAColor blue(0,0,255);
+const LAColor purple(255,0,255);
 
-const RgbColor white(255,255,255);
-const RgbColor black(0,0,0);
+const LAColor white(255,255,255);
+const LAColor black(0,0,0);
 
 uint8_t digitFont[10] = { 0x77, 0x44, 0x3e, 0x6e, 0x4d, 0x6b, 0x7b, 0x46, 0x7f, 0x6f };
 
 void
-setSegment(LEDArtPiece& piece, uint8_t digit, uint8_t segment, RgbColor color)
+setSegment(LEDArtPiece& piece, uint8_t digit, uint8_t segment, LAColor color)
 {
     uint8_t start = (28 * digit) + (4 * segment);
 
@@ -105,7 +105,7 @@ BadClock::DigitAnim::animate(LEDArtPiece& piece, LEDAnimationParam p)
     }
 
     // Dots
-    RgbColor dotColor = parent.showDots ? (parent.inSetMode ? green : red ) : black;
+    LAColor dotColor = parent.showDots ? (parent.inSetMode ? green : red ) : black;
     piece.strip.SetPixelColor(112, dotColor);
     piece.strip.SetPixelColor(113, dotColor);
 }
