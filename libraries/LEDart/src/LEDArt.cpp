@@ -158,8 +158,8 @@ LEDArtAnimation::clearTo(LEDArtPiece& piece, LAColor color, uint16_t start, uint
 #if LAColor == RGBWColor
 
 float saturation(LAColor& rgbw) {
-    float low = min(rgbw.R, min(rgbw.G, rgbw.B));
-    float high = max(rgbw.R, max(rgbw.G, rgbw.B));
+    float low = std::min(rgbw.R, std::min(rgbw.G, rgbw.B));
+    float high = std::max(rgbw.R, std::max(rgbw.G, rgbw.B));
     if (high == 0.0) return 0;
 
     uint8_t s = round(100.0 * ((high - low) / high));

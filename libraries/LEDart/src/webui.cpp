@@ -6,11 +6,13 @@
 #include "log.h"
 #include "butil.h"
 
+#include <SPIFFS.h>
+
 // For free memory
-extern "C" {
+// extern "C" {
 //#include "user_interface.h"
 //#include <esp32/esp_system.h>
-}
+// }
 
 // #include <StandardCplusplus.h>
 // #include <string>
@@ -138,12 +140,13 @@ WebUI::loop()
     //     lastPoke = now;
     // }    
 
-    // if (now - lastMemCheck > 10000) 
-    // {
-    //     uint32_t free = system_get_free_heap_size();
-    //     os_printf("WebUI: ------ Free memory %d\n", free);
-    //     lastMemCheck = now;
-    // }
+    if (now - lastMemCheck > 10000) 
+    {
+        // uint32_t free = system_get_free_heap_size();
+        uint32_t free = ESP.getFreeHeap();
+        Serial.printf("WebUI: ------ Free memory %d\n", free);
+        lastMemCheck = now;
+    }
 
 
     sendUpdates();
@@ -288,40 +291,40 @@ WebUI::h_404(AsyncWebServerRequest *req)
 void 
 WebUI::h_socket(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len)
 {    
-    // os_printf("h_socket(,,%d,%x,%x,%d)\n", type, arg, data, len);
+    // Serial.printf("h_socket(,,%d,%x,%x,%d)\n", type, arg, data, len);
 
     // if (h_socket_count==0) {
-    //     os_printf("**** done\n");
+    //     Serial.printf("**** done\n");
     //     return;
     // }
     // h_socket_count--;
 
     if(type == WS_EVT_CONNECT){
         //client connected
-        os_printf("ws[%s][%u] connect\n", server->url(), client->id());
+        Serial.printf("ws[%s][%u] connect\n", server->url(), client->id());
         // client->ping();
 
         addClient(client);
 
     } else if(type == WS_EVT_DISCONNECT){
         //client disconnected
-        os_printf("ws[%s][%u] disconnect: %u\n", server->url(), client->id());
+        Serial.printf("ws[%s][%u] disconnect: %u\n", server->url(), client->id());
         removeClient(client);
 
     } else if(type == WS_EVT_ERROR){
         //error was received from the other end
-        os_printf("ws[%s][%u] error(%u):\n", server->url(), client->id(), *((uint16_t*)arg), (char*)data);
-        // os_printf("ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t*)arg), (char*)data);
+        Serial.printf("ws[%s][%u] error(%u):\n", server->url(), client->id(), *((uint16_t*)arg), (char*)data);
+        // Serial.printf("ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t*)arg), (char*)data);
 
     } else if(type == WS_EVT_PONG){
         //pong message was received (in response to a ping request maybe)
-        // os_printf("ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len)?(char*)data:"");
-        os_printf("ws[%s][%u] pong[%u]\n", server->url(), client->id(), len);
+        // Serial.printf("ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len)?(char*)data:"");
+        Serial.printf("ws[%s][%u] pong[%u]\n", server->url(), client->id(), len);
 
     } else if(type == WS_EVT_DATA) {
         //data packet
         AwsFrameInfo * info = (AwsFrameInfo*)arg;
-        // os_printf("ws[%s][%u] data final=%d index=%d iLen=%d len=%d\n",
+        // Serial.printf("ws[%s][%u] data final=%d index=%d iLen=%d len=%d\n",
         //     server->url(), client->id(),
         //     info->final, info->index, info->len, len
         // );
@@ -329,23 +332,23 @@ WebUI::h_socket(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEvent
         if(info->final && info->index == 0 && info->len == len){
             //the whole message is in a single frame and we got all of it's data
 
-            // os_printf("ws[%s][%u] %s-message[%llu]: ", server->url(), client->id(), (info->opcode == WS_TEXT)?"text":"binary", info->len);
+            // Serial.printf("ws[%s][%u] %s-message[%llu]: ", server->url(), client->id(), (info->opcode == WS_TEXT)?"text":"binary", info->len);
             //   for(size_t i=0; i < info->len; i++){
-            //     os_printf("%02x ", data[i]);
+            //     Serial.printf("%02x ", data[i]);
             //   }
-            //   os_printf("\n");
+            //   Serial.printf("\n");
             // }
 
             if (info->opcode != WS_TEXT) {
                 // TODO: Handle binary??
-                os_printf("ws do not handle binary messages\n");
+                Serial.printf("ws do not handle binary messages\n");
                 return;
             }
 
             // It is text
 
             if (len<2) {
-                os_printf("ws message was too short. Needs to be 2 bytes\n");
+                Serial.printf("ws message was too short. Needs to be 2 bytes\n");
                 return;
             }
 
@@ -355,10 +358,10 @@ WebUI::h_socket(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEvent
             // Life is WAY better if the message is a null terminated string
             uint8_t* szTemp = (uint8_t*)strndup((char*)data, len);
             if (!szTemp) {
-                os_printf("ws OOM couldn't create szTemp to handle the message\n");
+                Serial.printf("ws OOM couldn't create szTemp to handle the message\n");
                 return;
             }
-            os_printf("ws[%s][%u] handleTextMessage(%s)\n", 
+            Serial.printf("ws[%s][%u] handleTextMessage(%s)\n", 
                 server->url(), client->id(),
                 szTemp
             );
@@ -368,29 +371,29 @@ WebUI::h_socket(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEvent
 
         
         } else {
-            os_printf("\nXXXX Not handling segmented messages\n");
+            Serial.printf("\nXXXX Not handling segmented messages\n");
             // //message is comprised of multiple frames or the frame is split into multiple packets
             // if (info->index == 0) {
             //     if(info->num == 0)
-            //         os_printf("ws[%s][%u] %s-message start\n", server->url(), client->id(), (info->message_opcode == WS_TEXT)?"text":"binary");
-            //     os_printf("ws[%s][%u] frame[%u] start[%llu]\n", server->url(), client->id(), info->num, info->len);
+            //         Serial.printf("ws[%s][%u] %s-message start\n", server->url(), client->id(), (info->message_opcode == WS_TEXT)?"text":"binary");
+            //     Serial.printf("ws[%s][%u] frame[%u] start[%llu]\n", server->url(), client->id(), info->num, info->len);
             // }
 
-            // os_printf("ws[%s][%u] frame[%u] %s[%llu - %llu]: ", server->url(), client->id(), info->num, (info->message_opcode == WS_TEXT)?"text":"binary", info->index, info->index + len);
+            // Serial.printf("ws[%s][%u] frame[%u] %s[%llu - %llu]: ", server->url(), client->id(), info->num, (info->message_opcode == WS_TEXT)?"text":"binary", info->index, info->index + len);
             // if(info->message_opcode == WS_TEXT) {
             //     data[len] = 0;
-            //     os_printf("%s\n", (char*)data);
+            //     Serial.printf("%s\n", (char*)data);
             // } else {
             //     for(size_t i=0; i < len; i++){
-            //         os_printf("%02x ", data[i]);
+            //         Serial.printf("%02x ", data[i]);
             //     }
-            //     os_printf("\n");
+            //     Serial.printf("\n");
             // }
 
             // if((info->index + len) == info->len) {
-            //     os_printf("ws[%s][%u] frame[%u] end[%llu]\n", server->url(), client->id(), info->num, info->len);
+            //     Serial.printf("ws[%s][%u] frame[%u] end[%llu]\n", server->url(), client->id(), info->num, info->len);
             //     if(info->final) {
-            //         os_printf("ws[%s][%u] %s-message end\n", server->url(), client->id(), (info->message_opcode == WS_TEXT)?"text":"binary");
+            //         Serial.printf("ws[%s][%u] %s-message end\n", server->url(), client->id(), (info->message_opcode == WS_TEXT)?"text":"binary");
             //         if(info->message_opcode == WS_TEXT)
             //             client->text("I got your text message");
             //         else

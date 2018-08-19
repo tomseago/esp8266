@@ -3,6 +3,7 @@
 #include "haus_fan.h"
 #include "log.h"
 
+#include <WiFi.h>
 #include <ESPAsyncTCPbuffer.h>
 
 const uint32_t HF_STA_Restart_Delay = 20000;

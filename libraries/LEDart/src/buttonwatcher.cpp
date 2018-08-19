@@ -5,25 +5,18 @@
 // #include "rand.h"
 // #include "nexus.h"
 
-// THe original 2 header version
-// #define BUTTON_1 12
-// #define BUTTON_2 14
-// #define BUTTON_3 5
-// #define BUTTON_4 13
+#ifndef D1
+// Translate for ESP32
+#define D7 -1
+#define D6 -1
+#define D5 -1
 
-// // Which should be this with names...
-// #define BUTTON_1 D6
-// #define BUTTON_2 D5
-// #define BUTTON_3 D1
-// #define BUTTON_4 D7
+#define D4 analogInputToDigitalPin(A14)
+#define D3 analogInputToDigitalPin(A15)
+#define D2 analogInputToDigitalPin(A16)
+#define D1 analogInputToDigitalPin(A17)
 
-
-// // The new 1 header version.
-// // D4 is the built in LED so maybe this works???
-// #define BUTTON_1 D3
-// #define BUTTON_2 D4
-// #define BUTTON_3 D1
-// #define BUTTON_4 D2
+#endif
 
 
 // For vest

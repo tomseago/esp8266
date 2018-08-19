@@ -4,7 +4,13 @@
 #include "nexus.h"
 #include "log.h"
 
+
+#ifdef ESP32
+#include <AsyncTCP.h>
+#else
 #include <ESPAsyncTCP.h>
+#endif
+
 #include <ESPAsyncTCPbuffer.h>
 
 
@@ -15,7 +21,7 @@ protected:
 
     AsyncClient* client;
     AsyncTCPbuffer* tcpBuffer;
-    uint32 nextCheck;
+    uint32_t nextCheck;
 
     bool forceDisconnect;
 

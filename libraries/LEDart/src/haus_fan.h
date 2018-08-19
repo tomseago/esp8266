@@ -1,9 +1,14 @@
 #pragma once
 
+#include <Arduino.h>
+
 // #include <ESP8266WiFi.h>
 
-// #include <ESPAsyncTCP.h>
-
+#ifdef ESP32
+#include <AsyncTCP.h>
+#else
+#include <ESPAsyncTCP.h>
+#endif
 
 class HausFan {
 protected:
@@ -24,8 +29,8 @@ protected:
     char* szSTAName[2];
     char* szSTAPassword[2];
 
-    uint32 nextSTACheck;
-    uint32 staAttemptBegan;
+    uint32_t nextSTACheck;
+    uint32_t staAttemptBegan;
     uint8_t staCheckAttempts;    
 
     void checkSTA();

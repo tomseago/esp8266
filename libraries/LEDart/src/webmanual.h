@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <Print.h>
 
-// #include <ESPAsyncWebserver.h>
+#include <ESPAsyncWebserver.h>
 // #include <Hash.h>
 #include <functional>
 
@@ -31,7 +31,7 @@ public :
 
     ///////////////
     // The stream interface for writing logs
-    void flush(void) override;
+    void flush(void);
     size_t write(uint8_t) override;
     size_t write(const uint8_t *buffer, size_t size) override;
     inline size_t write(unsigned long n)

@@ -6,6 +6,7 @@
 #include "log.h"
 #include "butil.h"
 
+#include <SPIFFS.h>
 // #include <StandardCplusplus.h>
 // #include <string>
 
@@ -249,7 +250,7 @@ WebManual::h_socket(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsE
 {
   if(type == WS_EVT_CONNECT){
     //client connected
-    os_printf("ws[%s][%u] connect\n", server->url(), client->id());
+    Serial.printf("ws[%s][%u] connect\n", server->url(), client->id());
     // client->printf("Hello Client %u :)", client->id());
     client->ping();
 
@@ -257,15 +258,15 @@ WebManual::h_socket(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsE
 
   } else if(type == WS_EVT_DISCONNECT){
     //client disconnected
-    os_printf("ws[%s][%u] disconnect: %u\n", server->url(), client->id());
+    Serial.printf("ws[%s][%u] disconnect: %u\n", server->url(), client->id());
     removeClient(client);
 
   } else if(type == WS_EVT_ERROR){
     //error was received from the other end
-    os_printf("ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t*)arg), (char*)data);
+    Serial.printf("ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t*)arg), (char*)data);
   } else if(type == WS_EVT_PONG){
     //pong message was received (in response to a ping request maybe)
-    os_printf("ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len)?(char*)data:"");
+    Serial.printf("ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len)?(char*)data:"");
   } else if(type == WS_EVT_DATA){
 
     //data packet
@@ -273,11 +274,11 @@ WebManual::h_socket(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsE
     if(info->final && info->index == 0 && info->len == len){
       //the whole message is in a single frame and we got all of it's data
 
-      // os_printf("ws[%s][%u] %s-message[%llu]: ", server->url(), client->id(), (info->opcode == WS_TEXT)?"text":"binary", info->len);
+      // Serial.printf("ws[%s][%u] %s-message[%llu]: ", server->url(), client->id(), (info->opcode == WS_TEXT)?"text":"binary", info->len);
       //   for(size_t i=0; i < info->len; i++){
-      //     os_printf("%02x ", data[i]);
+      //     Serial.printf("%02x ", data[i]);
       //   }
-      //   os_printf("\n");
+      //   Serial.printf("\n");
       // }
 
       ////////////////////
@@ -376,25 +377,25 @@ WebManual::h_socket(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsE
       //message is comprised of multiple frames or the frame is split into multiple packets
       if(info->index == 0){
         if(info->num == 0)
-          os_printf("ws[%s][%u] %s-message start\n", server->url(), client->id(), (info->message_opcode == WS_TEXT)?"text":"binary");
-        os_printf("ws[%s][%u] frame[%u] start[%llu]\n", server->url(), client->id(), info->num, info->len);
+          Serial.printf("ws[%s][%u] %s-message start\n", server->url(), client->id(), (info->message_opcode == WS_TEXT)?"text":"binary");
+        Serial.printf("ws[%s][%u] frame[%u] start[%llu]\n", server->url(), client->id(), info->num, info->len);
       }
 
-      os_printf("ws[%s][%u] frame[%u] %s[%llu - %llu]: ", server->url(), client->id(), info->num, (info->message_opcode == WS_TEXT)?"text":"binary", info->index, info->index + len);
+      Serial.printf("ws[%s][%u] frame[%u] %s[%llu - %llu]: ", server->url(), client->id(), info->num, (info->message_opcode == WS_TEXT)?"text":"binary", info->index, info->index + len);
       if(info->message_opcode == WS_TEXT){
         data[len] = 0;
-        os_printf("%s\n", (char*)data);
+        Serial.printf("%s\n", (char*)data);
       } else {
         for(size_t i=0; i < len; i++){
-          os_printf("%02x ", data[i]);
+          Serial.printf("%02x ", data[i]);
         }
-        os_printf("\n");
+        Serial.printf("\n");
       }
 
       if((info->index + len) == info->len){
-        os_printf("ws[%s][%u] frame[%u] end[%llu]\n", server->url(), client->id(), info->num, info->len);
+        Serial.printf("ws[%s][%u] frame[%u] end[%llu]\n", server->url(), client->id(), info->num, info->len);
         if(info->final){
-          os_printf("ws[%s][%u] %s-message end\n", server->url(), client->id(), (info->message_opcode == WS_TEXT)?"text":"binary");
+          Serial.printf("ws[%s][%u] %s-message end\n", server->url(), client->id(), (info->message_opcode == WS_TEXT)?"text":"binary");
           if(info->message_opcode == WS_TEXT)
             client->text("I got your text message");
           else

@@ -4,7 +4,7 @@
 #include <Arduino.h>
 //#include <WiFi.h>
 //
-//#include <ESPAsyncWebServer.h>
+#include <ESPAsyncWebServer.h>
 
 #include <LEDArt.h>
 #include <nexus.h>
@@ -27,9 +27,11 @@
 Nexus nx;
 
 
-// 104 leds total
-// 16 on short sides, 36 on long sides
 const uint8_t MaxBrightness = 255;  // Hell to the yeah!
+
+// 104 leds total
+// 16 on short sides, 36 on long sides <- old guesses
+
 const uint16_t PixelCount = 104;
 
 LEDArtPiece art(nx, PixelCount, MaxBrightness);

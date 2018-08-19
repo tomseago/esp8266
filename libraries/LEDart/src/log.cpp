@@ -56,7 +56,7 @@ DBLog::flush(void)
 
     for(uint8_t i=0; i<MAX_STREAMS; i++) 
     {
-        if (streams[i]) streams[i]->flush();
+        // if (streams[i]) streams[i]->flush();
     }
 }
 

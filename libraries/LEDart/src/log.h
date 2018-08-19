@@ -10,10 +10,13 @@ public:
     DBLog();
 
     void setSerialEnabled(bool en);
+
+    // These should really be Stream's instead of Print's which would bring
+    // back the flush, but might require subclasses to also do available() and read()
     bool addPrint(Print *stream);
     void removePrint(Print *stream);
 
-    void flush(void) override;
+    void flush(void);
     size_t write(uint8_t) override;
     size_t write(const uint8_t *buffer, size_t size) override;
     inline size_t write(unsigned long n)

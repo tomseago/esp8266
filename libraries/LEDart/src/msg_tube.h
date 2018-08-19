@@ -3,7 +3,11 @@
 // #include <ESP8266WiFi.h>
 #include <WiFi.h>
 
+#ifdef ESP32
+#include <AsyncTCP.h>
+#else
 #include <ESPAsyncTCP.h>
+#endif
 
 const uint16_t MTServerPort = 2000;
 const uint8_t MTBroadcastAddr = 255;
@@ -135,8 +139,8 @@ protected:
 
     void dumpClientConns();
 
-    uint32 nextSTACheck;
-    uint32 staAttemptBegan;
+    uint32_t nextSTACheck;
+    uint32_t staAttemptBegan;
     uint8_t staCheckAttempts;
 
     void checkSTA();

@@ -8,6 +8,20 @@
 // #define BUTTON_3 5
 // #define BUTTON_4 13
 
+#ifndef D1
+// Translate for ESP32
+#define D7 -1
+#define D6 -1
+#define D5 -1
+
+#define D4 analogInputToDigitalPin(A14)
+#define D3 analogInputToDigitalPin(A15)
+#define D2 analogInputToDigitalPin(A16)
+#define D1 analogInputToDigitalPin(A17)
+
+#endif
+
+
 // Which should be this with names...
 #define BUTTON_1 D6
 #define BUTTON_2 D5
@@ -28,6 +42,7 @@
 #define BUTTON_2 D3
 #define BUTTON_3 D2
 #define BUTTON_4 D1
+
 
 QuickButtons::QuickButtons(LEDArtPiece& piece, LEDArtAnimation* flashLight) :
     piece(piece),

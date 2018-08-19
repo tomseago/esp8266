@@ -4,6 +4,7 @@
 
 #include "log.h"
 
+#include <WiFi.h>
 // #include <ESP8266Wifi.h>
 
 // const uint32_t LASE_Restart_Delay = 20000;
@@ -169,28 +170,48 @@ void
 PersistentConnection::writeUInt16(uint16_t v)
 {
     uint8_t* p = (uint8_t*)&v;
+#ifdef I_AM_BIGENDIAN    
+    tcpBuffer->write(p[0]);
+    tcpBuffer->write(p[1]);
+#else
     tcpBuffer->write(p[1]);
     tcpBuffer->write(p[0]);
+#endif    
 }
 
 void
 PersistentConnection::writeUInt32(uint32_t v)
 {
     uint8_t* p = (uint8_t*)&v;
+#ifdef I_AM_BIGENDIAN
+    tcpBuffer->write(p[0]);
+    tcpBuffer->write(p[1]);
+    tcpBuffer->write(p[2]);
+    tcpBuffer->write(p[3]);
+#else
     tcpBuffer->write(p[3]);
     tcpBuffer->write(p[2]);
     tcpBuffer->write(p[1]);
     tcpBuffer->write(p[0]);
+#endif
 }
 
 void
 PersistentConnection::writeFloat(float v)
 {
     uint8_t* p = (uint8_t*)&v;
+
+#ifdef I_AM_BIGENDIAN
+    tcpBuffer->write(p[0]);
+    tcpBuffer->write(p[1]);
+    tcpBuffer->write(p[2]);
+    tcpBuffer->write(p[3]);
+#else
     tcpBuffer->write(p[3]);
     tcpBuffer->write(p[2]);
     tcpBuffer->write(p[1]);
     tcpBuffer->write(p[0]);
+#endif
 }
 
 void
