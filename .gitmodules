@@ -10,3 +10,6 @@
 [submodule "libraries/Artnet"]
 	path = libraries/Artnet
 	url = git@github.com:natcl/Artnet.git
+[submodule "libraries/AsyncTCP"]
+	path = libraries/AsyncTCP
+	url = git@github.com:tomseago/AsyncTCP.git
