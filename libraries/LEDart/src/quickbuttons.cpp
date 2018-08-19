@@ -8,7 +8,8 @@
 // #define BUTTON_3 5
 // #define BUTTON_4 13
 
-#ifndef D1
+#ifdef ESP32
+
 // Translate for ESP32
 #define D7 -1
 #define D6 -1

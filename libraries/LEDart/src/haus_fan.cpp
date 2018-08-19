@@ -3,7 +3,12 @@
 #include "haus_fan.h"
 #include "log.h"
 
+#ifdef ESP32
 #include <WiFi.h>
+#else
+#include <ESP8266WiFi.h>
+#endif
+
 #include <ESPAsyncTCPbuffer.h>
 
 const uint32_t HF_STA_Restart_Delay = 20000;

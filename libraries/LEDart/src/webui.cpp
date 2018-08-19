@@ -6,18 +6,12 @@
 #include "log.h"
 #include "butil.h"
 
+#ifdef ESP32
 #include <SPIFFS.h>
-
-// For free memory
-// extern "C" {
-//#include "user_interface.h"
-//#include <esp32/esp_system.h>
-// }
-
-// #include <StandardCplusplus.h>
-// #include <string>
+#endif
 
 // using namespace std;
+
 WebUI::StatusAnim::StatusAnim(WebUI& parent) : 
     LEDArtAnimation("WebUIStatus"),
     parent(parent)

@@ -6,7 +6,9 @@
 #include "log.h"
 #include "butil.h"
 
+#ifdef ESP32
 #include <SPIFFS.h>
+#endif
 // #include <StandardCplusplus.h>
 // #include <string>
 

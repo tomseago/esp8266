@@ -1,11 +1,15 @@
 #include "buttonwatcher.h"
 
+#include <Arduino.h>
+
 #include "log.h"
 
 // #include "rand.h"
 // #include "nexus.h"
 
 #ifndef D1
+
+#ifdef ESP32
 // Translate for ESP32
 #define D7 -1
 #define D6 -1
@@ -15,6 +19,7 @@
 #define D3 analogInputToDigitalPin(A15)
 #define D2 analogInputToDigitalPin(A16)
 #define D1 analogInputToDigitalPin(A17)
+#endif
 
 #endif
 

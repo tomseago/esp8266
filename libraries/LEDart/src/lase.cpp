@@ -4,8 +4,11 @@
 
 #include "log.h"
 
+#ifdef ESP32
 #include <WiFi.h>
-// #include <ESP8266Wifi.h>
+#else
+#include <ESP8266WiFi.h>
+#endif
 
 // const uint32_t LASE_Restart_Delay = 20000;
 // const uint32_t LASE_STA_Connected_Recheck_Delay = 30000;
