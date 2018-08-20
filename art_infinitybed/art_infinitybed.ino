@@ -29,10 +29,10 @@ Nexus nx;
 
 const uint8_t MaxBrightness = 255;  // Hell to the yeah!
 
-// 104 leds total
-// 16 on short sides, 36 on long sides <- old guesses
+// 100 leds total
+// 16 on short sides, 34 on long sides
 
-const uint16_t PixelCount = 104;
+const uint16_t PixelCount = 100;
 
 LEDArtPiece art(nx, PixelCount, MaxBrightness);
 
@@ -81,7 +81,7 @@ void setup() {
   Log.printf("DB Log start\n");
 
   /////// Configure network and hardware UI
-//   msgTube.configure(NODE_ID, "InfinityBed", "Password");
+//   msgTube.configure(NODE_ID, "SpaceFrame", "password");
    msgTube.configure(NODE_ID, "Haus", "GundamWing");
    msgTube.enableStatic();
    msgTube.begin();
@@ -159,21 +159,10 @@ void setup() {
 //  }
 
   lase.begin();
-
-  evil.begin();
+//  evil.begin();
 }
 
-bool didOnce = false;
-
 void loop() {
-  if (!didOnce) {
-    didOnce = true;
-    uint8_t a = 200;
-    float f = a;
-    uint8_t b = f;
-    Log.printf("a=%d f=%f b=%d\n", a, f, b);
-  }
-  
    msgTube.loop();
    wifiSync.loop();
 //  hausFan.loop();
