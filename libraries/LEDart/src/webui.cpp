@@ -140,9 +140,17 @@ WebUI::loop()
         uint32_t free = ESP.getFreeHeap();
         Serial.printf("WebUI: ------ Free memory %d\n", free);
         lastMemCheck = now;
+
+        if (!ws.status())
+        {
+            Serial.printf("WebUI: *** ws.begin()\n");
+            ws.end();            
+            ws.begin();
+        }
+
     }
 
-
+    handleIncomings();
     sendUpdates();
 }
 
@@ -349,20 +357,26 @@ WebUI::h_socket(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEvent
             ////////////////////
             // Handle the specific message
 
-            // Life is WAY better if the message is a null terminated string
-            uint8_t* szTemp = (uint8_t*)strndup((char*)data, len);
-            if (!szTemp) {
-                Serial.printf("ws OOM couldn't create szTemp to handle the message\n");
-                return;
-            }
-            Serial.printf("ws[%s][%u] handleTextMessage(%s)\n", 
-                server->url(), client->id(),
-                szTemp
-            );
+            // // Life is WAY better if the message is a null terminated string
+            // uint8_t* szTemp = (uint8_t*)strndup((char*)data, len);
+            // if (!szTemp) {
+            //     Serial.printf("ws OOM couldn't create szTemp to handle the message\n");
+            //     return;
+            // }
+            // Serial.printf("ws[%s][%u] handleTextMessage(%s)\n", 
+            //     server->url(), client->id(),
+            //     szTemp
+            // );
 
-            handleTextMessage(client, szTemp, len);
-            free(szTemp);
+            // handleTextMessage(client, szTemp, len);
+            // free(szTemp);
 
+            // Store it away
+            ClientCtx* ctx = ctxForClient(client);
+            if (ctx)
+            {
+                ctx->incoming.pushCStr((char*)data, len);
+            }            
         
         } else {
             Serial.printf("\nXXXX Not handling segmented messages\n");
@@ -891,6 +905,34 @@ WebUI::sendUpdates()
     return; 
 }
 
+
+void
+WebUI::handleIncomings()
+{
+    ClientCtx* pCur = pClientCtxs;
+    if (!pCur) return;
+
+    uint8_t* data;
+    size_t len;
+    while(pCur)
+    {
+        AsyncWebSocketClient* client = socket.client(pCur->id);
+
+        while(pCur->incoming.hasBuffers())
+        {
+            data = pCur->incoming.peek(&len);
+            if (!data) break;
+
+            handleTextMessage(client, data, len);
+
+            pCur->incoming.pop();
+        }
+
+        pCur = pCur->pNext;
+    }   
+    
+    return; 
+}
 ///////////////////////
 // Stream interface for logging
 

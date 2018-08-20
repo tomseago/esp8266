@@ -14,7 +14,8 @@ const uint32_t STA_Attempt_Window = 20000;
 const uint32_t STA_Attempt_Check_Delay = 2000;
 
 // Use , in this ip because it goes in the IPAddress constructor
-#define MT_PEER_BASE_ADDRESS     10,7,10,1
+// #define MT_PEER_BASE_ADDRESS     10,7,10,1
+#define MT_PEER_BASE_ADDRESS     10,10,10,10
 #define MT_STATIC_MASTER_ADDRESS 10,0,1,200
 
 
@@ -395,11 +396,12 @@ MsgTube::begin()
         WiFi.softAP(szName, szPassword);
 
 
-        IPAddress localIp(10, 7, 0, 1);
-        IPAddress gateway(10, 7, 0, 1);
+        IPAddress localIp(MT_PEER_BASE_ADDRESS);
+        IPAddress gateway(MT_PEER_BASE_ADDRESS);
         IPAddress subnet(255, 255, 255, 0);
 
-        localIp[2] = nodeId + 10;
+        // localIp[2] = nodeId + 10;
+        localIp[2] += nodeId - 1;
         // localIp[3] = nodeId + 10;
         gateway = localIp;
 
@@ -410,7 +412,7 @@ MsgTube::begin()
 
     //------- Setup our server for receiving connections
     server.onClient(std::bind(&MsgTube::sConnect, this, std::placeholders::_1, std::placeholders::_2), NULL);
-    server.begin();
+    //server.begin();
 
     Log.printf("MT: Started server on port %d\n", MTServerPort);
 
@@ -672,6 +674,10 @@ MsgTube::checkSTA()
         checkSTAStillOk(true);
         break;
 
+    case MeshMaster:
+        checkMeshhMaster();
+        break;
+
     case Disabled:
         // Do nothing
         break;
@@ -697,18 +703,18 @@ MsgTube::startSTAConnect(bool isSecondary)
         return;
     }
 
-    // Start by making sure we are consistently disconnected
-    Log.printf("MT: SSC WiFi.disconnect(true)\n");
-    WiFi.disconnect(true);
-
     if (nodeId == MTMasterAddr)
     {
         // Special case for master node, disabled
-        staStatus = Disabled;
-        nextSTACheck = (uint32_t)-1;
-        Log.printf("MT: SSC isMaster, disabling sta connect, return\n");
+        staStatus = MeshMaster;
+        // nextSTACheck = (uint32_t)-1;
+        Log.printf("MT: SSC isMaster, going into mesh master mode\n");
         return;
     }
+
+    // Start by making sure we are consistently disconnected
+    Log.printf("MT: SSC WiFi.disconnect(true)\n");
+    WiFi.disconnect(true);
 
     // Configure the next node towards 0
     uint8_t nextNodeId = isSecondary ? nodeId - 2 : nodeId - 1;
@@ -915,6 +921,8 @@ MsgTube::checkStaticAttempt()
         staStatus = ConnectedStatic;
         nextSTACheck = millis() + STA_Connected_Recheck_Delay;
 
+        server.begin();
+
         if (nodeId == MTMasterAddr) {
             Log.printf("MT: Master node, wait for connections from others\n");
             return;
@@ -967,7 +975,9 @@ MsgTube::checkStaticStillOk()
     wl_status_t wifiStatus = WiFi.status();
     uint32_t after = millis();
 
-    Log.printf("MT: checkStaticStillOk() wifiStatus=%d time=%d\n", wifiStatus, after-before);
+    uint8_t serverStatus = server.status();
+
+    Log.printf("MT: checkStaticStillOk() wifiStatus=%d  serverStatus=%d time=%d\n", wifiStatus, serverStatus, after-before);
     // This is the only thing that means it's all good
     if (WL_CONNECTED == wifiStatus) {
         // Okay we have wifi.
@@ -990,9 +1000,41 @@ MsgTube::checkStaticStillOk()
     // If we were connected to primary and it failed, does that mean
     // we should immediately try secondary or not? For now, just
     // always restart at nothing.
+    server.end();
     staStatus = Nothing;
 }
 
+void
+MsgTube::checkMeshhMaster()
+{
+    wl_status_t wifiStatus = WiFi.status();
+    uint8_t serverStatus = server.status();
+
+    Log.printf("MT: checkMeshhMaster() wifiStatus=%d serverStatus=%d\n", wifiStatus, serverStatus);
+    // This is the only thing that means it's all good
+    // if (WL_CONNECTED == wifiStatus) {
+        // Okay we have wifi.
+
+        // For master, wifi is enough to declare happiness
+        if (!serverStatus)
+        {
+            Log.printf("MT: Starting server\n");
+            server.begin();
+        }
+        // else leave it along
+    // }
+    // else
+    // {
+    //     if (serverStatus)
+    //     {
+    //         // Seems odd, but clean it up just in case it's needed
+    //         Log.printf("MT: Stopping server\n");
+    //     }
+    //     server.end();
+    // }
+
+    nextSTACheck = millis() + STA_Connected_Recheck_Delay;
+}
 
 ///
 

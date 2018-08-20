@@ -8,6 +8,7 @@
 
 #include "LEDArt.h"
 
+#include "bufferQ.h"
 
 class WebUI : public Print, NexusListener
 {
@@ -66,6 +67,9 @@ private:
         
         bool wantsStateJSON; // if they have requested it
         bool needsStateJSON; // if something has changed since we last updated them
+
+        BufferQ incoming;
+        BufferQ outgoing;
 
         ClientCtx* pNext;
 
@@ -127,4 +131,6 @@ private:
     void setUpdateNeeded(AsyncWebSocketClient* client);
     bstring makeStateJSONMsg();
     void sendUpdates();
+
+    void handleIncomings();
 };

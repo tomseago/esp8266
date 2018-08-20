@@ -118,6 +118,7 @@ protected:
         TryingSecondary,
         ConnectedSecondary,
         Disabled,
+        MeshMaster,
 
         TryingStatic,
         ConnectedStatic,
@@ -151,6 +152,8 @@ protected:
     void checkSTAAttempt(bool isSecondary);
     void startSTANothingPeriod();
     void checkSTAStillOk(bool isSecondary);
+    
+    void checkMeshhMaster();
 
     void startStaticConnect();
     void checkStaticAttempt();
