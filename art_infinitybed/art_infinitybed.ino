@@ -1,5 +1,5 @@
 // The master node id is 1 to avoid weirdness with IP addresses
-#define NODE_ID 1
+#define NODE_ID 4
 
 #include <Arduino.h>
 //#include <WiFi.h>
@@ -81,9 +81,9 @@ void setup() {
   Log.printf("DB Log start\n");
 
   /////// Configure network and hardware UI
-//   msgTube.configure(NODE_ID, "SpaceFrame", "password");
-   msgTube.configure(NODE_ID, "Haus", "GundamWing");
-   msgTube.enableStatic();
+   msgTube.configure(NODE_ID, "SpaceFrame", "password");
+//   msgTube.configure(NODE_ID, "Haus", "GundamWing");
+//   msgTube.enableStatic();
    msgTube.begin();
 
 //  hausFan.configure("InfinityBed", "Password");

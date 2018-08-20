@@ -562,7 +562,6 @@ LEDArtPiece::animateChannel(LEDAnimationType type, uint32_t now)
             {
                 Log.printf("PIECE: AC Starting prepared animation '%s'\n", szPreparedAnimName);
                 nexus.usePreparedState();
-                nexus.clearPreparedState();
 
                 // Set the geometry if we can
                 LEDArtGeometry* pNextGeom = geomForName(szPreparedGeomName);
@@ -582,7 +581,13 @@ LEDArtPiece::animateChannel(LEDAnimationType type, uint32_t now)
                     // The nexus may care that we changed things
                     nexus.setGeometry(pCurrentGeom->szName, geomRotated, (uint32_t)this);                   
                 }
+                else 
+                {
+                    Log.printf("PIECE: AC could not find prepared geom '%s'\n", szPreparedGeomName);
+                }
 
+                // Can't clear the prepared state until done using szPreparedGeomName
+                nexus.clearPreparedState();                
 
                 startAnimation(pNext, false, now);
                 return;
@@ -676,12 +681,12 @@ LEDArtPiece::findNextGeometry(bool randomize, bool withCompat, bool* pRotated)
     if (pGeomRegistrations == pGeom && !pGeom->pNext) 
     {
         // Return the alternate, or don't
-        if (pGeom->canRotate && !withCompat || testAnimGeomCompat(pAnim, pGeom, !geomRotated))
+        if (pGeom->canRotate && (!withCompat || testAnimGeomCompat(pAnim, pGeom, !geomRotated)))
         {
             // Return the alternative
             if (pRotated)
             {
-                // Log.printf("PIECE: Special case 1 geom, rotate it\n");
+                Log.printf("PIECE: Special case 1 geom, rotate  pAnim=%s\n", pAnim ? pAnim->szName : "NULL");
                 *pRotated = !geomRotated;
             }
             return pGeom;
@@ -689,7 +694,7 @@ LEDArtPiece::findNextGeometry(bool randomize, bool withCompat, bool* pRotated)
         // else, sorry, only got the one, gotta live with it
         if (pRotated)
         {
-            // Log.printf("PIECE: Special case 1 geom, no rotation\n");
+            Log.printf("PIECE: Special case 1 geom, no change to rotation  pAnim=%s\n", pAnim ? pAnim->szName : "NULL");
             *pRotated = geomRotated;
         }
         return pGeom;
@@ -835,6 +840,8 @@ LEDArtPiece::findNextBaseAnimation(bool randomize, LEDArtGeometry* pGeom, bool r
     LEDAnimationChannel* pChannel = channels + LEDAnimationType_BASE;
     LEDArtAnimation* pAnim = pChannel->pRunning;
 
+    Log.printf("PIECE: findNextBaseAnimation pGeom=%s rotated=%d\n", pGeom ? pGeom->szName : "NULL", rotated);
+
     if (!pAnim) {
         // Nothing running, use the first registration as long as it is compatible
         // with the current geometry.
@@ -887,8 +894,18 @@ LEDArtPiece::findNextBaseAnimation(bool randomize, LEDArtGeometry* pGeom, bool r
         pNext = pNext->pNext;
     }
 
+    if (randomize)
+    {
+        // We maybe looked at everything and selected nothing, so try again
+        // without the randomize, presuming _something_ is compatible with
+        // the given geometry
+        Log.printf("PIECE: findNextBaseAnimation without randomize\n");
+        return findNextBaseAnimation(false, pGeom, rotated);
+    }
+
     // Oops! We didn't find a "next", but because we want to always have 
     // something, just return the current again...
+    Log.printf("PIECE: findNextBaseAnimation without random returning current anim, which may not be compatible with the requested geom\n");
     return pAnim;
 }
 

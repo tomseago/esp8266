@@ -8,12 +8,12 @@ Server laseServer;
 
 HashMap laseByClients = new HashMap();
 
-float phWidth = 200;
-float phHeight = 140;
+float phWidth = 150;
+float phHeight = 160;
 float phSpacing = 10;
 
 boolean drawHUD = true;
-int maxHUDIx = 4;
+int maxHUDIx = 12;
 
 void setup() {
   size(2048, 1024, P3D);

@@ -107,7 +107,7 @@ class LEDArtPiece {
     text(number, indexWidth, 20); 
     
     float tableWidth = phWidth - indexWidth - 2;
-    float tableSep = phWidth - (0.7 * tableWidth);
+    float tableSep = phWidth - (0.55 * tableWidth);
         
     textSize(12);
     float vH = textAscent() + textDescent();
@@ -115,7 +115,7 @@ class LEDArtPiece {
     float vHSpace = 2;
     
     float lineY = vSpacing;
-    for(int i=1; i<=7; i++) {
+    for(int i=1; i<=8; i++) {
       Integer key = new Integer(i);
       String label = (String)labels.get(key);
 

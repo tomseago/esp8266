@@ -334,15 +334,18 @@ Lase::sendLabels()
     writeCStr("Anim");
 
     writeByte(4);
-    writeCStr("When");
+    writeCStr("GeomId");
 
     writeByte(5);
-    writeCStr("N Anim");
+    writeCStr("When");
 
     writeByte(6);
-    writeCStr("SQE");
+    writeCStr("N Anim");
 
     writeByte(7);
+    writeCStr("SQE");
+
+    writeByte(8);
     writeCStr("Pixels @");
 
     writeByte(0);
@@ -375,6 +378,11 @@ Lase::sendValues()
     writeByte(0);
     writeCStr(nexus.getCurrentAnimName());
 
+    writeByte(4);
+    //writeCStr("GeomId");
+    writeByte(1);
+    writeUInt32(piece.geomId());
+
     uint32_t when;
     char* szGeomName;
     bool geomRotated;
@@ -382,22 +390,22 @@ Lase::sendValues()
 
     when = nexus.nextPreparedState(&szGeomName, &geomRotated, &szAnimName);
 
-    writeByte(4);
+    writeByte(5);
     //writeCStr("When");
     writeByte(1);
     writeUInt32(when);
 
-    writeByte(5);
+    writeByte(6);
     //writeCStr("N Anim");
     writeByte(0);
     writeCStr(szAnimName ? szAnimName : (char*)"NULL");
 
-    writeByte(6);
+    writeByte(7);
     //writeCStr("SQE");
     writeByte(1);
     writeUInt32(nexus.stateQEvents);
 
-    writeByte(7);
+    writeByte(8);
     //writeCStr("Pixels");
     writeByte(1);
     writeUInt32(pixelsFrameRate.avgIFTms());

@@ -56,7 +56,9 @@ Nexus::addListener(NexusListener* listener)
 void
 Nexus::randomizeAll(uint32_t source)
 {
+    Log.printf("NEXUS: randomizeAll src=%d\n",source);
     NexusState toApply;
+    gatherState(&toApply);
     randomizeState(&toApply);
     applyState(&toApply);
 }
@@ -408,8 +410,6 @@ Nexus::randomizeState(NexusState* state)
 void
 Nexus::applyState(NexusState* state)
 {
-    Log.printf("NEXUS: applyState state->mb=%d\n", state->maxBrightness);
-
     palette = (LEDArtAnimation::LEDPaletteType)state->palette;
     speedFactor = state->speedFactor;
     reverse = state->reverse;
@@ -421,6 +421,8 @@ Nexus::applyState(NexusState* state)
     geomRotated = state->geomRotated;
 
     // TODO: Update listeners????
+    Log.printf("NEXUS: applyState ");
+    logState(state, NULL, NULL);
 }
 
 void
