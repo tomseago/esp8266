@@ -19,7 +19,7 @@ void setup() {
   size(2048, 1024, P3D);
   
   cam = new PeasyCam(this, 5000);
-  cam.setMinimumDistance(2000);
+  cam.setMinimumDistance(1000);
   cam.setMaximumDistance(10000);
   
   //// The art pieces

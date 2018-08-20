@@ -65,8 +65,9 @@ class LEDArtPiece {
       pos.add(direction);
     }
     
+    // Back up half a space
     direction.setMag(spacing/2.0);
-    pos.add(direction);
+    pos.add(PVector.mult(direction, -1.0));
     return pos;
   }
   
@@ -213,7 +214,7 @@ class SimpleStrip extends LEDArtPiece {
 }
 
 final int NUM_SHORT = 16;
-final int NUM_LONG = 36;
+final int NUM_LONG = 34;
 
 float IPWidth = NUM_SHORT * SPACING_30_LED;
 float IPHeight = NUM_LONG * SPACING_30_LED;
@@ -231,7 +232,7 @@ class InfinityPanel extends LEDArtPiece {
     createPixels();
   }
   
-  protected void createPixels() {
+  protected void createPixelsOld() {
     type = PixelType.PT_RGBW;
     setNumberPixels(2 * (NUM_SHORT + NUM_LONG));
     
@@ -246,5 +247,35 @@ class InfinityPanel extends LEDArtPiece {
     
     // Reverse the long
     pos = createPixelStrip(SPACING_30_LED, pos, PVector.mult(secondDir,-1.0), NUM_SHORT+NUM_LONG+NUM_SHORT, NUM_LONG);
+  }
+  
+  protected void createPixels() {
+    type = PixelType.PT_RGBW;
+    setNumberPixels(2 * (NUM_SHORT + NUM_LONG));
+    
+    // First strip from origin 
+    int ssShort = 7;
+    int ssLong = NUM_SHORT-ssShort;
+    
+    PVector pos = origin.copy();
+    PVector offset = firstDir.copy().normalize().mult(SPACING_30_LED * ssLong);
+    pos.add(offset);
+    pos = createPixelStrip(SPACING_30_LED, pos, firstDir, 0, ssShort);
+    int index = ssShort;
+    
+    // Now a long one
+    pos = createPixelStrip(SPACING_30_LED, pos, secondDir, index, NUM_LONG);
+    index += NUM_LONG;
+    
+    // Reverse the short
+    pos = createPixelStrip(SPACING_30_LED, pos, PVector.mult(firstDir,-1.0), index, NUM_SHORT);
+    index += NUM_SHORT;
+    
+    // Reverse the long
+    pos = createPixelStrip(SPACING_30_LED, pos, PVector.mult(secondDir,-1.0), index, NUM_LONG);
+    index += NUM_LONG;
+    
+    // Finish with the ss long
+    pos = createPixelStrip(SPACING_30_LED, pos, firstDir, index, ssLong);
   }
 }
