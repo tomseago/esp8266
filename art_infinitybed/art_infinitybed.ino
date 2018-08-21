@@ -1,6 +1,6 @@
 #define ForceDefaults false
 #define NodeId 1
-#define FIRMWARE_VERSION  16
+#define FIRMWARE_VERSION  17
 
 // The master node id is 1 to avoid weirdness with IP addresses
 //#define NODE_ID 1
@@ -105,7 +105,7 @@ void setup() {
   );
 
   // Things we want to override stored values for in this firmware
-  NodeConfig.setLaseHost(IPAddress(10,10,10,4));
+  NodeConfig.setLaseHost(IPAddress(10,10,10,1));
 
   /////// Configure network and hardware UI
   // msgTube.enableStatic();

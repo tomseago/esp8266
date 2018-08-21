@@ -16,7 +16,8 @@ boolean drawHUD = true;
 int maxHUDIx = 12;
 
 void setup() {
-  size(2048, 1024, P3D);
+  //size(2048, 1024, P3D);
+  size(1024, 800, P3D);
   
   cam = new PeasyCam(this, 5000);
   cam.setMinimumDistance(1000);

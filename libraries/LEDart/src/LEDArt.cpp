@@ -162,7 +162,8 @@ float saturation(LAColor& rgbw) {
     float high = std::max(rgbw.R, std::max(rgbw.G, rgbw.B));
     if (high == 0.0) return 0;
 
-    uint8_t s = round(100.0 * ((high - low) / high));
+    // uint8_t s = round(100.0 * ((high - low) / high));
+    uint8_t s = round(200.0 * ((high - low) / high));
     // Log.printf("\n   sat=%d\n",s);
     return s;
 }

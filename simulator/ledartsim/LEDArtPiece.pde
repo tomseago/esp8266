@@ -104,7 +104,7 @@ class LEDArtPiece {
     textAlign(RIGHT);
     fill(#ffffff);
     textSize(20);
-    text(number, indexWidth, 20); 
+    text(number+1, indexWidth, 20); 
     
     float tableWidth = phWidth - indexWidth - 2;
     float tableSep = phWidth - (0.55 * tableWidth);
