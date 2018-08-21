@@ -152,3 +152,14 @@ public:
     virtual void animate(LEDArtPiece& piece, LEDAnimationParam p);
     virtual bool canUseGeom(uint16_t width, uint16_t height);
 };
+
+
+////////
+
+class LAA_RowScan : public LEDArtAnimation {
+public:
+    LAA_RowScan(char* szName);
+
+    virtual void animate(LEDArtPiece& piece, LEDAnimationParam p);
+    virtual bool canUseGeom(uint16_t width, uint16_t height);
+};

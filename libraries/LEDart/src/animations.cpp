@@ -282,29 +282,32 @@ LAA_BoxOutline::animate(LEDArtPiece& piece, LEDAnimationParam p) {
 
     piece.strip.ClearTo(black);
 
-    // uint16_t w = piece.topo.getWidth();
-    // uint16_t h = piece.topo.getHeight();
 
-    // for(int i=0; i<w; i++) {
-    //     piece.strip.SetPixelColor(piece.topo.Map(i, 0), green);
-    //     piece.strip.SetPixelColor(piece.topo.Map(i, h-1), green);
-    // }
-    // for(int i=0; i<h; i++) {
-    //     piece.strip.SetPixelColor(piece.topo.Map(0, i), blue);
-    //     piece.strip.SetPixelColor(piece.topo.Map(w-1, i), blue);
-    // }
+    uint16_t hPrimary = piece.geomPrimaryCount();
+    for(uint16_t prim = 0; prim < hPrimary; prim++) 
+    {
 
-    //////////
-    // currentType = Unit_SpecificRows;
+        if (prim == 0)
+        {
+            // Top 
+            piece.setPrimaryColor(prim, green);
+            continue;
+        }
+        if (prim == hPrimary - 1)
+        {
+            // Bottom
+            piece.setPrimaryColor(prim, cyan);
+            continue;
+        }
 
-    // setFullUnitColor(piece, 0, cyan);
-    // setFullUnitColor(piece, numUnits(piece)-1, purple);
+        // A middle section, so we want it's end pieces
 
-    // currentType = Unit_SpecificCols;
-
-    // setFullUnitColor(piece, 1, green);
-    // setFullUnitColor(piece, numUnits(piece)-2, blue);
-
+        // Rows may vary in length
+        uint16_t rowLength = piece.geomSecondaryCount(prim);
+        piece.setSecondaryColorInPrimary(prim, 0, red);
+        piece.setSecondaryColorInPrimary(prim, 1, blue);
+        piece.setSecondaryColorInPrimary(prim, rowLength-1, yellow);
+    }
 }
 
 
@@ -393,7 +396,9 @@ LAA_UnitFill::animate(LEDArtPiece& piece, LEDAnimationParam p)
 bool
 LAA_UnitFill::canUseGeom(uint16_t width, uint16_t height)
 { 
-    return height > width; 
+    return true;
+    // If you want it to be more picky for single strip scenarios
+    // return height > width; 
 }
 
 void
@@ -641,4 +646,55 @@ bool
 LAA_KittPallete::canUseGeom(uint16_t width, uint16_t height)
 { 
     return height > width; 
+}
+
+
+///////////////////
+
+LAA_RowScan::LAA_RowScan(char* szName) : 
+    LEDArtAnimation(szName)
+{
+}
+
+void
+LAA_RowScan::animate(LEDArtPiece& piece, LEDAnimationParam p) 
+{
+
+    // Map progress to a full back and forth loop
+    // float prog;
+    // if (p.progress < 0.5) {
+    //     prog = p.progress * 2.0;
+    // } else {
+    //     // Second half of things
+    //     prog = 2.0 - (p.progress * 2.0);
+    // }
+
+    float prog = p.progress;
+
+    uint16_t primaryCount = piece.geomPrimaryCount();
+
+    float rowHeight = 1.0 / (float)primaryCount;
+
+    for(int16_t pIx=0; pIx<primaryCount; pIx++) {
+        float ixProg = (float)pIx/(float)primaryCount;
+        float distance = fabsf(prog - ixProg);
+        //distance *= distance;
+
+        LAColor color;
+        if (distance < rowHeight) {
+            color = piece.nexus.foreground;
+            // color = red;
+        } else {
+            color = piece.nexus.background;
+            // color = blue;
+        }
+
+        piece.setPrimaryColor(pIx, color);
+    } 
+}
+
+bool
+LAA_RowScan::canUseGeom(uint16_t width, uint16_t height)
+{ 
+    return true;
 }

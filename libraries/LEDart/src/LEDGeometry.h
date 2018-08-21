@@ -31,10 +31,10 @@ public:
     {
     }
 
-    virtual uint16_t map(uint16_t x, uint16_t y) { return x; }
+    virtual uint16_t map(uint16_t x, uint16_t y) { return y; }
 
-    virtual uint16_t getWidth(int16_t rowIx=-1) { return pixelCount; }
-    virtual uint16_t getHeight() { return 1; }
+    virtual uint16_t getWidth(int16_t rowIx=-1) { return 1; }
+    virtual uint16_t getHeight() { return pixelCount; }
 };
 
 template <typename T> class LEDArtTopoGeometry : public LEDArtGeometry {

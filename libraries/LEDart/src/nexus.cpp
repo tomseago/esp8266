@@ -384,8 +384,22 @@ Nexus::randomizeState(NexusState* state)
     // speedFactor = 1.0;
     // state->foreground = LAColor(HslColor(((float)rand(1000))/1000.0, 0.6, 0.5));
     // state->background = LAColor(HslColor(((float)rand(1000))/1000.0, 0.3, 0.2));
-    state->foreground = LAColor(HslColor(((float)rand(1000))/1000.0, 1.0, (((float)rand(1000))/2000.0)+0.2));
-    state->background = LAColor(HslColor(((float)rand(1000))/1000.0, 1.0, 0.2));
+    float fHue = ((float)rand(1000))/1000.0;
+    float bHue = ((float)rand(1000))/1000.0;
+    if (fabs(bHue - fHue) < 0.2)
+    {
+        if (bHue > fHue)
+        {
+            bHue += 0.2;
+        }
+        else
+        {
+            fHue += 0.2;
+        }
+    }
+
+    state->foreground = LAColor(HslColor(fHue, 1.0, (((float)rand(1000))/2000.0)+0.2));
+    state->background = LAColor(HslColor(bHue, 1.0, 0.5));
 
     // To convert to RGBW...
     convertLAColor(state->foreground);

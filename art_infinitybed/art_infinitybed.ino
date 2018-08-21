@@ -1,6 +1,6 @@
 #define ForceDefaults false
 #define NodeId 1
-#define FIRMWARE_VERSION  17
+#define FIRMWARE_VERSION  50
 
 // The master node id is 1 to avoid weirdness with IP addresses
 //#define NODE_ID 1
@@ -16,6 +16,8 @@
 #include <nexus.h>
 #include <animations.h>
 #include <log.h>
+
+#include <spaceframe.h>
 
 #include <node_config.h>
 //#include <haus_fan.h> // instead of msg_tube when it won't have peers
@@ -46,28 +48,34 @@ const uint16_t PixelCount = 100;
 
 LEDArtPiece art(nx, PixelCount, MaxBrightness);
 
-LEDArtSingleGeometry geomAll("All", PixelCount);
+
+LEDArtSingleGeometry geomAll("All", PixelCount, false);
+SFGeomPanelEdges geomPanelEdges("Panel Edges");
+//SFGeomSideGrid geomSideGrid("Side Grid");
+SFGeomWrappedOver geomWrappedOver("Wrapped Over");
+SFGeomWrappedLong geomWrappedLong("Wrapped Long");
 
 
-// Bottom straps size
-//HarnessGeometry geom(30, 2);
-    
+// No    
 //LAA_Flood flood("Flood", RgbColor(128,0,0));
 LAA_Sparkle sparkle("Sparkle", PixelCount);
-LAA_Rainbow rainbow("Rainbow");
 //LAA_Line line("Line");
-//LAA_BoxOutline boxOutline("Box Outline");
+LAA_BoxOutline boxOutline("Box Outline");
 LAA_AllWhite allWhite("All White");
 //LAA_HalfWhite halfWhite("Half White");
 //
-LAA_UnitFill unitFill("Unit Fill");
-//LAA_RandoFill randoFill("Rando Fill");
-//LAA_PaletteFill paletteFill("Palette Fill");
+LAA_RandoFill randoFill("Rando Fill");
+LAA_PaletteFill paletteFill("Palette Fill");
 //
 //LAA_Kitt kitt("Kitt");
 //LAA_KittSmooth kittSmooth("Kitt Smooth");
 //
 //LAA_KittPallete kittPallete("Kitt Pallete");
+
+// Yes
+LAA_UnitFill unitFill("Unit Fill");
+LAA_Rainbow rainbow("Rainbow");
+LAA_RowScan rowScan("Row Scan");
 
 QuickButtons buttons(art, &allWhite);
 
@@ -105,7 +113,7 @@ void setup() {
   );
 
   // Things we want to override stored values for in this firmware
-  NodeConfig.setLaseHost(IPAddress(10,10,10,1));
+  NodeConfig.setLaseHost(IPAddress(10,10,10,4));
 
   /////// Configure network and hardware UI
   // msgTube.enableStatic();
@@ -120,7 +128,11 @@ void setup() {
 
   /////// Configure the art piece
   art.registerGeometry(&geomAll);
-//  art.registerGeometry(&geomRays);
+//  art.registerGeometry(&geomSideGrid);
+  art.registerGeometry(&geomPanelEdges);
+  art.registerGeometry(&geomWrappedOver);
+  art.registerGeometry(&geomWrappedLong);
+
 
   // Could set different defaults here if we care
   // nx.unitType = 1;
@@ -130,8 +142,7 @@ void setup() {
 
   // Default animation time is 16 seconds which is 8 bars at 120bpm
   // so when using a small duration setting it to a multiple of this is good
-  nx.maxDuration = 32000;
-  //nx.maxDuration = 256000;
+  nx.maxDuration = 256000;
 
   // For testing message tube we want small duration
   // nx.maxDuration = 3000;
@@ -141,18 +152,28 @@ void setup() {
   // Generally these shouldn't be registered because they're for flashlight mode  
 //  art.registerAnimation(&allWhite);
 //  art.registerAnimation(&halfWhite);
-//
-//  art.registerAnimation(&flood);
-  art.registerAnimation(&unitFill);
-//  art.registerAnimation(&randoFill);
-//  art.registerAnimation(&paletteFill);
-//  art.registerAnimation(&sparkle);
-//  art.registerAnimation(&line);
-  art.registerAnimation(&rainbow);
+
+
 //  art.registerAnimation(&boxOutline);
+
+//  art.registerAnimation(&flood);
+  art.registerAnimation(&randoFill);
+  art.registerAnimation(&paletteFill);
+  art.registerAnimation(&sparkle);
+//  art.registerAnimation(&line);
 //  art.registerAnimation(&kitt);
 //  art.registerAnimation(&kittSmooth);
+
 //  art.registerAnimation(&kittPallete);
+
+  art.registerAnimation(&unitFill);
+  art.registerAnimation(&rainbow);
+  art.registerAnimation(&rowScan);
+
+  // Things we don't want randomly selected
+  paletteFill.isEnabled = false;
+  sparkle.isEnabled = false;
+  
   art.begin();
 //
     nx.addListener(&art);
@@ -161,7 +182,7 @@ void setup() {
 //  // elsewhere right now
     art.startAnimation(&webui.statusAnim, false);
 
-    art.startAnimation(&rainbow, false);
+//    art.startAnimation(&rainbow, false);
 //    art.startAnimation(&wifiSync.statusAnim, false);
 //    art.startAnimation(&kittPallete, false);
 

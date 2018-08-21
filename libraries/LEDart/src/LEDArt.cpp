@@ -50,6 +50,12 @@ const LAColor Palette_WHITE_BLACK[] = {
     LAColor(255, 255, 255),
 };
 
+const LAColor Palette_WHITE_BLACK2[] = {
+    LAColor(10, 10, 10),
+    LAColor(96, 96, 96),
+    LAColor(255, 255, 255),
+};
+
 const LAColor Palette_JORDAN[] = {
     LAColor(0, 0, 0),
     LAColor(96, 96, 96),
@@ -72,6 +78,13 @@ const LAColor Palette_BLUES[] = {
     LAColor(1, 1, 5),
 };
 
+const LAColor Palette_BLUES2[] = {
+    LAColor(32, 74, 255),
+    LAColor(0, 23, 123),
+    LAColor(3, 19, 21),
+    LAColor(21, 18, 33),
+    LAColor(32, 74, 255),
+};
 
 const LAColor Palette_PINKS[] = {
     LAColor(255, 59, 51),
@@ -88,15 +101,22 @@ const LAColor Palette_REDS[] = {
     LAColor(0, 0, 0),
 };
 
+const LAColor Palette_REDS2[] = {
+    LAColor(255, 0, 0),
+    LAColor(225, 32, 5),
+    LAColor(35, 0, 0),
+    LAColor(40, 0, 0),
+};
+
 const LAColor* LEDArtAnimation::paletteColors[] = {
     Palette_RB,
     Palette_RGB,
     Palette_RYB,
-    Palette_WHITE_BLACK,
+    Palette_WHITE_BLACK2,
     Palette_MARDI_GRAS,
-    Palette_BLUES,
+    Palette_BLUES2,
     Palette_PINKS,
-    Palette_REDS,
+    Palette_REDS2,
 };
 
 // const uint8_t LEDArtAnimation::rybRainbowColorsCount = 3;

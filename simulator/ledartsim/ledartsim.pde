@@ -16,12 +16,14 @@ boolean drawHUD = true;
 int maxHUDIx = 12;
 
 void setup() {
-  //size(2048, 1024, P3D);
-  size(1024, 800, P3D);
+  size(2048, 1024, P3D);
+  //size(1024, 800, P3D);
   
   cam = new PeasyCam(this, 5000);
   cam.setMinimumDistance(1000);
   cam.setMaximumDistance(10000);
+  cam.setSuppressRollRotationMode();
+  cam.setWheelScale(0.2);
   
   //// The art pieces
   //setupSimpleStrips(4, 104);
@@ -172,9 +174,9 @@ void setupInfinityBed() {
   //////
   
   // top left end
-  origin = new PVector(-(IPWidth + widthSpace * 1.5), -IPHeight - 20, -(IPHeight / 2.0));
+  origin = new PVector(-(IPWidth + widthSpace * 1.5), -IPHeight - 20, +(IPHeight / 2.0));
   first = new PVector(-1, 0, 0); // left
-  second = new PVector(0, 0, 1); // towards
+  second = new PVector(0, 0, -1); // away
   pieces[4] = new InfinityPanel(origin, first, second);
 
   // top left middle
