@@ -1,13 +1,16 @@
-#define NODE_ID 1
+#define ForceDefaults false
+#define NodeId 1
+#define FIRMWARE_VERSION  50
 
-#include <ESP8266WiFi.h>
-  
+#include <Arduino.h>
 #include <ESPAsyncWebServer.h>
 
 #include <LEDArt.h>
 #include <nexus.h>
 #include <animations.h>
 #include <log.h>
+
+#include <node_config.h>
 
 #include <haus_fan.h> // instead of msg_tube when it won't have peers
 //#include <msg_tube.h>
@@ -71,7 +74,7 @@ WebUI webui(nx, art);
 
 //Pinger pinger;
 
-Lase lase(IPAddress(10,0,1,10), nx, art);
+Lase lase(nx, art);
 
 void setup() {
 
@@ -83,10 +86,23 @@ void setup() {
   Log.setSerialEnabled(true);
   Log.printf("DB Log start\n");
 
+  NodeConfig.begin(
+    ForceDefaults, 
+    NodeId, 
+    "TomArtBrainHat", "ILoveTwinks", 
+    (uint32_t)IPAddress(10,0,1,10),  // Lase Host
+    (uint32_t)IPAddress(10,10,9,10), // Base address for peers in mesh mode
+    
+    (uint32_t)IPAddress(10,10,10,100),  // Static mode address of the master
+    (uint32_t)IPAddress(10,10,10,254)  // Static mode gateway for the master
+  );
+
+  // Things we want to override stored values for in this firmware
+  NodeConfig.setLaseHost(IPAddress(10,10,10,4));
+
   /////// Configure network and hardware UI
   // msgTube.configure(NODE_ID, "TomArtFIPStrip", "ILoveTwinks");
   // msgTube.begin();
-  hausFan.configure("TomArtBrainHat", "ILoveTwinks");
   hausFan.setPossibleNet(false, "Haus", "GundamWing");
   hausFan.begin();
   

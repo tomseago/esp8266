@@ -23,9 +23,6 @@ protected:
 
     STAStatus staStatus = Nothing;
 
-    char* szAPName;
-    char* szAPPassword;
-
     char* szSTAName[2];
     char* szSTAPassword[2];
 

@@ -2,6 +2,7 @@
 
 #include "haus_fan.h"
 #include "log.h"
+#include "node_config.h"
 
 #ifdef ESP32
 #include <WiFi.h>
@@ -23,16 +24,6 @@ HausFan::HausFan()
 
 }
 
-bool 
-HausFan::configure(const char* szAPName, const char* szAPPassword)
-{
-    this->szAPName = (char*)szAPName;
-    this->szAPPassword = (char*)szAPPassword;
-
-    //WiFi.mode(WIFI_AP);
-    return true;
-}
-
 void
 HausFan::setPossibleNet(bool isSecondary, const char *szName, const char *szPassword)
 {
@@ -51,12 +42,12 @@ HausFan::begin()
 
     //------ Configure the AP side of things
 
-    Log.printf("HF: Starting soft AP %s %s\n", szAPName, szAPPassword);
-    WiFi.softAP(szAPName, szAPPassword);
+    Log.printf("HF: Starting soft AP %s %s\n", NodeConfig.wifiBaseName(), NodeConfig.wifiPassword());
+    WiFi.softAP(NodeConfig.wifiBaseName(), NodeConfig.wifiPassword());
 
 
-    IPAddress localIp(10, 8, 8, 8);
-    IPAddress gateway(10, 8, 8, 8);
+    IPAddress localIp = NodeConfig.staticMasterIP();
+    IPAddress gateway = NodeConfig.staticGateway();
     IPAddress subnet(255, 255, 255, 0);
 
     // localIp[2] = nodeId + 10;
