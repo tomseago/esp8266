@@ -2,7 +2,7 @@
 #include "nexus.h"
 
 const uint32_t QueryInterval = 5000;
-const int32_t JumpInterval = 1000;
+const int32_t JumpInterval = 20;
 const size_t StateSize = 100;
 
 WiFiSync::StatusAnim::StatusAnim(WiFiSync& parent) : 

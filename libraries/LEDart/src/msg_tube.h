@@ -12,8 +12,11 @@
 #include <ESPAsyncTCP.h>
 #endif
 
+#include <WiFiUdp.h>
+
 const uint16_t MTServerPort = 2000;
 const uint8_t MTBroadcastAddr = 255;
+const uint16_t MTUDPPort = 2001;
 
 const uint8_t MTMasterAddr = 1;
 
@@ -37,6 +40,7 @@ class MTListener;
 // Internal ones
 class MTClientConnection;
 
+#include "node_config.h"
 
 class MTListener {
     friend MsgTube;
@@ -83,6 +87,9 @@ protected:
     void readDataLenDone(bool ok, void * ret);
     void readDataDone(bool ok, void * ret);
 
+    bool readFromUDP(WiFiUDP* pUDP);
+    void writeToUDP(WiFiUDP* pUDP);
+
 public:
     bool isBroadcast() { return dest == MTBroadcastAddr; }
 
@@ -125,10 +132,13 @@ protected:
 
     STAStatus staStatus = Nothing;    
 
-    uint8_t nodeId;
-    char* szBaseName;
-    char* szPassword;
     bool isStaticMode;
+    bool useUDP;
+
+    WiFiUDP* pUDP = NULL;
+    MTMessage udpMsg; // For reading from UDP
+    uint8_t maxNodes = 0;
+    IPAddress* learnedIPs;
 
     MTListener* listeners = NULL;
 
@@ -158,21 +168,22 @@ protected:
 
     void handleMessage(MTMessage* msg);
 
+    void receiveUDP();
+    void sendUDP(MTMessage* msg);
+
 public:
     MsgTube();
-
-    // Before calling begin set config data
-    bool configure(const uint8_t nodeId, const char* szBaseName, const char* szPassword);
 
     // Default mode is mesh, but this will put us into static mode (one time config before
     // calling begin)
     void enableStatic();
+    void enableUDP(uint8_t maxNodes); // will also enable static
 
     void begin();
     void loop();
 
-    uint8_t getNodeId() { return nodeId; }
-    bool isMaster() { return nodeId == MTMasterAddr; }
+    uint8_t getNodeId() { return NodeConfig.nodeId(); }
+    bool isMaster() { return NodeConfig.nodeId() == MTMasterAddr; }
 
     void addListener(MTListener* listener);
 

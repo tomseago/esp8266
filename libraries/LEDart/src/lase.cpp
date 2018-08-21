@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include "log.h"
+#include "node_config.h"
 
 #ifdef ESP32
 #include <WiFi.h>
@@ -35,6 +36,11 @@ PersistentConnection::begin()
 void
 PersistentConnection::loop()
 {
+    // If these aren't set, don't do anything, but still loop because maybe
+    // they can be set in the future.
+    uint32_t addr = (uint32)serverAddr;
+    if (!addr || !port) return;
+
     checkClient();
 }
 
@@ -53,7 +59,11 @@ PersistentConnection::checkClient()
     if (forceDisconnect)
     {
         forceDisconnect = false;
-        WiFi.disconnect(true);
+        //WiFi.disconnect(true);
+        if (client)
+        {
+            client->close();
+        }
         nextCheck = now + PC_Backoff_Delay;
         return;
     }
@@ -82,6 +92,8 @@ PersistentConnection::createClient()
 {
     // Before we can start, we must be in a state of connected
     wl_status_t wifiStatus = WiFi.status();
+
+    Log.printf("PC: createClient() status=%d\n", wifiStatus);
 
     // This is the only thing that means it's all good
     if (WL_CONNECTED != wifiStatus) {
@@ -146,7 +158,13 @@ PersistentConnection::cError(void* context, AsyncClient* client, int8_t error)
     // Nuke wifi by disconnecting when this happens. We would have only tried if
     // we thought wifi was good, but apparently it is not.
     // Wait, no! This probably just means the server isn't running!!!!
-    // forceDisconnect = true;
+    //forceDisconnect = true;
+    if (!tcpBuffer)
+    {
+        // Close the client because there is no tcpBuffer to do so
+        delete this->client;
+        this->client = NULL;
+    }
 }
 
 bool
@@ -229,9 +247,8 @@ PersistentConnection::writeCStr(char* sz)
 const uint32_t Lase_Value_Interval = 1000;
 const uint32_t Lase_Pixel_Interval = 100;
 
-Lase::Lase(IPAddress serverAddr, uint8_t id, Nexus &nexus, LEDArtPiece &piece) :
-    PersistentConnection(serverAddr, 7453),
-    id(id),
+Lase::Lase(Nexus &nexus, LEDArtPiece &piece) :
+    PersistentConnection((uint32_t)0, 7453),
     nexus(nexus),
     piece(piece),
     pixelsFrameRate(20)
@@ -242,6 +259,7 @@ Lase::Lase(IPAddress serverAddr, uint8_t id, Nexus &nexus, LEDArtPiece &piece) :
 void
 Lase::begin()
 {
+    serverAddr = NodeConfig.laseHost();
     PersistentConnection::begin();
 }
 
@@ -309,7 +327,7 @@ Lase::sendSetup()
     // uint16 numPixels
     // uint8  bytesPerPixel
     writeByte(2);
-    writeUInt16(id);
+    writeUInt16(NodeConfig.nodeId()-1);
     writeUInt16(piece.strip.PixelCount());
     writeByte(piece.strip.PixelSize());
 }

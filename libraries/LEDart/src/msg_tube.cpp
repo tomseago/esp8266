@@ -13,11 +13,6 @@ const uint32_t STA_Attempt_Window = 20000;
 
 const uint32_t STA_Attempt_Check_Delay = 2000;
 
-// Use , in this ip because it goes in the IPAddress constructor
-#define MT_PEER_BASE_ADDRESS     10,7,10,1
-#define MT_STATIC_MASTER_ADDRESS 10,0,1,200
-
-
 class MTClientConnection {    
 
     MTMessage msg;
@@ -322,6 +317,70 @@ MTMessage::readDataDone(bool ok, void * ret)
     conn->messageDone(true);
 }
 
+bool
+MTMessage::readFromUDP(WiFiUDP* pUDP)
+{
+    if (!pUDP) return false;
+
+    int avail = pUDP->available();
+    Log.printf("MT: Read from UDP avail=%d\n", avail);
+
+    if (avail < sizeof(id))
+    {
+        Log.printf("MT: ERROR: UDP message didn't have enough bytes for id\n");
+        return false;
+    }
+    pUDP->read((unsigned char*)&id, sizeof(id));
+    avail -= sizeof(id);
+
+    if (avail < sizeof(src))
+    {
+        Log.printf("MT: ERROR: UDP message didn't have enough bytes for src\n");
+        return false;
+    }
+    pUDP->read((unsigned char*)&src, sizeof(src));
+    avail -= sizeof(src);
+
+    if (avail < sizeof(dest))
+    {
+        Log.printf("MT: ERROR: UDP message didn't have enough bytes for dest\n");
+        return false;
+    }
+    pUDP->read((unsigned char*)&dest, sizeof(dest));
+    avail -= sizeof(dest);
+
+    if (avail < sizeof(type))
+    {
+        Log.printf("MT: ERROR: UDP message didn't have enough bytes for type\n");
+        return false;
+    }
+    pUDP->read((unsigned char*)&type, sizeof(type));
+    avail -= sizeof(type);
+
+    if (avail < sizeof(length))
+    {
+        Log.printf("MT: ERROR: UDP message didn't have enough bytes for id\n");
+        return false;
+    }
+    pUDP->read((unsigned char*)&length, sizeof(length));
+    avail -= sizeof(length);
+
+    if (length > capacity)
+    {
+        Log.printf("MT: ERROR: UDP message has data length %d but capacity is %d\n", length, capacity);
+        return false;
+    }
+
+    if (length > avail)
+    {
+        Log.printf("MT: ERROR: UDP data length=%d but avail is only=%d\n", length, avail);
+        return false;
+    }
+    pUDP->read((unsigned char*)data, length);
+
+    return true;
+}
+
 ////
 
 // Send the message. If something goes bad presumable the connection closes???
@@ -349,30 +408,56 @@ MTMessage::sendTo(MTClientConnection* conn)
     conn->wantsFlush = true;
 }
 
+void
+MTMessage::writeToUDP(WiFiUDP* pUDP)
+{
+    if (!pUDP) return;
+
+    Log.printf("MT: Writing %d(%d: %d->%d) to UDP\n", id, type, src, dest);
+
+    pUDP->write((uint8_t*)&id, sizeof(id));
+    pUDP->write((uint8_t*)&src, sizeof(src));
+    pUDP->write((uint8_t*)&dest, sizeof(dest));
+    pUDP->write((uint8_t*)&type, sizeof(type));
+    pUDP->write((uint8_t*)&length, sizeof(length));
+
+    if (length > 0)
+    {
+        pUDP->write(data, length);
+    }
+}
 
 /////////////////////////////////////////////////////////////////////////////////////
 
 MsgTube::MsgTube() :
-    server(MTServerPort)
+    server(MTServerPort),
+    udpMsg(1024)
 {
 
-}
-
-bool 
-MsgTube::configure(const uint8_t nodeId, const char* szBaseName, const char* szPassword)
-{
-    this->nodeId = nodeId;
-    this->szBaseName = (char*)szBaseName;
-    this->szPassword = (char*)szPassword;
-
-    //WiFi.mode(WIFI_AP);
-    return true;
 }
 
 void
 MsgTube::enableStatic()
 {
     isStaticMode = true;
+}
+
+void
+MsgTube::enableUDP(uint8_t maxNodes)
+{
+    isStaticMode = true;
+    useUDP = true;
+
+    maxNodes++;
+
+    pUDP = new WiFiUDP();
+    this->maxNodes = maxNodes;
+    learnedIPs = (IPAddress*)malloc(maxNodes * sizeof(IPAddress));
+    // Start with everyone being broadcast is the way we reach them
+    // This is some legit ignoring C++ decoration of memory...
+    memset(learnedIPs, 0xff, maxNodes * sizeof(IPAddress));
+
+    // But for master we know the IP yeah? BUT, let us learn it...
 }
 
 void
@@ -388,24 +473,29 @@ MsgTube::begin()
     //------ Configure the AP side of things
     if (!isStaticMode)
     {
-        char szName[strlen(szBaseName) + 3];
-        sprintf(szName, "%s%d", szBaseName, nodeId);
+        WiFi.mode(WIFI_AP_STA);
+        char szName[strlen(NodeConfig.wifiBaseName()) + 3];
+        sprintf(szName, "%s%d", NodeConfig.wifiBaseName(), NodeConfig.nodeId());
 
-        Log.printf("MT: Starting soft AP %s %s\n", szName, szPassword);
-        WiFi.softAP(szName, szPassword);
+        Log.printf("MT: Starting soft AP %s %s\n", szName, NodeConfig.wifiPassword());
+        WiFi.softAP(szName, NodeConfig.wifiPassword());
 
 
-        IPAddress localIp(10, 7, 0, 1);
-        IPAddress gateway(10, 7, 0, 1);
+        IPAddress localIp(NodeConfig.apBaseIP());
+        IPAddress gateway(NodeConfig.apBaseIP());
         IPAddress subnet(255, 255, 255, 0);
 
-        localIp[2] = nodeId + 10;
+        localIp[2] = NodeConfig.nodeId() + 10;
         // localIp[3] = nodeId + 10;
         gateway = localIp;
 
 
         Log.printf("MT: Calling softAPConfig(%s, %s, %s)\n", localIp.toString().c_str(), gateway.toString().c_str(), subnet.toString().c_str());
         WiFi.softAPConfig(localIp, gateway, subnet);
+    }
+    else
+    {
+        WiFi.mode(WIFI_STA);        
     }
 
     //------- Setup our server for receiving connections
@@ -432,7 +522,10 @@ MsgTube::loop()
 
         cursor = next;
     }
+
+    receiveUDP();
 }
+
 
 void
 MsgTube::addListener(MTListener* listener)
@@ -452,7 +545,7 @@ MsgTube::newMessage(uint16_t capacity)
     MTMessage* msg = new MTMessage(capacity);
     if (msg)
     {
-        msg->src = nodeId;
+        msg->src = NodeConfig.nodeId();
     }
     return msg;
 }
@@ -464,55 +557,66 @@ MsgTube::sendMessage(MTMessage* msg)
 {
     if (!msg) return;
 
+    uint8_t nodeId = NodeConfig.nodeId();
+
     if (msg->dest == nodeId)
     {
         // Refuse to send messages to ourself
         return;
     }
 
-    bool sendAbove = false;
-    bool sendBelow = false;
-
-    if (msg->src == nodeId)
+    if (useUDP)
     {
-        // We are sending it, so use the destination to know above or below.
-        if (msg->dest == MTBroadcastAddr)
-        {
-            sendAbove = true;
-            sendBelow = true;
-        }
-        else
-        {
-            sendAbove = msg->dest < nodeId;
-            sendBelow = msg->dest > nodeId;
-        }
+        // Perhapse UDP?
+        sendUDP(msg);
     }
     else
     {
-        // Look at the source and send it the opposite direction
-        sendAbove = msg->src > nodeId;
-        sendBelow = msg->src < nodeId;
-    }    
+        bool sendAbove = false;
+        bool sendBelow = false;
 
-    MTClientConnection* cursor = clientConns;
-
-    while(cursor)
-    {
-        // Because sending the message might do a failure that deletes it maybe??
-        MTClientConnection* next = cursor->next;
-
-        if (sendAbove && cursor->addr < nodeId)
+        if (msg->src == nodeId)
         {
-            msg->sendTo(cursor);
+            // We are sending it, so use the destination to know above or below.
+            if (msg->dest == MTBroadcastAddr)
+            {
+                sendAbove = true;
+                sendBelow = true;
+            }
+            else
+            {
+                sendAbove = msg->dest < nodeId;
+                sendBelow = msg->dest > nodeId;
+            }
         }
-        if (sendBelow && cursor->addr > nodeId)
+        else
         {
-            msg->sendTo(cursor);
-        }
+            // Look at the source and send it the opposite direction
+            sendAbove = msg->src > nodeId;
+            sendBelow = msg->src < nodeId;
+        }    
 
-        // Loop!
-        cursor = next;
+        MTClientConnection* cursor = clientConns;
+
+        while(cursor)
+        {
+            // Because sending the message might do a failure that deletes it maybe??
+            MTClientConnection* next = cursor->next;
+
+            if (sendAbove && cursor->addr < nodeId)
+            {
+                msg->sendTo(cursor);
+            }
+            if (sendBelow && cursor->addr > nodeId)
+            {
+                msg->sendTo(cursor);
+            }
+
+            // Loop!
+            cursor = next;
+        }
     }
+
     Log.printf("MT: sendMessage() complete\n");
 }
 
@@ -554,7 +658,7 @@ MsgTube::addConnection(MTClientConnection* conn)
     clientConns = conn;
 
     // dumpClientConns();
-    conn->sendAddr(nodeId);    
+    conn->sendAddr(NodeConfig.nodeId());    
 }
 
 void
@@ -601,7 +705,7 @@ MsgTube::receivedMessage(MTClientConnection* conn, MTMessage* msg)
 {
     Log.printf("MT: Received a complete message\n");
 
-    if (msg->dest == nodeId || msg->dest == MTBroadcastAddr)
+    if (msg->dest == NodeConfig.nodeId() || msg->dest == MTBroadcastAddr)
     {
         // It's for me!
         handleMessage(msg);
@@ -690,7 +794,7 @@ void
 MsgTube::startSTAConnect(bool isSecondary)
 {    
     Log.printf("MT: startSTAConnect(isSecondary=%s)\n", isSecondary ? "true": "false");
-    if ((nodeId == MTMasterAddr+1) && isSecondary)
+    if ((NodeConfig.nodeId() == MTMasterAddr+1) && isSecondary)
     {
         // There is no secondary, but we might want to try again for the primary
         startSTANothingPeriod();
@@ -701,7 +805,7 @@ MsgTube::startSTAConnect(bool isSecondary)
     Log.printf("MT: SSC WiFi.disconnect(true)\n");
     WiFi.disconnect(true);
 
-    if (nodeId == MTMasterAddr)
+    if (NodeConfig.nodeId() == MTMasterAddr)
     {
         // Special case for master node, disabled
         staStatus = Disabled;
@@ -711,12 +815,12 @@ MsgTube::startSTAConnect(bool isSecondary)
     }
 
     // Configure the next node towards 0
-    uint8_t nextNodeId = isSecondary ? nodeId - 2 : nodeId - 1;
-    char szNextNodeName[strlen(szBaseName) + 3];
-    sprintf(szNextNodeName, "%s%d", szBaseName, nextNodeId);
+    uint8_t nextNodeId = isSecondary ? NodeConfig.nodeId() - 2 : NodeConfig.nodeId() - 1;
+    char szNextNodeName[strlen(NodeConfig.wifiBaseName()) + 3];
+    sprintf(szNextNodeName, "%s%d", NodeConfig.wifiBaseName(), nextNodeId);
 
     Log.printf("MT: SSC WiFi.begin(%s)\n", szNextNodeName);
-    WiFi.begin(szNextNodeName, szPassword);
+    WiFi.begin(szNextNodeName, NodeConfig.wifiPassword());
 
     // Start checking status to see if we get connected
     staAttemptBegan = millis();
@@ -758,8 +862,8 @@ MsgTube::checkSTAAttempt(bool isSecondary)
 
         // Create the local connection
         AsyncClient* client = new AsyncClient();
-        IPAddress peer(MT_PEER_BASE_ADDRESS);
-        peer[2] += isSecondary ? nodeId - 2 : nodeId - 1;
+        IPAddress peer(NodeConfig.apBaseIP());
+        peer[2] += isSecondary ? NodeConfig.nodeId() - 2 : NodeConfig.nodeId() - 1;
 
         // touch it yet
         Log.printf("MT: Setting onConnect and onError handlers for new client\n");
@@ -861,11 +965,11 @@ MsgTube::startStaticConnect()
 
     // Even if master we must connect to the access point, but
     // if master we use a fixed ip
-    if (nodeId == MTMasterAddr)
+    if (NodeConfig.nodeId() == MTMasterAddr)
     {
-        IPAddress ip( MT_STATIC_MASTER_ADDRESS );
-        IPAddress gateway(MT_STATIC_MASTER_ADDRESS);
-        gateway[3] = 1;
+        IPAddress ip( NodeConfig.staticMasterIP() );
+        IPAddress gateway(NodeConfig.staticGateway());
+        //gateway[3] = 254; // This should move to configuration
 
         IPAddress subnet(255, 255, 255, 0);
 
@@ -874,8 +978,8 @@ MsgTube::startStaticConnect()
     }
 
     // Use the base name directly because it is an external AP
-    Log.printf("MT: SSt WiFi.begin(%s)\n", szBaseName);
-    WiFi.begin(szBaseName, szPassword);
+    Log.printf("MT: SSt WiFi.begin(%s)\n", NodeConfig.wifiBaseName());
+    WiFi.begin(NodeConfig.wifiBaseName(), NodeConfig.wifiPassword());
 
     // Start checking status to see if we get connected
     staAttemptBegan = millis();
@@ -915,31 +1019,47 @@ MsgTube::checkStaticAttempt()
         staStatus = ConnectedStatic;
         nextSTACheck = millis() + STA_Connected_Recheck_Delay;
 
-        if (nodeId == MTMasterAddr) {
-            Log.printf("MT: Master node, wait for connections from others\n");
-            return;
-        }
-
-        // We are not the master, so try to connect to it...
-
-        // Create the local connection
-        AsyncClient* client = new AsyncClient();
-        IPAddress peer(MT_STATIC_MASTER_ADDRESS); 
-
-        // touch it yet
-        Log.printf("MT: Setting onConnect and onError handlers for new client\n");
-        client->onConnect(std::bind(&MsgTube::sConnect, this, std::placeholders::_1, std::placeholders::_2), NULL);
-        client->onError(std::bind(&MsgTube::conError, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), NULL);
-
-        if (!client->connect(peer, MTServerPort))
+        if (useUDP) 
         {
-            // Aack!
-            Log.printf("MT: Unable to create AsyncClient so bailing to Nothing\n");
-            startSTANothingPeriod();
+            uint8_t beganUDP = pUDP->begin(MTUDPPort);
+            if (beganUDP) 
+            {
+                Log.printf("MT: Began listening for UDP on %d\n", MTUDPPort);
+            }
+            else
+            {
+                Log.printf("MT: Failed to begin UDP\n");
+            }
             return;
         }
+        else
+        {
+            if (NodeConfig.nodeId() == MTMasterAddr) {
+                Log.printf("MT: Master node, wait for connections from others\n");
+                return;
+            }
 
-        Log.printf("MT: New client connection for Static. Yay!!");
+            // We are not the master, so try to connect to it...
+
+            // Create the local connection
+            AsyncClient* client = new AsyncClient();
+            IPAddress peer(NodeConfig.staticMasterIP()); 
+
+            // touch it yet
+            Log.printf("MT: Setting onConnect and onError handlers for new client\n");
+            client->onConnect(std::bind(&MsgTube::sConnect, this, std::placeholders::_1, std::placeholders::_2), NULL);
+            client->onError(std::bind(&MsgTube::conError, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), NULL);
+
+            if (!client->connect(peer, MTServerPort))
+            {
+                // Aack!
+                Log.printf("MT: Unable to create AsyncClient so bailing to Nothing\n");
+                startSTANothingPeriod();
+                return;
+            }
+
+            Log.printf("MT: New client connection for Static. Yay!!");
+        }
 
         return;
     }
@@ -973,8 +1093,8 @@ MsgTube::checkStaticStillOk()
         // Okay we have wifi.
         nextSTACheck = millis() + STA_Connected_Recheck_Delay;
 
-        // For master, wifi is enough to declare happiness
-        if (nodeId == MTMasterAddr) {
+        // For master & UDP, having wifi is enough to declare happiness
+        if (NodeConfig.nodeId() == MTMasterAddr || useUDP) {
             return;
         }
 
@@ -1011,4 +1131,66 @@ MsgTube::handleMessage(MTMessage* msg)
 
 uint32_t MTMessage::nextIdVal = 1000;
 
+/////////
+
+void
+MsgTube::receiveUDP()
+{
+    if (!useUDP || !pUDP) return;
+
+    while(pUDP->parsePacket())
+    {
+        // There is something to read
+        if(udpMsg.readFromUDP(pUDP))
+        {
+            // Update our routing table to know that the source of this
+            // message is reachable at this IP (presuming it's not a broadcast right?)
+            if (udpMsg.src < maxNodes)
+            {
+                IPAddress srcAddr = pUDP->remoteIP();
+                // if (srcAddr[3] != 255)
+                // {
+                    learnedIPs[udpMsg.src] = srcAddr;
+                    Log.printf("MT: Learned ip %d.%d.%d.%d for node %d\n", srcAddr[0], srcAddr[1], srcAddr[2], srcAddr[3], udpMsg.src);
+                // }
+                // else
+                // {
+                //     Log.printf("MT: Received packet from broadcast addr from node %d\n", udpMsg.src);
+                // }
+            }
+
+            handleMessage(&udpMsg);
+        }
+        pUDP->flush();
+    }
+}
+
+void
+MsgTube::sendUDP(MTMessage* msg)
+{
+    if (!useUDP || !pUDP) return;
+
+    // Figure out an address for the message
+    IPAddress address(255, 255, 255, 255); // assume broadcast
+    if (msg->dest != MTBroadcastAddr)
+    {
+        if (msg->dest >= maxNodes)
+        {
+            Log.printf("MT: ERROR: Peer %d is beyond maxNodes. Can not send via UDP\n");
+            return;
+        }
+
+        address = learnedIPs[msg->dest];
+    }
+
+    pUDP->beginPacket(address, MTUDPPort);
+
+    msg->writeToUDP(pUDP);
+
+    pUDP->endPacket();
+}
+
+
+// We statically declare a message tube for the revolution!
 MsgTube msgTube;
+

@@ -63,7 +63,6 @@ protected:
     uint32_t nextValueTime;
     uint32_t nextPixelTime;    
 
-    uint8_t id;
     LEDArtPiece &piece;
     Nexus &nexus;
 
@@ -78,7 +77,7 @@ protected:
     void sendPixels();
 
 public:
-    Lase(IPAddress serverAddr, uint8_t id, Nexus &nexus, LEDArtPiece &piece);
+    Lase(Nexus &nexus, LEDArtPiece &piece);
 
     virtual void begin();
     virtual void loop();
