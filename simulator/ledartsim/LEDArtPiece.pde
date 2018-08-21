@@ -1,7 +1,7 @@
 public enum PixelType {
   PT_RGB,
-  PT_RBG,
-  PT_RGBW
+  PT_RGBW,
+  PT_GRBW,
 };
 
 int DATA_TIMEOUT = 1000;
@@ -159,20 +159,24 @@ class LEDArtPiece {
       }      
       int b = data[cursor++] & 0x00ff;
       
-      if (type == PixelType.PT_RGBW) {
+      if (type == PixelType.PT_RGBW || type == PixelType.PT_GRBW) {
         if (cursor==length) {
           break;
         }
         int w = data[cursor++] & 0x00ff;
-        pixels[pixelIx].setColor(r,g,b,w);
-      } else {
-        if (type == PixelType.PT_RBG) {
-          // SetColor wants RGB, but we have b & g swapped because of the type
-          pixels[pixelIx].setColor(r,b,g);
+        if (type == PixelType.PT_RGBW) {
+          pixels[pixelIx].setColor(r,g,b,w);
         } else {
+          pixels[pixelIx].setColor(g,r,b,w);
+        }
+      } else {
+        //if (type == PixelType.PT_RBG) {
+        //  // SetColor wants RGB, but we have b & g swapped because of the type
+        //  pixels[pixelIx].setColor(r,b,g);
+        //} else {
           //println("Set pixel "+pixelIx+" to "+r+", "+g+", "+b);
           pixels[pixelIx].setColor(r,g,b);
-        }
+        //}
       }
 
       pixelIx++;
@@ -250,11 +254,11 @@ class InfinityPanel extends LEDArtPiece {
   }
   
   protected void createPixels() {
-    type = PixelType.PT_RGBW;
+    type = PixelType.PT_GRBW;
     setNumberPixels(2 * (NUM_SHORT + NUM_LONG));
     
     // First strip from origin 
-    int ssShort = 7;
+    int ssShort = 9;
     int ssLong = NUM_SHORT-ssShort;
     
     PVector pos = origin.copy();

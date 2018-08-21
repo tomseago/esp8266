@@ -8,7 +8,7 @@
 // #define LAColor RgbColor
 
 // Infinity Bed
-#define LEDART_COLOR_FEATURE  NeoRgbwFeature  
+#define LEDART_COLOR_FEATURE  NeoGrbwFeature  
 #define LAColor RgbwColor
 
 

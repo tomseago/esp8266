@@ -160,8 +160,7 @@ void setupInfinityBed() {
   pieces[1] = new InfinityPanel(origin, first, second);
   
   // front right middle
-  origin.x += widthSpace;
-  first.mult(-1.0); // to the right now
+  origin.x += widthSpace + IPWidth;
   pieces[2] = new InfinityPanel(origin, first, second);
   
   // front right end
@@ -182,8 +181,7 @@ void setupInfinityBed() {
   pieces[5] = new InfinityPanel(origin, first, second);
   
   // top right middle
-  origin.x += widthSpace;
-  first.mult(-1.0); // to the right now
+  origin.x += widthSpace + IPWidth;
   pieces[6] = new InfinityPanel(origin, first, second);
   
   // top right end
@@ -202,11 +200,10 @@ void setupInfinityBed() {
   pieces[9] = new InfinityPanel(origin, first, second);
   
   // front right middle
-  origin.x += widthSpace;
-  first.mult(-1.0); // to the right now
+  origin.x += widthSpace + IPWidth;
   pieces[10] = new InfinityPanel(origin, first, second);
   
   // front right end
-  origin.x += IPWidth + widthSpace;
+  origin.x += widthSpace + IPWidth;
   pieces[11] = new InfinityPanel(origin, first, second);
  }
