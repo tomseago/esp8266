@@ -1,15 +1,23 @@
 #pragma once
 
 #ifndef LEDART_COLOR_FEATURE
+
 // strips
-// #define LEDART_COLOR_FEATURE  NeoGrbFeature
+#define LEDART_COLOR_FEATURE  NeoGrbFeature
 // bullets
 //#define LEDART_COLOR_FEATURE  NeoRgbFeature  
-// #define LAColor RgbColor
+
+#define LEDART_RGBW false
 
 // Infinity Bed
-#define LEDART_COLOR_FEATURE  NeoGrbwFeature  
+// #define LEDART_COLOR_FEATURE  NeoGrbwFeature  
+
+
+#if LEDART_RGBW
 #define LAColor RgbwColor
+#else
+#define LAColor RgbColor
+#endif
 
 
 

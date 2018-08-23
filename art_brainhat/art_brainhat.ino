@@ -35,19 +35,22 @@ const uint16_t PixelCount = 61;
 
 LEDArtPiece art(nx, PixelCount, MaxBrightness);
 
-LEDArtSingleGeometry geomAll("All", PixelCount);
+LEDArtSingleGeometry geomAll("All", PixelCount, false);
 
 
-uint16_t table[][24] = {
-  {  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23 },
-  { 24, 25, 25, 26, 27, 27, 28, 29, 29, 30, 31, 31, 32, 33, 33, 34, 35, 35, 36, 37, 37, 38, 39, 39 },
-  { 40, 40, 41, 41, 42, 42, 43, 43, 44, 44, 45, 45, 46, 46, 47, 47, 48, 48, 49, 49, 50, 50, 51, 51 },
-  { 52, 52, 53, 53, 53, 54, 54, 54, 55, 55, 55, 56, 56, 56, 57, 57, 57, 58, 58, 58, 59, 59, 59, 52 },
-  { 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60 }
+uint16_t table[] = {
+    0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 
+   24, 25, 25, 26, 27, 27, 28, 29, 29, 30, 31, 31, 32, 33, 33, 34, 35, 35, 36, 37, 37, 38, 39, 39, 
+   40, 40, 41, 41, 42, 42, 43, 43, 44, 44, 45, 45, 46, 46, 47, 47, 48, 48, 49, 49, 50, 50, 51, 51, 
+   52, 52, 53, 53, 53, 54, 54, 54, 55, 55, 55, 56, 56, 56, 57, 57, 57, 58, 58, 58, 59, 59, 59, 52, 
+   60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 
 };
-LEDArtTableGeometry geomRays("Rays", 5, 24, (uint16_t**)table);
+LEDArtTableGeometry geomRays("Rays", 5, 24, table);
+
+#include <circle_geom.h>
 
 // Bottom straps size
+
 //HarnessGeometry geom(30, 2);
     
 //LAA_Flood flood("Flood", RgbColor(128,0,0));
@@ -66,6 +69,7 @@ LAA_Kitt kitt("Kitt");
 LAA_KittSmooth kittSmooth("Kitt Smooth");
 
 LAA_KittPallete kittPallete("Kitt Pallete");
+LAA_RowScan rowScan("Row Scan");
 
 QuickButtons buttons(art, &halfWhite);
 
@@ -110,7 +114,9 @@ void setup() {
 
   /////// Configure the art piece
   art.registerGeometry(&geomAll);
-//  art.registerGeometry(&geomRays);
+  art.registerGeometry(&geomRays);
+  art.registerGeometry(&geomBackToFront);
+  art.registerGeometry(&geomSideToSide);
 
   // Could set different defaults here if we care
   // nx.unitType = 1;
@@ -124,21 +130,23 @@ void setup() {
  nx.maxDuration = 256000;
   
   art.registerAnimation(&webui.statusAnim);
-
-//  art.registerAnimation(&allWhite);
-//  art.registerAnimation(&halfWhite);
 //
-//  art.registerAnimation(&flood);
-  art.registerAnimation(&unitFill);
-  art.registerAnimation(&randoFill);
-  art.registerAnimation(&paletteFill);
+////  art.registerAnimation(&allWhite);
+////  art.registerAnimation(&halfWhite);
+////
+////  art.registerAnimation(&flood);
+//  art.registerAnimation(&unitFill);
+//  art.registerAnimation(&randoFill);
+//  art.registerAnimation(&paletteFill);
 //  art.registerAnimation(&sparkle);
-//  art.registerAnimation(&line);
-  art.registerAnimation(&rainbow);
-//  art.registerAnimation(&boxOutline);
-//  art.registerAnimation(&kitt);
-  art.registerAnimation(&kittSmooth);
-  art.registerAnimation(&kittPallete);
+////  art.registerAnimation(&line);
+//  art.registerAnimation(&rainbow);
+////  art.registerAnimation(&boxOutline);
+////  art.registerAnimation(&kitt);
+//  art.registerAnimation(&kittSmooth);
+//  art.registerAnimation(&kittPallete);
+
+  art.registerAnimation(&rowScan);
   art.begin();
 //
     nx.addListener(&art);
@@ -147,9 +155,9 @@ void setup() {
 //  // elsewhere right now
     art.startAnimation(&webui.statusAnim, false);
 
-    art.startAnimation(&unitFill, false);
+//    art.startAnimation(&unitFill, false);
 //    art.startAnimation(&wifiSync.statusAnim, false);
-    art.startAnimation(&kittPallete, false);
+//    art.startAnimation(&kittPallete, false);
 
 // Need to begin the strip when debugging, but art.begin() does this on it's own
 //    art.strip.Begin();
@@ -160,7 +168,7 @@ void setup() {
 
   // Do these last so randomization doesn't affect it
   nx.foreground = RgbColor(255,0,0);
-  nx.background = RgbColor(0, 0, 0);
+  nx.background = RgbColor(0, 0, 255);
   nx.speedFactor = 1.0;
   
 //  pinger.begin();

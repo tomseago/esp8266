@@ -75,7 +75,7 @@ PersistentConnection::checkClient()
 
     // There is a client so just make sure it is ok?
     if (!client->connecting() && !client->connected()) {
-        Log.printf("PC: Client in a bad state %s\n", client->stateToString());
+        //Log.printf("PC: Client in a bad state %s\n", client->stateToString());
         nextCheck = millis() + PC_Restart_Delay;
         return;
     }

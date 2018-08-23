@@ -473,7 +473,7 @@ Nexus::logName(uint16_t len, char* sz)
 void
 Nexus::logState(NexusState* state, char* szGeomName, char* szAnimName)
 {
-#if LAColor == RGBWColor
+#if LEDART_RGBW
     Log.printf("NEXUS STATE: p=%d, sf=%f, fg=(%d,%d,%d,%d) bg=(%d,%d,%d,%d) rev=%s geomRot=%s mb=%d", 
         state->palette, state->speedFactor, 
         state->foreground.R, state->foreground.G, state->foreground.B, state->foreground.W, 

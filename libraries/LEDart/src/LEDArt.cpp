@@ -175,7 +175,7 @@ LEDArtAnimation::clearTo(LEDArtPiece& piece, LAColor color, uint16_t start, uint
 /////
 
 
-#if LAColor == RGBWColor
+#if LEDART_RGBW
 
 float saturation(LAColor& rgbw) {
     float low = std::min(rgbw.R, std::min(rgbw.G, rgbw.B));

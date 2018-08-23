@@ -698,3 +698,54 @@ LAA_RowScan::canUseGeom(uint16_t width, uint16_t height)
 { 
     return true;
 }
+
+///////////////////
+
+/*
+LAA_RowScan::LAA_RowScan(char* szName) : 
+    LEDArtAnimation(szName)
+{
+}
+
+void
+LAA_RowScan::animate(LEDArtPiece& piece, LEDAnimationParam p) 
+{
+
+    // Map progress to a full back and forth loop
+    // float prog;
+    // if (p.progress < 0.5) {
+    //     prog = p.progress * 2.0;
+    // } else {
+    //     // Second half of things
+    //     prog = 2.0 - (p.progress * 2.0);
+    // }
+
+    float prog = p.progress;
+
+    uint16_t primaryCount = piece.geomPrimaryCount();
+
+    float rowHeight = 1.0 / (float)primaryCount;
+
+    for(int16_t pIx=0; pIx<primaryCount; pIx++) {
+        float ixProg = (float)pIx/(float)primaryCount;
+        float distance = fabsf(prog - ixProg);
+        //distance *= distance;
+
+        LAColor color;
+        if (distance < rowHeight) {
+            color = piece.nexus.foreground;
+            // color = red;
+        } else {
+            color = piece.nexus.background;
+            // color = blue;
+        }
+
+        piece.setPrimaryColor(pIx, color);
+    } 
+}
+
+bool
+LAA_RowScan::canUseGeom(uint16_t width, uint16_t height)
+{ 
+    return true;
+}*/
