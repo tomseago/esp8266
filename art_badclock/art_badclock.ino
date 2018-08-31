@@ -1,4 +1,7 @@
-#define NODE_ID 1
+#define ForceDefaults false
+#define NodeId 1
+#define FIRMWARE_VERSION  50
+
 
 #include <ESP8266WiFi.h>
   
@@ -9,6 +12,7 @@
 #include <animations.h>
 #include <log.h>
 
+#include <node_config.h>
 #include <haus_fan.h> // instead of msg_tube when it won't have peers
 //#include <msg_tube.h>
 // #include <wifisync.h>
@@ -28,7 +32,7 @@ Nexus nx;
 // Outside to inside 24, 16, 12, 8, 1 = 61  
 // 3.66 amps at full brightness, 2.7 amps @ 74% brightness = 188
 
-const uint8_t MaxBrightness = 32;
+const uint8_t MaxBrightness = 255;
 const uint16_t PixelCount = 114; // 4* 28 + 2 dots
 
 LEDArtPiece art(nx, PixelCount, MaxBrightness);
@@ -85,10 +89,20 @@ void setup() {
   Log.setSerialEnabled(true);
   Log.printf("DB Log start\n");
 
+  NodeConfig.begin(
+    ForceDefaults, 
+    NodeId, 
+    "TomArtBadClock", "ILoveTwinks", 
+    (uint32_t)IPAddress(10,0,1,10),  // Lase Host
+    (uint32_t)IPAddress(10,10,9,10), // Base address for peers in mesh mode
+    
+    (uint32_t)IPAddress(10,10,10,100),  // Static mode address of the master
+    (uint32_t)IPAddress(10,10,10,254)  // Static mode gateway for the master
+  );
+
   /////// Configure network and hardware UI
   // msgTube.configure(NODE_ID, "TomArtFIPStrip", "ILoveTwinks");
   // msgTube.begin();
-  hausFan.configure("TomArtBadClock", "ILoveTwinks");
   hausFan.setPossibleNet(false, "Haus", "GundamWing");
   hausFan.begin();
   

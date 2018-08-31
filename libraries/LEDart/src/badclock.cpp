@@ -26,6 +26,8 @@
 
 // using namespace std;
 
+#include "math.h"
+
 const LAColor red(255,0,0);
 const LAColor yellow(255,255,0);
 const LAColor green(0,255,0);
@@ -55,7 +57,12 @@ hoursAndMinutes(uint32_t seconds, uint8_t& hours, uint8_t& mins)
     hours = seconds / 3600;
     mins = (seconds / 60) - (hours * 60);
 
-    hours = hours % 24;
+    // hours = hours % 24;
+    hours = hours % 12;
+    if (!hours) 
+    {
+        hours = 12;
+    }
 }
 
 void
@@ -106,6 +113,10 @@ BadClock::DigitAnim::animate(LEDArtPiece& piece, LEDAnimationParam p)
 
     // Dots
     LAColor dotColor = parent.showDots ? (parent.inSetMode ? green : red ) : black;
+    if (parent.inDebug)
+    {
+        dotColor = parent.ignoreVariance ? yellow : purple;
+    }
     piece.strip.SetPixelColor(112, dotColor);
     piece.strip.SetPixelColor(113, dotColor);
 }
@@ -129,14 +140,42 @@ BadClock::begin()
     ButtonWatcher::begin();
 }
 
+uint32_t lastDebugPrint = 0;
+
 void
 BadClock::loop()
 {
     ButtonWatcher::loop();
 
     
-    uint32_t secs = (millis() / 1000) + offset;
+    uint32_t secs = (millis() / 1000) + offset + debugOffset;
 
+    // now vary it
+    float vector = 0.0;
+    float days = (float)secs / (3600.0 * 24.0);
+    float maxVar = 0.0;
+    int32_t variance = 0;
+    if (!ignoreVariance)
+    {
+        // Period of about 37 minutes for up down vector
+        vector = sinf(((secs % 2222) / 2222.0) * M_TWOPI);
+
+        // days * one hour (at 7 days, +-7 hours)
+        //maxVar = (secs / (24.0 * 3600.0) ) * 3600.0;
+        //maxVar = secs / 24.0; // linear
+        maxVar = powf((days / 5.0), 4) * 3600.0;
+
+        // Magnitude
+        variance = (int32_t)(vector * maxVar);
+    }
+
+    if (millis() - lastDebugPrint > 1000) 
+    {
+        lastDebugPrint = millis();
+        Log.printf("secs=%d, vector=%f, days=%f, maxVar=%f, variance=%d\n", secs, vector, days, maxVar, variance);
+    }
+
+    secs += variance;
 
     /*
     digits[0] = secs / 1000;
@@ -162,10 +201,6 @@ BadClock::loop()
     {
         hoursAndMinutes(secs, hours, mins);
     }
-    //  = secs / 3600;
-    // uint16_t mins = (secs / 60) - (hours * 60);
-
-    // hours = hours % 24;
 
     digits[0] = hours / 10;
     digits[1] = hours % 10;
@@ -230,6 +265,29 @@ BadClock::buttonFell(uint8_t button)
             break;
         }
     }
+    else if (inDebug)
+    {
+        switch(button)
+        {
+        case 0:
+            // Add 10 minutes
+            debugOffset += 600;
+            break;
+
+        case 1:
+            // Add 1 hour
+            debugOffset += 3600;
+            break;
+
+        case 2:
+            debugOffset = 0;
+            break;
+
+        case 3:
+            ignoreVariance = !ignoreVariance;
+            break;
+        }
+    }
     else
     {
         // Not in set mode
@@ -251,6 +309,7 @@ BadClock::buttonLongPress(uint8_t button)
         break;
 
     case 3:
+        inDebug = !inDebug;
         break;
     }
 }

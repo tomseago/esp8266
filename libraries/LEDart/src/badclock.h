@@ -35,7 +35,12 @@ private:
 
     bool inSetMode;
     bool showSeconds;
+
     uint32_t offset;
+    uint32_t debugOffset;
+
+    bool inDebug;
+    bool ignoreVariance;
 
     void resetSeconds();
 };
