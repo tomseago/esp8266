@@ -1,6 +1,6 @@
 #define ForceDefaults false
 #define NodeId 1
-#define FIRMWARE_VERSION  50
+#define FIRMWARE_VERSION  52
 
 // The master node id is 1 to avoid weirdness with IP addresses
 //#define NODE_ID 1

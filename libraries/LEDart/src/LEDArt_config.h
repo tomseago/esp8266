@@ -5,12 +5,12 @@
 // strips
 // #define LEDART_COLOR_FEATURE  NeoGrbFeature
 // bullets
-#define LEDART_COLOR_FEATURE  NeoRgbFeature  
+// #define LEDART_COLOR_FEATURE  NeoRgbFeature  
 
-#define LEDART_RGBW false
+#define LEDART_RGBW true
 
 // Infinity Bed
-// #define LEDART_COLOR_FEATURE  NeoGrbwFeature  
+#define LEDART_COLOR_FEATURE  NeoGrbwFeature  
 
 
 #if LEDART_RGBW
