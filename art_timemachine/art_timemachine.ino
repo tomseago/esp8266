@@ -2,8 +2,6 @@
 #define NodeId 1
 #define FIRMWARE_VERSION  50
 
-
-#include <WiFi.h>
   
 #include <ESPAsyncWebServer.h>
 
@@ -32,10 +30,10 @@ Nexus nx;
 // Outside to inside 24, 16, 12, 8, 1 = 61  
 // 3.66 amps at full brightness, 2.7 amps @ 74% brightness = 188
 
-const uint8_t MaxBrightness = 255;
-const uint16_t PixelCount = 114; // 4* 28 + 2 dots
+const uint8_t MaxBrightness = 128;
+const uint16_t PixelCount = 48; // 4* 28 + 2 dots
 
-LEDArtPiece art(nx, PixelCount, MaxBrightness);
+LEDArtPiece art(nx, PixelCount, MaxBrightness, 17); // For esp32 any pin below 32?
 
 LEDArtSingleGeometry geomAll("All", PixelCount);
 
@@ -54,28 +52,28 @@ LEDArtTableGeometry geomRays("Rays", 5, 24, (uint16_t**)table);
 //HarnessGeometry geom(30, 2);
     
 //LAA_Flood flood("Flood", RgbColor(128,0,0));
-LAA_Sparkle sparkle("Sparkle", PixelCount);
+//LAA_Sparkle sparkle("Sparkle", PixelCount);
 LAA_Rainbow rainbow("Rainbow");
-LAA_Line line("Line");
-LAA_BoxOutline boxOutline("Box Outline");
-LAA_AllWhite allWhite("All White");
-LAA_HalfWhite halfWhite("Half White");
-
-LAA_UnitFill unitFill("Unit Fill");
-LAA_RandoFill randoFill("Rando Fill");
-LAA_PaletteFill paletteFill("Palette Fill");
-
-LAA_Kitt kitt("Kitt");
-LAA_KittSmooth kittSmooth("Kitt Smooth");
-
-LAA_KittPallete kittPallete("Kitt Pallete");
+//LAA_Line line("Line");
+//LAA_BoxOutline boxOutline("Box Outline");
+//LAA_AllWhite allWhite("All White");
+//LAA_HalfWhite halfWhite("Half White");
+//
+//LAA_UnitFill unitFill("Unit Fill");
+//LAA_RandoFill randoFill("Rando Fill");
+//LAA_PaletteFill paletteFill("Palette Fill");
+//
+//LAA_Kitt kitt("Kitt");
+//LAA_KittSmooth kittSmooth("Kitt Smooth");
+//
+//LAA_KittPallete kittPallete("Kitt Pallete");
 
 //QuickButtons buttons(art, &halfWhite);
 
 WebUI webui(nx, art);
 //WiFiSync wifiSync(nx);
 
-BadClock badClock(nx, art);
+//BadClock badClock(nx, art);
 
 //Pinger pinger;
 
@@ -92,7 +90,7 @@ void setup() {
   NodeConfig.begin(
     ForceDefaults, 
     NodeId, 
-    "TomArtBadClock", "ILoveTwinks", 
+    "TomArtTimeWarp", "ILoveTwinks", 
     (uint32_t)IPAddress(10,0,1,10),  // Lase Host
     (uint32_t)IPAddress(10,10,9,10), // Base address for peers in mesh mode
     
@@ -107,7 +105,7 @@ void setup() {
   hausFan.begin();
   
 //  buttons.begin();
-  badClock.begin();
+//  badClock.begin();
   
   /////// Configure the art piece
   art.registerGeometry(&geomAll);
@@ -125,22 +123,22 @@ void setup() {
  nx.maxDuration = 256000;
   
   art.registerAnimation(&webui.statusAnim);
-  art.registerAnimation(&badClock.digitAnim);
+//  art.registerAnimation(&badClock.digitAnim);
 
 //  art.registerAnimation(&allWhite);
 //  art.registerAnimation(&halfWhite);
 //
 //  art.registerAnimation(&flood);
-  art.registerAnimation(&unitFill);
-  art.registerAnimation(&randoFill);
-  art.registerAnimation(&paletteFill);
+//  art.registerAnimation(&unitFill);
+//  art.registerAnimation(&randoFill);
+//  art.registerAnimation(&paletteFill);
 //  art.registerAnimation(&sparkle);
 //  art.registerAnimation(&line);
   art.registerAnimation(&rainbow);
 //  art.registerAnimation(&boxOutline);
 //  art.registerAnimation(&kitt);
-  art.registerAnimation(&kittSmooth);
-  art.registerAnimation(&kittPallete);
+//  art.registerAnimation(&kittSmooth);
+//  art.registerAnimation(&kittPallete);
   art.begin();
 //
     nx.addListener(&art);
@@ -148,11 +146,11 @@ void setup() {
 //  // Start the webui animation just so we don't have to deal with it
 //  // elsewhere right now
     art.startAnimation(&webui.statusAnim, false);
-    art.startAnimation(&badClock.digitAnim, false);
+//    art.startAnimation(&badClock.digitAnim, false);
 
-    art.startAnimation(&unitFill, false);
+    art.startAnimation(&rainbow, false);
 //    art.startAnimation(&wifiSync.statusAnim, false);
-    art.startAnimation(&kittPallete, false);
+//    art.startAnimation(&kittPallete, false);
 
 // Need to begin the strip when debugging, but art.begin() does this on it's own
 //    art.strip.Begin();
@@ -182,7 +180,7 @@ void loop() {
   // wifiSync.loop();
   hausFan.loop();
   webui.loop();
-  badClock.loop();
+//  badClock.loop();
 //  pinger.loop();
 
 //  buttons.loop();

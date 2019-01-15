@@ -3,9 +3,9 @@
 #ifndef LEDART_COLOR_FEATURE
 
 // strips
-// #define LEDART_COLOR_FEATURE  NeoGrbFeature
+#define LEDART_COLOR_FEATURE  NeoGrbFeature
 // bullets
-#define LEDART_COLOR_FEATURE  NeoRgbFeature  
+//#define LEDART_COLOR_FEATURE  NeoRgbFeature  
 
 #define LEDART_RGBW false
 

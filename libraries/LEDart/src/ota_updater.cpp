@@ -4,7 +4,9 @@
 #include "tagged_buffer.h"
 #include "node_config.h"
 
+#ifndef ESP32
 #include <ESP8266httpUpdate.h>
+#endif 
 
 const uint8_t TagVersion = 1;
 const uint8_t TagURL = 2;
@@ -18,6 +20,7 @@ OtaUpdater::begin()
 void
 OtaUpdater::loop()
 {
+#ifndef ESP32
     if (udp.parsePacket())
     {
         // Got a packet!
@@ -84,4 +87,5 @@ OtaUpdater::loop()
         free(szURL);
         udp.flush();
     }
+#endif
 }

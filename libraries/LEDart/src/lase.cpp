@@ -38,7 +38,7 @@ PersistentConnection::loop()
 {
     // If these aren't set, don't do anything, but still loop because maybe
     // they can be set in the future.
-    uint32_t addr = (uint32)serverAddr;
+    uint32_t addr = (uint32_t)serverAddr;
     if (!addr || !port) return;
 
     checkClient();
