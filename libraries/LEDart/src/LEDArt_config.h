@@ -33,3 +33,5 @@
 #define LEDART_TOPO_LAYOUT    ColumnMajor270Layout
 #endif
 
+// To disable networking right now on esp32
+#define LEDART_NO_WIFI 1
