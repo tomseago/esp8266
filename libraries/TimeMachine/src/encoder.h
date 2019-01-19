@@ -2,26 +2,34 @@
 
 #include <Esp.h>
 
+#include "debug_buffer.h"
+
 class Encoder {
 public:
     Encoder(uint8_t clockPin, uint8_t dataPin, uint8_t swPin);
 
     void begin();
-    void loop();
 
-    void clockChange();
-    void dataChange();
-    void swChange();
+    int16_t takeDelta();
+
+    bool swUpdate(); // Returns true if the state changed
+    bool swPressed();     // Returns the current state of the switch
+
+    // isrs
+    void updateRotationState();
+    // void swChange();
 
 private:
-    uint8_t _clockPin;
-    uint8_t _dataPin;
-    uint8_t _swPin;
+    uint8_t clockPin;
+    uint8_t dataPin;
+    uint8_t swPin;
 
-    uint8_t _changeMask = 0;
-    uint8_t _changeCount = 0;
-    int8_t _delta = 0;
+    int16_t delta = 0;
 
-    bool _readyForData;
-    int32_t _val = 0;
+    // Rotation state
+    uint8_t rotState;
+
+    // Switch state
+    uint32_t swPrevMillis;
+    uint8_t swState;
 };

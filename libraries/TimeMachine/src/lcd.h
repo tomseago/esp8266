@@ -8,12 +8,40 @@
 #include <log.h>
 #include <bstrlib.h>
 
+
+
 class LCD : public Print {
 public:
+    enum LCDMode {
+        ModeDate = 0,
+        ModeDebug,
+        ModeLog,
+
+        ModeLast
+    };
+
+    enum Button {
+        BtnYear = 0,
+        BtnMonth,
+        BtnDay,
+        BtnSel,
+        BtnGo
+    };
+
     LCD();
 
     void begin();
     void loop();
+
+
+    void setMode(LCDMode mode);
+
+    void setYear(uint32_t year);
+    void setMonth(uint8_t month);
+    void setDay(uint8_t day);
+    void setSelVal(uint8_t val);
+
+    void setButton(Button which, bool set);
 
     ///////////////
     // The stream interface for writing logs
@@ -40,12 +68,29 @@ public:
 
 
 private:
-    LiquidCrystal_I2C _module;
-    char _logLines[4][21];
-    uint32_t _lastPing = 0;
+    LiquidCrystal_I2C module;
+    
+    LCDMode mode;
 
-    uint32_t _lastUpdate = 0;
-    bool _needsUpdate = false;
+    // Used for date display
+    uint32_t year;
+    uint8_t month;
+    uint8_t day;
+
+    uint8_t selVal;
+
+    char logLines[4][21];
+    uint32_t lastPing = 0;
+
+    uint32_t lastUpdate = 0;
+    bool logUpdated = false;
+
+    void fullUpdate();
+
+    void updateYear();
+    void updateMonth();
+    void updateDay();
+    void updateSelVal();
 
     void displayLog();
 };

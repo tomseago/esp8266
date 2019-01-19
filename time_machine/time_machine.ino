@@ -2,12 +2,22 @@
 #define NodeId 1
 #define FIRMWARE_VERSION  50
 
+#include <log.h>
 #include <time_machine.h>
 
 TimeMachine tm;
 
 void setup() {
-    tm.begin();
+
+  ////// Configure logging / debugging
+  Serial.begin(57600);
+  // Serial.print("Hello world\n");
+  // This turns on wifi debug output to the serial line
+  Serial.setDebugOutput(true);
+  Log.setSerialEnabled(true);
+  Log.printf("DB Log start\n");
+  
+  tm.begin();
 }
 
 void loop() {

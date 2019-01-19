@@ -1,33 +1,32 @@
 #include "encoder.h"
 
-#include <log.h>
+// #include <log.h>
 
-#define CLOCK_BIT (1 << 2)
-#define DATA_BIT  (1 << 1)
-#define SW_BIT    (1)
+// #define CLOCK_BIT (1 << 2)
+// #define DATA_BIT  (1 << 1)
+// #define SW_BIT    (1)
 
-void
-isrClockChange(void* arg)
-{
-    ((Encoder*)arg)->clockChange();
-}
+#define DEBOUNCED_STATE 0
+#define UNSTABLE_STATE  1
+#define STATE_CHANGED   3
 
-void
-isrDataChange(void* arg)
-{
-    ((Encoder*)arg)->dataChange();
-}
 
 void
-isrSwChange(void* arg)
+isrUpdateRotationState(void* arg)
 {
-    ((Encoder*)arg)->swChange();
+    ((Encoder*)arg)->updateRotationState();
 }
+
+// void
+// isrSwChange(void* arg)
+// {
+//     ((Encoder*)arg)->swChange();
+// }
 
 Encoder::Encoder(uint8_t clockPin, uint8_t dataPin, uint8_t swPin) :
-    _clockPin(clockPin),
-    _dataPin(dataPin),
-    _swPin(swPin)
+    clockPin(clockPin),
+    dataPin(dataPin),
+    swPin(swPin)
 {
 
 }
@@ -35,111 +34,144 @@ Encoder::Encoder(uint8_t clockPin, uint8_t dataPin, uint8_t swPin) :
 void
 Encoder::begin()
 {
-    pinMode(_clockPin, INPUT_PULLUP);
-    pinMode(_dataPin, INPUT_PULLUP);
-    pinMode(_swPin, INPUT_PULLUP);
+    pinMode(clockPin, INPUT);
+    pinMode(dataPin, INPUT);
+    pinMode(swPin, INPUT);
 
-    attachInterruptArg(_clockPin, isrClockChange, this, CHANGE);
-    // attachInterruptArg(_dataPin, isrDataChange, this, CHANGE);
-    attachInterruptArg(_swPin, isrSwChange, this, CHANGE);
+    attachInterruptArg(clockPin, isrUpdateRotationState, this, CHANGE);
+    attachInterruptArg(dataPin, isrUpdateRotationState, this, CHANGE);
+    //attachInterruptArg(swPin, isrSwChange, this, CHANGE);
+
+    if (digitalRead(swPin)) {
+        swState = _BV(DEBOUNCED_STATE) | _BV(UNSTABLE_STATE);
+    }
+
+    swPrevMillis = millis();
 }
 
-void
-Encoder::loop()
+int16_t
+Encoder::takeDelta()
 {
-    uint8_t cm = _changeMask;
-    int8_t d = _delta;
-    _changeMask = 0;
-    _delta = 0;
+    int16_t ret = delta;
+    delta = 0;
+    return ret;
+}
 
-    // bool clk = digitalRead(_clockPin);
-    // bool data = digitalRead(_dataPin);
+#define BOUNCE_INTERVAL 15
 
-    // if (clk == _readyForData) {
-    //     return;
-    // }
+bool
+Encoder::swUpdate()
+{
+    // Read the state of the switch in a temporary variable.
+    bool currentState = digitalRead(swPin);
+    swState &= ~_BV(STATE_CHANGED);
 
-    // _readyForData = clk;
-    // bool cm = false;
-    // int8_t d = 0;
-
-    // if (clk) {
-    //     d = data ? 1 : -1;
-    // } else {
-    //     d = data ? -1 : 1;
-    // }
-
-    if (cm)
-    {
-        // uint8_t pins = (digitalRead(_clockPin) << 2) + (digitalRead(_dataPin) << 1) + (digitalRead(_swPin));
-        // Log.printf("C: %c%c%c,%c%c%c %d %d ", 
-        //     cm&4 ? 'C' : '.', cm&2 ? 'D' : '.', cm&1 ? 'S' : '.',
-        //     pins&4 ? 'C' : '.', pins&2 ? 'D' : '.', pins&1 ? 'S' : '.',
-        //     _changeCount, d);
-        if (d > 0) {
-            _val++;
-        } else {
-            _val--;
+    // If the reading is different from last reading, reset the debounce counter
+    if ( currentState != (bool)(swState & _BV(UNSTABLE_STATE)) ) {
+        swPrevMillis = millis();
+        swState ^= _BV(UNSTABLE_STATE);
+    } else
+        if ( millis() - swPrevMillis >= BOUNCE_INTERVAL ) {
+            // We have passed the threshold time, so the input is now stable
+            // If it is different from last state, set the STATE_CHANGED flag
+            if ((bool)(swState & _BV(DEBOUNCED_STATE)) != currentState) {
+                swPrevMillis = millis();
+                swState ^= _BV(DEBOUNCED_STATE);
+                swState |= _BV(STATE_CHANGED);
+            }
         }
-        Log.printf("Value = %d, %d              ", d, _val);
-    }
+
+    return swState & _BV(STATE_CHANGED);
 }
 
-void
-Encoder::clockChange()
+bool
+Encoder::swPressed()
 {
-    if (digitalRead(_clockPin)) {
-        _delta = digitalRead(_dataPin) ? 1 : -1;
-    } else {
-        _delta = digitalRead(_dataPin) ? -1: 1;        
-    }
-    _changeMask |= CLOCK_BIT;
-    _changeCount++;
-
-    // if (_readyForData) {
-    //     // Ignore this interrupt
-    //     return;
-    // }
-
-    // _readyForData = true;
-
-    // // uint8_t pins = (digitalRead(_clockPin) << 1) + digitalRead(_dataPin);
-
-    // // detachInterrupt(_clockPin);
-    // // attachInterruptArg(_dataPin, isrDataChange, this, CHANGE);    
-
-    // // _changeMask |= CLOCK_BIT;
-    // // _changeCount++;
-
-    // // if (digitalRead(_dataPin)) {
-    // //     _delta++;
-    // // } else {
-    // //     _delta--;
-    // // }
+    return !(swState & _BV(DEBOUNCED_STATE));
 }
 
+
+// Values returned by 'process'
+// No complete step yet.
+#define DIR_NONE 0x0
+// Clockwise step.
+#define DIR_CW 0x10
+// Anti-clockwise step.
+#define DIR_CCW 0x20
+
+
+/*
+ * The below state table has, for each state (row), the new state
+ * to set based on the next encoder output. From left to right in,
+ * the table, the encoder outputs are 00, 01, 10, 11, and the value
+ * in that position is the new state to set.
+ */
+
+#define R_START 0x0
+
+#ifdef HALF_STEP
+// Use the half-step state table (emits a code at 00 and 11)
+#define R_CCW_BEGIN 0x1
+#define R_CW_BEGIN 0x2
+#define R_START_M 0x3
+#define R_CW_BEGIN_M 0x4
+#define R_CCW_BEGIN_M 0x5
+const unsigned char ttable[6][4] = {
+  // R_START (00)
+  {R_START_M,            R_CW_BEGIN,     R_CCW_BEGIN,  R_START},
+  // R_CCW_BEGIN
+  {R_START_M | DIR_CCW, R_START,        R_CCW_BEGIN,  R_START},
+  // R_CW_BEGIN
+  {R_START_M | DIR_CW,  R_CW_BEGIN,     R_START,      R_START},
+  // R_START_M (11)
+  {R_START_M,            R_CCW_BEGIN_M,  R_CW_BEGIN_M, R_START},
+  // R_CW_BEGIN_M
+  {R_START_M,            R_START_M,      R_CW_BEGIN_M, R_START | DIR_CW},
+  // R_CCW_BEGIN_M
+  {R_START_M,            R_CCW_BEGIN_M,  R_START_M,    R_START | DIR_CCW},
+};
+#else
+// Use the full-step state table (emits a code at 00 only)
+#define R_CW_FINAL 0x1
+#define R_CW_BEGIN 0x2
+#define R_CW_NEXT 0x3
+#define R_CCW_BEGIN 0x4
+#define R_CCW_FINAL 0x5
+#define R_CCW_NEXT 0x6
+
+const unsigned char ttable[7][4] = {
+  // R_START
+  {R_START,    R_CW_BEGIN,  R_CCW_BEGIN, R_START},
+  // R_CW_FINAL
+  {R_CW_NEXT,  R_START,     R_CW_FINAL,  R_START | DIR_CW},
+  // R_CW_BEGIN
+  {R_CW_NEXT,  R_CW_BEGIN,  R_START,     R_START},
+  // R_CW_NEXT
+  {R_CW_NEXT,  R_CW_BEGIN,  R_CW_FINAL,  R_START},
+  // R_CCW_BEGIN
+  {R_CCW_NEXT, R_START,     R_CCW_BEGIN, R_START},
+  // R_CCW_FINAL
+  {R_CCW_NEXT, R_CCW_FINAL, R_START,     R_START | DIR_CCW},
+  // R_CCW_NEXT
+  {R_CCW_NEXT, R_CCW_FINAL, R_CCW_BEGIN, R_START},
+};
+#endif
+
 void
-Encoder::dataChange()
+Encoder::updateRotationState()
 {
-    if (!_readyForData) {
-        // Ignore 
-        return;
-    }
+  // Grab state of input pins.
+  unsigned char pinstate = (digitalRead(dataPin) << 1) | digitalRead(clockPin);
 
-    _readyForData = false;
+  // Determine new state from the pins and state table.
+  rotState = ttable[rotState & 0xf][pinstate];
 
-    if (digitalRead(_dataPin)) {
-        _delta++;
-    } else {
-        _delta--;
-    }
-    _changeMask |= DATA_BIT;
-    _changeCount++;
-}
+  // Return emit bits, ie the generated event.
+  uint8_t result = rotState & 0x30;
 
-void
-Encoder::swChange()
-{
-    _changeMask |= SW_BIT;
-    _changeCount++;
+  if (result & DIR_CW) {
+    delta += 1;
+  } else if (result & DIR_CCW) {
+    delta -= 1;
+  }
 }
