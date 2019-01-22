@@ -1,6 +1,8 @@
 #include "circles.h"
 #include "tm_common.h"
 
+#include "rand.h"
+
 // We have two colorspaces remember...
 
 #define RED RgbColor(255,0,0)
@@ -32,13 +34,33 @@ Circles::begin()
     bus.Begin();
     bus.SetBrightness(32);
     bus.ClearTo(RED);
+    bus.SetPixelColor(0, BLUE);
+    bus.SetPixelColor(1, GREEN);
     bus.Show();
 }
 
 void
 Circles::loop()
 {
+    uint32_t now = millis();
 
+    if (now - lastFrameAt > 500) {
+        // Do a new frame!        
+        for(int i=0; i<18; i++) {
+            RgbColor color(0,0,0);
+
+            if (rand(1000) > 500) {
+                color = RgbColor(255, 0, 0);
+            }
+
+            for(int j=0; j<12; j++) {
+                bus.SetPixelColor( i*12 + j, color);
+            }
+        }
+
+        bus.Show();
+        lastFrameAt = now;
+    }
 }
 
 void

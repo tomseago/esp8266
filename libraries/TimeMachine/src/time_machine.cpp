@@ -7,7 +7,7 @@ TimeMachine::TimeMachine() :
     encDay(36,39,32),
     encMonth(33,34,35),
     encYear(25,26,27),
-    encSel(14,12,13)
+    encSel(14,19,13)
 {
 
 }

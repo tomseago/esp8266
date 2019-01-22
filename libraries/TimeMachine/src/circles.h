@@ -12,4 +12,6 @@ public:
     void loop();
 
     void setText(char* txt);
+
+    uint32_t lastFrameAt;
 };
