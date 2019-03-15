@@ -208,7 +208,7 @@ convertLAColor(LAColor& in) {
     //     in.R, in.G, in.B, in.W);
 
     // Without correction
-    in.W = getWhite(in);
+    //in.W = getWhite(in);
 
     // With some max correction
     //out.W = getWhite(in, 255, 200, 200);
